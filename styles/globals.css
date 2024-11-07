@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* input {
+  @apply w-[400px] border border-gray-200 py-2 px-6 bg-zinc-100/40;
+} */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+* {
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+}
+
+.marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: blanchedalmond;
+  font-size: 20px;
+  font-weight: bolder;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 5px black;
+}
+
+@media screen and (max-width: 768px) {
+  .marker {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
