@@ -284,6 +284,9 @@ function ViewEvent(props) {
   };
   const [formStep, setFormStep] = useState(0);
   const completeFormStep = () => {
+    if (props.eventData.isResourcePerson == false && formStep == 2) {
+      setFormStep((curr) => curr + 1);
+    }
     setFormStep((curr) => curr + 1);
   };
   const options = [
