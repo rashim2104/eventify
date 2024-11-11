@@ -11,9 +11,9 @@ import { logger } from "@/lib/logger";
 
 const schema = Joi.object({
   user_id: Joi.string().required().messages({
-  'any.required': 'User ID is required',
-  'string.empty': 'User ID cannot be an empty string',
-  'string.base': 'User ID must be a string',
+    'any.required': 'User ID is required',
+    'string.empty': 'User ID cannot be an empty string',
+    'string.base': 'User ID must be a string',
   }),
   dept: Joi.string().required().messages({
     'any.required': 'Department is required',
@@ -69,25 +69,20 @@ const schema = Joi.object({
     eventResourcePerson: Joi.array()
       .items(
         Joi.object({
-          ResourcePersonName: Joi.string().required().messages({
-            'any.required': 'Resource person name is required',
+          ResourcePersonName: Joi.string().allow('').messages({
             'string.empty': 'Resource person name cannot be an empty string',
           }),
-          ResourcePersonMail: Joi.string().email().required().messages({
-            'any.required': 'Resource person email is required',
+          ResourcePersonMail: Joi.string().email().allow('').messages({
             'string.empty': 'Resource person email cannot be an empty string',
             'string.email': 'Resource person email must be a valid email',
           }),
-          ResourcePersonPhone: Joi.string().required().messages({
-            'any.required': 'Resource person phone is required',
+          ResourcePersonPhone: Joi.string().allow('').messages({
             'string.empty': 'Resource person phone cannot be an empty string',
           }),
-          ResourcePersonDesgn: Joi.string().required().messages({
-            'any.required': 'Resource person designation is required',
+          ResourcePersonDesgn: Joi.string().allow('').messages({
             'string.empty': 'Resource person designation cannot be an empty string',
           }),
-          ResourcePersonAddr: Joi.string().required().messages({
-            'any.required': 'Resource person address is required',
+          ResourcePersonAddr: Joi.string().allow('').messages({
             'string.empty': 'Resource person address cannot be an empty string',
           }),
         })
@@ -97,31 +92,31 @@ const schema = Joi.object({
         'any.required': 'Event resource persons are required',
         'array.base': 'Event resource persons must be an array',
       }),
-      venueList: Joi.array().required()
-        .items(
-          Joi.object({
-            userId: Joi.string().required().messages({
-              'any.required': 'Booker ID is required',
-              'string.empty': 'Booker ID cannot be an empty string',
-            }),
-            venueId: Joi.string().required().messages({
-              'any.required': 'Venue ID is required',
-              'string.empty': 'Venue ID cannot be an empty string',
-            }),
-            venueName: Joi.string().required().messages({
-              'any.required': 'Venue Name is required',
-              'string.empty': 'Venue Name cannot be an empty string',
-            }),
-            reservationDate: Joi.string().required().messages({
-              'any.required': 'Reservation date is required',
-              'string.empty': 'Reservation date cannot be an empty string',
-            }),
-            reservationSession: Joi.string().required().messages({
-              'any.required': 'Reservation session is required',
-              'string.empty': 'Reservation session cannot be an empty string',
-            }),
-          })
-        ),
+    venueList: Joi.array().required()
+      .items(
+        Joi.object({
+          userId: Joi.string().required().messages({
+            'any.required': 'Booker ID is required',
+            'string.empty': 'Booker ID cannot be an empty string',
+          }),
+          venueId: Joi.string().required().messages({
+            'any.required': 'Venue ID is required',
+            'string.empty': 'Venue ID cannot be an empty string',
+          }),
+          venueName: Joi.string().required().messages({
+            'any.required': 'Venue Name is required',
+            'string.empty': 'Venue Name cannot be an empty string',
+          }),
+          reservationDate: Joi.string().required().messages({
+            'any.required': 'Reservation date is required',
+            'string.empty': 'Reservation date cannot be an empty string',
+          }),
+          reservationSession: Joi.string().required().messages({
+            'any.required': 'Reservation session is required',
+            'string.empty': 'Reservation session cannot be an empty string',
+          }),
+        })
+      ),
     EventName: Joi.string().required().messages({
       'any.required': 'Event name is required',
       'string.empty': 'Event name cannot be an empty string',
@@ -154,6 +149,9 @@ const schema = Joi.object({
     EventOrganizer: Joi.number().required().messages({
       'any.required': 'Event organizer is required',
       'number.base': 'Event organizer must be a number',
+    }),
+    isResourcePerson: Joi.boolean().allow(null).messages({
+      'boolean.base': 'Is resource person must be a boolean',
     }),
     EventType: Joi.object({
       eventType: Joi.string().required().messages({
@@ -207,7 +205,7 @@ export async function POST(req) {
     user = await authenticate(req);
     // Continue with your logic here
   } catch (error) {
-    logger("Not Auth","Create Event",error,401);
+    logger("Not Auth", "Create Event", error, 401);
     return NextResponse.json({ message: error.message }, { status: 401 });
   }
 
@@ -224,7 +222,7 @@ export async function POST(req) {
     }
     // Continue with your logic here
   } catch (error) {
-    logger(user._id,"Create Event",error,400)
+    logger(user._id, "Create Event", error, 400)
     return NextResponse.json({ message: error.message }, { status: 400 });
   }
 
@@ -242,8 +240,8 @@ export async function POST(req) {
   console.log(eventData.eventOrganizer);
   let eventCollege =
     eventData.EventOrganizer === 1 ||
-    eventData.EventOrganizer === 1 ||
-    eventData.EventOrganizer === 1
+      eventData.EventOrganizer === 1 ||
+      eventData.EventOrganizer === 1
       ? college
       : "common";
   if (userType === "HOD") {
@@ -319,10 +317,10 @@ export async function POST(req) {
     //         createdEvent._id
     //       );
     //     }
-    logger(user._id,"Create Event","Event Created",201)
+    logger(user._id, "Create Event", "Event Created", 201)
     return NextResponse.json({ message: "Event Created." }, { status: 201 });
   } catch (error) {
-    logger(user._id,"Create Event",error,500)
+    logger(user._id, "Create Event", error, 500)
     console.error("Error inserting event:", error);
     return NextResponse.json(
       { message: "An error occurred while Creating Event." },
