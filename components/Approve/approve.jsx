@@ -246,7 +246,7 @@ export default function Approve() {
               </div>
             </div>
             <Link
-              href={`${process.env.URL}/events/${event._id}`}
+              href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
               target="_blank"
               className="hover:text-white"
             >
