@@ -343,7 +343,7 @@ export default function EventCard({ events, message }) {
                         </div>
 
                         <Link
-                          href={`${process.env.URL}/pastevents/${event._id}`}
+                          href={`${process.env.URL}/events/${event._id}`}
                           target="_blank"
                           className="hover:text-white"
                         >
