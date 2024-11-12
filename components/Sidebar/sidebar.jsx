@@ -10,7 +10,7 @@ export default function Sidebar(){
   const [print,setPrint] = useState(true);
   const pathname = usePathname();
   useEffect(() => {
-    const allowedPaths = ["/dashboard","/manage", "/create", "/status", "/update", "/approve", "/report", "/profile","/events","/pastevents","events/[eventID]","pastevents/[eventID]", "/venues"];
+    const allowedPaths = ["/dashboard","/manage", "/create", "/status", "/update", "/approve", "/report", "/profile","/events","events/[eventID]", "/venues"];
     if (!allowedPaths.some(path => pathname.startsWith(path))) {
       setPrint(false);
     } else {

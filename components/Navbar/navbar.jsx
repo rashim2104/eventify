@@ -22,9 +22,7 @@ function Navbar() {
       "/report",
       "/profile",
       "/events",
-      "/pastevents",
       "events/[eventID]",
-      "pastevents/[eventID]",
       "/venues",
     ];
     if (!allowedPaths.some((path) => pathname.startsWith(path))) {
