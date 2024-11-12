@@ -214,10 +214,10 @@ export default function Report() {
                     <span>{event.eventData.EventName}</span>
                     <a
                       target="blank"
-                      href={`${process.env.URL}/events/${event._id}`}
+                      href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
                     >
                       View
-                    </a>
+                    </a>  
                   </li>
                 ))}
               </ul>
@@ -655,7 +655,7 @@ export default function Report() {
                     <span>{event.eventData.EventName}</span>
                     <a
                       target="blank"
-                      href={`${process.env.URL}/events/${event._id}`}
+                      href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
                     >
                       View
                     </a>

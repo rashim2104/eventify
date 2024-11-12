@@ -5,23 +5,23 @@ export default function StatusCard({ events, message }) {
   function getStatusText(status) {
     switch (status) {
       case 0:
-        return ["bg-gray-800","#465467","#151e2c","#2f3b4b"];
+        return ["bg-gray-800", "#465467", "#151e2c", "#2f3b4b"];
       case 1:
-        return ["bg-[#3db06a]","#f3eeed","#2c3437","#bbe993"];
+        return ["bg-[#3db06a]", "#f3eeed", "#2c3437", "#bbe993"];
       case 2:
-        return ["bg-[#3db06a]","#f3eeed","#2c3437","#bbe993"];
+        return ["bg-[#3db06a]", "#f3eeed", "#2c3437", "#bbe993"];
       case -1:
-        return ["bg-[#ff5f53]","#e7dccc","#420707","#b03733"];
+        return ["bg-[#ff5f53]", "#e7dccc", "#420707", "#b03733"];
       case -2:
-        return ["bg-[#ff5f53]","#e7dccc","#420707","#b03733"];
+        return ["bg-[#ff5f53]", "#e7dccc", "#420707", "#b03733"];
       case 3:
-        return ["bg-[#ffb521]","#ffe6b3","#6c4b00","#df9c01"];
+        return ["bg-[#ffb521]", "#ffe6b3", "#6c4b00", "#df9c01"];
       case 4:
-        return ["bg-[#ffb521]","#ffe6b3","#6c4b00","#df9c01"];
+        return ["bg-[#ffb521]", "#ffe6b3", "#6c4b00", "#df9c01"];
       case 5:
-        return ["bg-[#200389]","#acd3fb","#201546","#4d69a5"];
+        return ["bg-[#200389]", "#acd3fb", "#201546", "#4d69a5"];
       default:
-        return ["bg-gray-800","#465467","#151e2c","#2f3b4b"];
+        return ["bg-gray-800", "#465467", "#151e2c", "#2f3b4b"];
     }
   }
 
@@ -199,7 +199,7 @@ export default function StatusCard({ events, message }) {
                       </div>
                       <div className="flex">
                         <Link
-                          href={`${process.env.URL}/events/${event._id}`}
+                          href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
                           className="hover:text-white"
                         >
                           <svg
