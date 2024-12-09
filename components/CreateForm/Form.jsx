@@ -250,12 +250,12 @@ function Form() {
     let fileName = "";
     if (action === "poster") {
       fileName = fileUrl.poster.replace(
-        "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+        "https://eventifys3.s3.ap-south-1.amazonaws.com/",
         ""
       );
     } else if (action === "sanctionLetter") {
       fileName = fileUrl.sanctionLetter.replace(
-        "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+        "https://eventifys3.s3.ap-south-1.amazonaws.com/",
         ""
       );
     }
