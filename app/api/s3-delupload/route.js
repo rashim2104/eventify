@@ -46,7 +46,7 @@ export async function POST(req){
     try {
         const formData = await req.formData();
         const file = formData.get('file');
-        const oldFileName = formData.get('oldFileName').replace("https://eventify-file-storage.s3.ap-south-1.amazonaws.com/", "");
+        const oldFileName = formData.get('oldFileName').replace("https://eventifys3.s3.ap-south-1.amazonaws.com/", "");
         const id = formData.get('id');
         const action = `eventData.fileUrl.${formData.get('action')}`;
         if(!file){
@@ -63,12 +63,12 @@ export async function POST(req){
             { _id: id },
             {
                 $set: {
-                    [action] : "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/" + fileName
+                    [action] : "https://eventifys3.s3.ap-south-1.amazonaws.com/" + fileName
                 },
             },
         );
         logger(user._id,"S3 DeleteUpload","Success",200);
-        return NextResponse.json({message: "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/"+fileName}, { status: 200 });        
+        return NextResponse.json({message: "https://eventifys3.s3.ap-south-1.amazonaws.com/"+fileName}, { status: 200 });        
     } catch (error) {
         console.log(error);
         logger(user._id,"S3 DeleteUpload",error,400);

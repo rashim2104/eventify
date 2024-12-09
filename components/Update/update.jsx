@@ -199,7 +199,7 @@ export default function Update() {
       case "geoPhotos":
         for (const photoUrl of fileUrl.geoPhotos) {
           const fileName = photoUrl.replace(
-            "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+            "https://eventifys3.s3.ap-south-1.amazonaws.com/",
             ""
           );
           await deleteFile(fileName);
@@ -208,7 +208,7 @@ export default function Update() {
         break;
       case "financialCommitments":
         const financialFileName = fileUrl.financialCommitments.replace(
-          "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
           ""
         );
         await deleteFile(financialFileName);
@@ -216,7 +216,7 @@ export default function Update() {
         break;
       case "report":
         const reportFileName = fileUrl.report.replace(
-          "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
           ""
         );
         await deleteFile(reportFileName);
@@ -224,7 +224,7 @@ export default function Update() {
         break;
       case "eventPoster":
         const posterFileName = fileUrl.eventPoster.replace(
-          "https://eventify-file-storage.s3.ap-south-1.amazonaws.com/",
+          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
           ""
         );
         await deleteFile(posterFileName);
