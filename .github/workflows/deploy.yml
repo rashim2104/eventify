@@ -1,0 +1,28 @@
+name: Deploy to EC2 on Push
+
+on:
+  push:
+    branches:
+      - main # Trigger this workflow on push to the 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }} # This is the secret you added
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@13.127.183.139 << 'EOF'
+            cd /home/ubuntu/eventify
+            git pull origin main  # Pull latest changes
+            npm install  # Install dependencies
+            pm2 restart nextjs-app  # Restart the app using PM2
+          EOF
