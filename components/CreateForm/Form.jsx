@@ -244,6 +244,9 @@ function Form() {
       setFile(null);
     }
   };
+
+// WH CHeck
+
   const handleDelete = async (e, action) => {
     e.preventDefault();
     const formData = new FormData();
