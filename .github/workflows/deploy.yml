@@ -24,5 +24,6 @@ jobs:
             cd /home/ubuntu/eventify
             git pull origin main  # Pull latest changes
             npm install  # Install dependencies
-            pm2 restart nextjs-app  # Restart the app using PM2
+            npm run build  # Restart the app using PM2
+            npm start  # Restart the app using PM2
           EOF
