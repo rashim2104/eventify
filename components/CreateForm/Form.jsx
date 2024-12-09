@@ -244,9 +244,6 @@ function Form() {
       setFile(null);
     }
   };
-
-  // Git FIx
-
   const handleDelete = async (e, action) => {
     e.preventDefault();
     const formData = new FormData();
