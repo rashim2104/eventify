@@ -95,193 +95,35 @@ function ViewEvent(props) {
     // console.log(eventData);
   }, [isValid]);
 
-  const generatePDF = (e) => {
-    e.preventDefault();
-    // Create a new jsPDF instance
-    const doc = new jsPDF();
-    const organizer = [
-      -1,
-      "Department",
-      "Professional Societies",
-      "Clubs and Cells",
-      "Others",
-    ];
-    var width = doc.internal.pageSize.getWidth();
-    var height = doc.internal.pageSize.getHeight();
-    doc.setFontSize(12);
-    if (props.data.eventCollege === "SIT") {
-      doc.addImage(
-        "/assets/images/report/SIT_1.png",
-        "PNG",
-        0,
-        0,
-        width,
-        height
-      );
-    } else if (props.data.eventCollege === "SEC") {
-      doc.addImage(
-        "/assets/images/report/SEC_1.png",
-        "PNG",
-        0,
-        0,
-        width,
-        height
-      );
-    } else {
-      doc.addImage(
-        "/assets/images/report/COM_1.png",
-        "PNG",
-        0,
-        0,
-        width,
-        height
-      );
+  const generatePDF = async () => {
+    console.log(props.data);
+    try {
+            const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ eventId: props.data._id }), // Send data to API route
+      });
+
+      // Handle the response as a PDF file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a download link and trigger the download
+      const link = document.createElement("a");
+      link.href = url;
+      console.log(props.data);
+      link.download = `Event_Report - ${props.data.ins_id} ${props.data.eventData.EventName}.pdf`;
+      link.click();
+
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
     }
-    doc.text(props.data.ins_id ? props.data.ins_id : "", 158.75, 39.95, {
-      maxWidth: 50,
-    });
-    doc.text(organizer[props.data.eventData.EventOrganizer], 118, 56.62);
-    doc.text(
-      props.data.eventData.eventCoordinators[0].coordinatorName,
-      118,
-      65.61,
-      { maxWidth: 80 }
-    );
-    doc.text(
-      props.data.eventData.eventCoordinators[0].coordinatorMail,
-      118,
-      79.37,
-      { maxWidth: 80 }
-    );
-    doc.text(
-      props.data.eventData.eventCoordinators[0].coordinatorPhone,
-      118,
-      88.37,
-      { maxWidth: 80 }
-    );
-    doc.text(props.data.eventData.EventType.eventType, 118, 97.1, {
-      maxWidth: 80,
-    }); // Assuming this is the event type like "Workshop"
-    doc.text(props.data.eventData.EventName, 118, 106.09, { maxWidth: 80 }); // Event name
-    doc.text(props.data.eventData.EventObjective, 118, 115.09, {
-      maxWidth: 80,
-    }); // Event objective, might need to handle length check dynamically
-    doc.text(
-      props.data.eventData.eventResourcePerson[0].ResourcePersonName,
-      118,
-      124.09,
-      { maxWidth: 80 }
-    );
-    doc.text(props.data.eventData.eventLocation, 118, 133.09, { maxWidth: 80 }); // Assuming this is the location like "IT Laboratory"
-    doc.text(props.data.eventData.eventStakeholders.join(", "), 118, 142.09, {
-      maxWidth: 80,
-    }); // Joining stakeholders array to string
-    doc.text(props.data.eventData.EventVenue, 118, 151.08, { maxWidth: 80 });
-    const formatDateTime = (dateString) => {
-      const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-      const year = date.getFullYear();
-      let hours = date.getHours();
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
-      const strHours = String(hours).padStart(2, "0");
-      return `${day}-${month}-${year} ${strHours}:${minutes} ${ampm}`;
-    };
-
-    const startTime = formatDateTime(props.data.eventData.StartTime, {
-      maxWidth: 80,
-    });
-    const endTime = formatDateTime(props.data.eventData.EndTime, {
-      maxWidth: 80,
-    });
-
-    doc.text(startTime, 118, 160.07, { maxWidth: 80 });
-    doc.text(endTime, 118, 169.06, { maxWidth: 80 });
-    doc.text(props.data.eventData.EventDuration, 118, 178.06, { maxWidth: 80 });
-    doc.text(
-      props.data.eventData.isSponsored === "true" ? "Yes" : "No",
-      118,
-      187.06,
-      {
-        maxWidth: 80,
-      }
-    );
-    doc.text(
-      props.data.eventData.isSponsored === "true"
-        ? `${props.data.eventData.Budget}`
-        : "-",
-      118,
-      196.05,
-      { maxWidth: 80 }
-    ); // Assuming this is a static value as not found in schema
-    doc.text(
-      props.data.eventData.eventSponsors[0].name +
-        " - " +
-        props.data.eventData.eventSponsors[0].address,
-      118,
-      212.19,
-      { maxWidth: 80 }
-    );
-    doc.textWithLink("Poster", 118, 223.04, {
-      url: props.data.eventData.fileUrl.poster,
-    });
-
-    if (props.data.updateStatus) {
-      doc.addPage();
-      if (props.data.eventCollege === "SIT") {
-        doc.addImage(
-          "/assets/images/report/SIT_2.png",
-          "PNG",
-          0,
-          0,
-          width,
-          height
-        );
-      } else if (props.data.eventCollege === "SEC") {
-        doc.addImage(
-          "/assets/images/report/SEC_2.png",
-          "PNG",
-          0,
-          0,
-          width,
-          height
-        );
-      } else {
-        doc.addImage(
-          "/assets/images/report/COM_2.png",
-          "PNG",
-          0,
-          0,
-          width,
-          height
-        );
-      }
-      doc.textWithLink("Report", 118, 65.61, {
-        url: props.data.postEventData.fileUrl.report,
-      });
-      doc.text(props.data.postEventData.videoLinks, 118, 79.37, {
-        maxWidth: 80,
-      });
-      doc.text(props.data.postEventData.amountSpent, 118, 88.37, {
-        maxWidth: 80,
-      });
-      doc.textWithLink("Financial Commitments", 118, 97.1, {
-        url: props.data.postEventData.fileUrl.financialCommitments,
-      }); // Assuming this is the event type like "Workshop"
-      let y = 106.09;
-      props.data.postEventData.fileUrl.geoPhotos.forEach((photoUrl, index) => {
-        doc.textWithLink(`Photo ${index + 1}`, 118, y, { url: photoUrl });
-        y += 10; // Increment the Y-axis coordinate for each link
-      });
-    }
-
-    doc.save("Report.pdf");
-
-    // Save the PDF
   };
+
   const [formStep, setFormStep] = useState(0);
   const completeFormStep = () => {
     if (props.eventData.isResourcePerson == false && formStep == 2) {
