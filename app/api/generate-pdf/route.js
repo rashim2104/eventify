@@ -202,8 +202,8 @@ export async function POST(req) {
           </div>
 
           <div class="footer">
-            Generated with Eventify - ${new Date().toLocaleString()}
-          </div>
+            Generated with Eventify - ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+        </div>
         </body>
       </html>
     `;
