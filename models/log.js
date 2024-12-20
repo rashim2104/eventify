@@ -1,24 +1,25 @@
 import mongoose, { Schema, models } from "mongoose";
 
 const logSchema = new Schema({
-  user_id:{
+  user_id: {
     type: Schema.Types.ObjectId,
-    required: true,
+    ref: 'User',
+    default: null,
   },
-  action:{
+  action: {
     type: String,
     required: true,
   },
-  logType:{
+  logType: {
     type: String,
-    required : true,
+    required: true,
   },
-  status:{
+  status: {
     type: Number,
     default: 0,
   }
-},  
-{ timestamps: true }
+},
+  { timestamps: true }
 );
 
 const Logs = models.Logs || mongoose.model('Logs', logSchema);

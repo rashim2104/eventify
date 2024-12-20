@@ -1,30 +1,62 @@
 import { NextResponse } from "next/server";
-import { connectMongoDB } from "@/lib/mongodb"; // Function to connect to MongoDB
-import Venues from "@/models/venue"; // Mongoose model for the Venues collection
-import { authenticate } from "@/lib/authenticate"; // Authentication function
-import { logger } from "@/lib/logger"; // Logging function
+import { connectMongoDB } from "@/lib/mongodb"; 
+import Venues from "@/models/venue"; 
+import { authenticate } from "@/lib/authenticate"; 
+import { logger } from "@/lib/logger"; 
 
 export async function POST(req) {
+    const ACTION = "All Venues";
     let user;
+
     try {
         user = await authenticate(req);
-        // Continue with your logic here
     } catch (error) {
-        logger("Not Auth", "All Venues", "Unknown Session", 401);
-        return NextResponse.json({ message: error.message }, { status: 401 });
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
     }
 
-    // Ensure database connection
-    await connectMongoDB();
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
 
     try {
-        // Fetch all the venues from MongoDB
-        let userVenues = await Venues.find({});
-        logger(user._id, "All Venues", "Fetch successful", 200);
-        return NextResponse.json({ message: userVenues }, { status: 200 });
+        const userVenues = await Venues.find({});
+        await logger(
+            user._id,
+            ACTION,
+            "Venues Fetched Successfully",
+            200
+        );
+        return NextResponse.json(
+            { message: userVenues },
+            { status: 200 }
+        );
     } catch (error) {
-        console.error("Error fetching venues:", error);
-        logger(user._id, "All Venues", error, 500);
+        await logger(
+            user._id,
+            ACTION,
+            "Venues Fetch Failed: " + error.message,
+            500
+        );
         return NextResponse.json(
             { message: "An error occurred while fetching data." },
             { status: 500 }
@@ -33,15 +65,42 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-    // Ensure database connection
-    await connectMongoDB();
+    const ACTION = "Get All Venues";
+    
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            "SYSTEM",
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
 
     try {
-        // Fetch all the venues from MongoDB
-        let venues = await Venues.find({});
-        return NextResponse.json({ venues }, { status: 200 });
+        const venues = await Venues.find({});
+        await logger(
+            "SYSTEM",
+            ACTION,
+            "Venues Fetched Successfully",
+            200
+        );
+        return NextResponse.json(
+            { venues },
+            { status: 200 }
+        );
     } catch (error) {
-        console.error("Error fetching venues:", error);
+        await logger(
+            "SYSTEM",
+            ACTION,
+            "Venues Fetch Failed: " + error.message,
+            500
+        );
         return NextResponse.json(
             { message: "An error occurred while fetching data." },
             { status: 500 }

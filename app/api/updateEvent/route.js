@@ -1,4 +1,3 @@
-// API route for creating a new event
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import Events from "@/models/events";
@@ -6,40 +5,85 @@ import { authenticate } from "@/lib/authenticate";
 import { logger } from "@/lib/logger";
 
 export async function POST(req) {
-  // Authenticate the Request
-  const { _id: user_id } = await authenticate(req);
-  // Ensure database connection
-  await connectMongoDB(); 
+    const ACTION = "Update Event";
+    let user;
 
-  let valueToJson = await req.json();
-
-  const { jsonData } =  valueToJson;
-  
-  try {
-    // Insert the event into the collection
-    const updatedEvent = await Events.updateOne(
-      { _id: jsonData.selectedEvent },
-      {
-        updateStatus: 1,
-        postEventUpdateOn: new Date(),
-        postEventUpdateBy: user_id,
-        postEventData: jsonData,
-      }
-    );
-
-    if (updatedEvent) {
-      logger(user_id, "Update Event", "Event Updated", 200);
-      return NextResponse.json({ message: "Event Updated." }, { status: 200 });
-    } else {
-      logger(user_id, "Update Event", "Event Not Found",500);
-      return NextResponse.json({ message: "Event not found." }, { status: 500 });
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
     }
-  } catch (error) {
-    logger(user_id, "Update Event", error, 500);
-    console.error('Error updating event:', error);
-    return NextResponse.json(
-      { message: "An error occurred while updating the event." },
-      { status: 500 }
-    );
-  }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
+    try {
+        const { jsonData } = await req.json();
+
+        const updatedEvent = await Events.updateOne(
+            { _id: jsonData.selectedEvent },
+            {
+                updateStatus: 1,
+                postEventUpdateOn: new Date(),
+                postEventUpdateBy: user._id,
+                postEventData: jsonData,
+            }
+        );
+
+        if (updatedEvent.modifiedCount > 0) {
+            await logger(
+                user._id,
+                ACTION,
+                `Event Updated Successfully - ID: ${jsonData.selectedEvent}`,
+                200
+            );
+            return NextResponse.json(
+                { message: "Event Updated" },
+                { status: 200 }
+            );
+        } else {
+            await logger(
+                user._id,
+                ACTION,
+                `Event Not Found: ${jsonData.selectedEvent}`,
+                404
+            );
+            return NextResponse.json(
+                { message: "Event not found" },
+                { status: 404 }
+            );
+        }
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Event Update Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while updating the event" },
+            { status: 500 }
+        );
+    }
 }

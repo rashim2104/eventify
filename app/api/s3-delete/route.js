@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { S3Client,DeleteObjectCommand  } from '@aws-sdk/client-s3';
+import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { authenticate } from '@/lib/authenticate';
 import { logger } from '@/lib/logger';
 
@@ -11,30 +11,72 @@ const s3Client = new S3Client({
     }
 });
 
-async function deleteFileS3(fileName){
+async function deleteFileS3(fileName) {
     const deleteParams = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: fileName,
     };
-    const command = new DeleteObjectCommand (deleteParams);
-    const data = await s3Client.send(command);
-    return data;
+    const command = new DeleteObjectCommand(deleteParams);
+    return await s3Client.send(command);
 }
- 
-export async function POST(req){
-    const user = await authenticate(req);
+
+export async function POST(req) {
+    const ACTION = "S3 Delete";
+    let user;
+
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
+    }
+
     try {
         const formData = await req.formData();
         const fileName = formData.get('fileName');
-        if(!fileName){
-            return NextResponse.json({message: "No file found"}, { status: 400 });
+
+        if (!fileName) {
+            await logger(
+                user._id,
+                ACTION,
+                "No File Name Provided",
+                400
+            );
+            return NextResponse.json(
+                { message: "No file found" },
+                { status: 400 }
+            );
         }
+
         const response = await deleteFileS3(fileName);
-        logger(user._id,"S3 Delete",response,200);
-        return NextResponse.json({message: response}, { status: 200 });        
+        await logger(
+            user._id,
+            ACTION,
+            `File Deleted Successfully: ${fileName}`,
+            200
+        );
+        return NextResponse.json(
+            { message: response },
+            { status: 200 }
+        );
     } catch (error) {
-        logger(user._id,"S3 Delete",error,500);
-        console.log(error);
-        return NextResponse.json({message: error}, { status: 200 });
+        await logger(
+            user._id,
+            ACTION,
+            "File Deletion Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Failed to delete file" },
+            { status: 500 }
+        );
     }
 }

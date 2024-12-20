@@ -1,23 +1,42 @@
 import { NextResponse } from "next/server";
-import { connectMongoDB } from "@/lib/mongodb"; // Function to connect to MongoDB
-import Venues from "@/models/venue"; // Mongoose model for the Venues collection
-import { authenticate } from "@/lib/authenticate"; // Authentication function
-import { logger } from "@/lib/logger"; // Logging function
+import { connectMongoDB } from "@/lib/mongodb";
+import Venues from "@/models/venue";
+import { authenticate } from "@/lib/authenticate";
+import { logger } from "@/lib/logger";
 
 export async function POST(req) {
-    let user = { _id: "6134b2d9f1c8d8e1e0d8f4a3" };
-    // try {
-    //     user = await authenticate(req);
-    //     if (user.role !== "admin") {
-    //         throw new Error("Not authorized");
-    //     }
-    // } catch (error) {
-    //     logger("Not Auth", "Edit Venues", "Unknown Session", 401);
-    //     return NextResponse.json({ message: error.message }, { status: 401 });
-    // }
+    const ACTION = "Edit Venues";
+    let user;
 
-    // Ensure database connection
-    await connectMongoDB();
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
+    }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
 
     try {
         const { venues } = await req.json();
@@ -31,11 +50,23 @@ export async function POST(req) {
 
         await Venues.bulkWrite(bulkOperations);
 
-        logger(user._id, "Edit Venues", "Update successful", 200);
-        return NextResponse.json({ message: "Venues updated successfully" }, { status: 200 });
+        await logger(
+            user._id,
+            ACTION,
+            `Venues Updated Successfully: ${venues.length} venues`,
+            200
+        );
+        return NextResponse.json(
+            { message: "Venues updated successfully" },
+            { status: 200 }
+        );
     } catch (error) {
-        console.error("Error updating venues:", error);
-        logger(user._id, "Edit Venues", error, 500);
+        await logger(
+            user._id,
+            ACTION,
+            "Venues Update Failed: " + error.message,
+            500
+        );
         return NextResponse.json(
             { message: "An error occurred while updating data." },
             { status: 500 }
