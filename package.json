@@ -27,7 +27,7 @@
     "lodash": "^4.17.21",
     "mdb-react-ui-kit": "^7.0.0",
     "mongoose": "^7.4.1",
-    "next": "^15.1.2",
+    "next": "^14.2.17",
     "next-auth": "^4.22.3",
     "next-connect": "^1.0.0",
     "next-csrf": "^0.2.1",
