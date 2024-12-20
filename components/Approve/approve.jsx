@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,12 +11,56 @@ export default function Approve() {
   const [events, setEvents] = useState([]);
   const [message, setMessage] = useState("");
 
+  const getEvents = useCallback(async () => {
+    const user_id = session?.user?._id;
+    const dept = session?.user?.dept;
+    const userType = session?.user?.userType;
+    const college = session?.user?.college;
+
+    try {
+      const response = await fetch("/api/fetchApprove", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id,
+          dept,
+          college,
+          userType,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.message && data.message.length > 0) {
+        const currentDate = new Date();
+        const futureEvents = data.message.filter(
+          (event) => new Date(event.eventData.StartTime) > currentDate
+        );
+
+        if (futureEvents.length > 0) {
+          setEvents(futureEvents);
+          setMessage("");
+        } else {
+          setMessage("No future events to Approve.");
+          setEvents([]);
+        }
+      } else {
+        setMessage("No events to Approve.");
+        setEvents([]);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage("Error fetching events.");
+    }
+  }, [session?.user]);
+
   useEffect(() => {
-    // Only run getEvents() when the session is resolved (status is not 'loading')
     if (status === "authenticated" || status === "unauthenticated") {
       getEvents();
     }
-  }, [status, session]);
+  }, [status, getEvents]);
 
   if (status === "loading") {
     return (
@@ -35,51 +79,6 @@ export default function Approve() {
         Not Authorized !!
       </h1>
     );
-  }
-
-  async function getEvents() {
-    const user_id = session?.user?._id;
-    const dept = session?.user?.dept;
-    const userType = session?.user?.userType;
-    const college = session?.user?.college;
-
-    fetch("/api/fetchApprove", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id,
-        dept,
-        college,
-        userType,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.message && data.message.length > 0) {
-          const currentDate = new Date();
-          const futureEvents = data.message.filter(
-            (event) => new Date(event.eventData.StartTime) > currentDate
-          );
-
-          if (futureEvents.length > 0) {
-            setEvents(futureEvents);
-            console.log(futureEvents);
-            setMessage("");
-          } else {
-            setMessage("No future events to Approve.");
-            setEvents([]);
-          }
-        } else {
-          setMessage("No events to Approve.");
-          setEvents([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setMessage("Error fetching events.");
-      });
   }
 
   const formatDate = (dateString) => {

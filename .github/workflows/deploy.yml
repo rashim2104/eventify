@@ -23,7 +23,7 @@ jobs:
       # Step 3: Deploy to EC2 Instance
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@13.127.183.139 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@52.66.242.74 << 'EOF'
             # Navigate to your project directory
             cd /home/ubuntu/eventify
 

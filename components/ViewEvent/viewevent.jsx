@@ -93,34 +93,41 @@ function ViewEvent(props) {
     });
     console.log(isValid, errors);
     // console.log(eventData);
-  }, [isValid]);
+  }, [isValid, errors, props, setValue]);
+
+  useEffect(() => {
+    if (props.eventData) {
+      setValue("videoLinks", props.eventData.videoLinks || "");
+      setValue("amountSpent", props.eventData.amountSpent || "");
+    }
+  }, [isValid, errors, props, setValue]);
 
   const generatePDF = async () => {
-    console.log(props.data);
     try {
-            const response = await fetch("/api/generate-pdf", {
+      const response = await fetch("/api/generate-pdf", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ eventId: props.data._id }), // Send data to API route
+        body: JSON.stringify({ eventId: props.data._id }),
       });
 
-      // Handle the response as a PDF file
+      if (!response.ok) {
+        throw new Error('PDF generation failed');
+      }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-
-      // Create a download link and trigger the download
+      
       const link = document.createElement("a");
       link.href = url;
-      console.log(props.data);
       link.download = `Event_Report - ${props.data.ins_id} ${props.data.eventData.EventName}.pdf`;
       link.click();
 
-      // Clean up the URL object
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading PDF:", error);
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
     }
   };
 
