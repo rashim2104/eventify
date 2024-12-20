@@ -1,5 +1,4 @@
-import { useState } from "react";
-import React, { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import Image from "next/image";
 import "./Form.css";
@@ -388,8 +387,19 @@ function Form() {
   const eventVenueAddInfo = watch("eventVenueAddInfo");
 
   useEffect(() => {
-    console.log(getValues("eventVenueAddInfo"));
-  }, [eventVenueAddInfo]);
+    if (watch("eventVenueAddInfo")) {
+      getValues("eventVenueAddInfo");
+    }
+  }, [watch("eventVenueAddInfo"), getValues]);
+
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === "EventOrganizer" && value.EventOrganizer) {
+        setEventOrigin(value.EventOrganizer);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const [hasResourcePersons, setHasResourcePersons] = useState(null);
 
@@ -452,12 +462,6 @@ function Form() {
                     <option value="3">Clubs and Cells</option>
                     <option value="4">Other</option>
                   </select>
-
-                  {useEffect(() => {
-                    if (field?.value) {
-                      setEventOrigin(field.value);
-                    }
-                  }, [field?.value])}
 
                   {field.value == 2 && (
                     <div>

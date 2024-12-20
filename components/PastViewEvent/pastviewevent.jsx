@@ -197,11 +197,26 @@ class EventForm extends React.Component {
               style={{ display: "flex", flexDirection: "column", gap: "5px" }}
             >
               <span style={{ fontWeight: "bold" }}>Event Poster:</span>
-              <img
-                src={this.state.eventPoster}
-                alt="Event Poster"
-                style={{ maxWidth: "100%", height: "auto" }}
-              />
+              {this.state.eventPoster && (
+                <div className="flex justify-center mb-4">
+                  {this.state.eventPoster.endsWith('.pdf') ? (
+                    <iframe
+                      src={this.state.eventPoster}
+                      width={450}
+                      height={500}
+                      title="Event Poster PDF"
+                    />
+                  ) : (
+                    <Image
+                      src={this.state.eventPoster}
+                      alt="Event Poster"
+                      width={300}
+                      height={300}
+                      className="rounded-md"
+                    />
+                  )}
+                </div>
+              )}
             </label>
 
             {this.state.eventPhotos !== "" && (
@@ -209,10 +224,15 @@ class EventForm extends React.Component {
                 style={{ display: "flex", flexDirection: "column", gap: "5px" }}
               >
                 <span style={{ fontWeight: "bold" }}>Event Photos:</span>
-                <img
-                  src={this.state.eventPhotos}
-                  style={{ maxWidth: "100%", height: "auto" }}
-                />
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src={this.state.eventPhotos}
+                    alt="Event Photos"
+                    width={300}
+                    height={300}
+                    className="rounded-md"
+                  />
+                </div>
               </label>
             )}
           </form>

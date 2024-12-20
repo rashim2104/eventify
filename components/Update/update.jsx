@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import "@/components/CreateForm/Form.css";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function Update() {
   const { data: session, status } = useSession();
@@ -382,7 +383,7 @@ export default function Update() {
                   <label>Uploaded Successfully!</label>
                   <br />
                   {fileUrl.geoPhotos.map((photoUrl, index) => (
-                    <img
+                    <Image
                       key={index}
                       className="rounded-md"
                       height={300}
@@ -455,12 +456,12 @@ export default function Update() {
                       height={500}
                     />
                   ) : (
-                    <img
+                    <Image
                       height={300}
                       width={300}
                       className="rounded-md"
                       src={fileUrl.eventPoster}
-                      alt="eventPoster"
+                      alt="Event Poster"
                     />
                   )}
                   <button
@@ -518,12 +519,12 @@ export default function Update() {
                       height={500}
                     />
                   ) : (
-                    <img
+                    <Image
                       height={300}
                       width={300}
                       className="rounded-md"
                       src={fileUrl.financialCommitments}
-                      alt="financialCommitments"
+                      alt="Financial Commitments Document"
                     />
                   )}
                   <button
@@ -571,12 +572,12 @@ export default function Update() {
                   {fileUrl.report.endsWith(".pdf") ? (
                     <iframe src={fileUrl.report} width={450} height={500} />
                   ) : (
-                    <img
+                    <Image
                       height={300}
                       width={300}
                       className="rounded-md"
                       src={fileUrl.report}
-                      alt="report"
+                      alt="Event Report"
                     />
                   )}
                   <button

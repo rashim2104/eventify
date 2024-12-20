@@ -87,13 +87,15 @@ export default function EventInfo({ params }) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      if (redirectStatus) router.replace("/approve");
-      // Only run getEvents() when the session is resolved (status is not 'loading')
-      else if (status === "authenticated" || status === "unauthenticated") {
-        console.log("Use Effect");
+      if (redirectStatus) {
+        router.replace("/approve");
+        return;
+      }
+
+      if (status === "authenticated" || status === "unauthenticated") {
         const eventId = params.eventID;
-        // const dept = session?.user?.dept;
         const userType = session?.user?.userType;
+
         try {
           const response = await fetch("/api/eventDetails", {
             method: "POST",
@@ -105,6 +107,7 @@ export default function EventInfo({ params }) {
               userType,
             }),
           });
+          
           const data = await response.json();
           if (
             data.message &&
@@ -112,18 +115,15 @@ export default function EventInfo({ params }) {
             data.message !== "An error occurred while fetching data."
           ) {
             setEventDetails(data.message);
-            console.log(data.message);
             setStatusMessage("");
           } else {
             setStatusMessage("Error fetching details.");
             setEventDetails([]);
-            console.log(eventDetails);
           }
         } catch (error) {
           console.error("Error:", error);
           setStatusMessage("Error fetching details.");
           setEventDetails([]);
-          console.log(eventDetails);
         } finally {
           setLoading(false);
         }
@@ -131,7 +131,14 @@ export default function EventInfo({ params }) {
     };
 
     fetchData();
-  }, [status, redirectStatus]);
+  }, [
+    status,
+    redirectStatus,
+    router,
+    params.eventID,
+    session?.user?.userType,
+    eventDetails
+  ]);
 
   if (status === "loading") {
     return (

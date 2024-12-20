@@ -34,28 +34,29 @@ function ViewEvent(props) {
   const [file, setFile] = useState(null);
 
   useEffect(() => {
-    if (ieeeSocietiesShort.includes(props.data.dept)) {
-      setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 2, true);
-      setEventOrigin(2);
-      setEventSociety("IEEE");
+    if (props.data?.dept && props.eventData?.EventOrganizer) {
+      setEventOrigin(props.eventData.EventOrganizer);
+      
+      if (props.eventData.EventOrganizer === "2") {
+        setEventSociety(props.data.dept);
+        setCurrSoc(props.data.dept);
+      } else if (props.eventData.EventOrganizer === "4") {
+        setCurrSoc(props.data.dept);
+      }
     }
-    if (clubsShort.includes(props.data.dept)) {
-      setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 3, true);
-      setEventOrigin(3);
-      setEventSociety(props.data.dept);
-    }
-    if (societies.includes(props.data.dept)) {
-      setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 2, true);
-      setEventOrigin(2);
-      setEventSociety(props.data.dept);
-    }
-    if (props.eventData.EventOrganizer == 4) {
-      setCurrSoc(props.data.dept);
-    }
-  }, [isEdit]);
+  
+    return () => {
+      // Cleanup if needed
+      setEventOrigin(undefined);
+      setEventSociety("");
+      setCurrSoc("");
+    };
+  }, [
+    props.data?.dept,
+    props.eventData?.EventOrganizer,
+    setValue
+  ]);
+  
   const {
     watch,
     handleSubmit,
