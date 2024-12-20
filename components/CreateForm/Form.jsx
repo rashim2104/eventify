@@ -245,7 +245,7 @@ function Form() {
     }
   };
 
-// WH CHeck
+  // WH CHeck
 
   const handleDelete = async (e, action) => {
     e.preventDefault();
@@ -440,8 +440,8 @@ function Form() {
               render={({ field }) => (
                 <div className="space-box">
                   <label htmlFor="eventOrganizer">Event Organizer </label>
-                  <select {...field} className="round">
-                    <option value="" disabled selected>
+                  <select {...field} className="round" defaultValue="">
+                    <option value="" disabled>
                       Select an option
                     </option>
                     <option value="1">Department</option>
@@ -453,7 +453,11 @@ function Form() {
                     <option value="4">Other</option>
                   </select>
 
-                  {setEventOrigin(field.value)}
+                  {useEffect(() => {
+                    if (field?.value) {
+                      setEventOrigin(field.value);
+                    }
+                  }, [field?.value])}
 
                   {field.value == 2 && (
                     <div>
@@ -461,12 +465,13 @@ function Form() {
                         <select
                           {...field}
                           value={eventSociety}
+                          defaultValue=""
                           onChange={(e) => {
                             setEventSociety(e.target.value);
                           }}
                           className="round"
                         >
-                          <option value="" disabled selected>
+                          <option value="" disabled>
                             Select an Option
                           </option>
                           {societies.map((option, index) => (
@@ -506,12 +511,13 @@ function Form() {
                       <select
                         {...field}
                         value={eventSociety}
+                        defaultValue=""
                         onChange={(e) => {
                           setEventSociety(e.target.value);
                         }}
                         className="round"
                       >
-                        <option value="" disabled selected>
+                        <option value="" disabled>
                           Select an Option
                         </option>
                         {clubs.map((option, index) => (
@@ -562,8 +568,8 @@ function Form() {
               render={({ field }) => (
                 <div className="space-box">
                   <label htmlFor="eventType">Event Type </label>
-                  <select {...field} className="round">
-                    <option disabled selected value="">
+                  <select {...field} className="round" defaultValue="">
+                    <option disabled value="">
                       Select an option
                     </option>
                     <option value="Workshop">Workshop</option>

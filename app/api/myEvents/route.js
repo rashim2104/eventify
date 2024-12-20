@@ -4,34 +4,64 @@ import { connectMongoDB } from "@/lib/mongodb";
 import Events from "@/models/events";
 import { authenticate } from '@/lib/authenticate';
 import { authOptions } from "../auth/[...nextauth]/route";
-import  {logger} from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
-export async function POST(req, res) {
-  let user;
-  try {
-    user = await authenticate(req, authOptions);
-    // Continue with your logic here
-  } catch (error) {
-    logger("Not Auth","My Events","Unknown session",401);
-    return NextResponse.json(
-      { message: error.message },
-      { status: 401 }
-    );
-  }
-  // Ensure database connection
-  await connectMongoDB();
-  let userEvents;
-  try {
-    // Fetch all the events created by the user.
-    userEvents = await Events.find({ user_id: user._id });
-    logger(user._id,"My Events","Fetch Success",200);
-    return NextResponse.json({ message: userEvents }, { status: 200 });
-  } catch (error) {
-    logger(user._id,"My Events",error,500);
-    console.error("Error fetching event:", error);
-    return NextResponse.json(
-      { message: "An error occurred while fetching data." },
-      { status: 500 }
-    );
-  }
+export async function POST(req) {
+    const ACTION = "My Events";
+    let user;
+
+    try {
+        user = await authenticate(req, authOptions);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
+    }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
+    try {
+        const userEvents = await Events.find({ user_id: user._id });
+        await logger(
+            user._id,
+            ACTION,
+            `Events Fetched Successfully - Count: ${userEvents.length}`,
+            200
+        );
+        return NextResponse.json(
+            { message: userEvents },
+            { status: 200 }
+        );
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Events Fetch Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while fetching data." },
+            { status: 500 }
+        );
+    }
 }

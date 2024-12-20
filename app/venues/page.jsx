@@ -13,10 +13,16 @@ export default function Venues() {
   useEffect(() => {
     const fetchVenues = async () => {
       try {
-        const response = await fetch("/api/allVenues");
+        const response = await fetch("/api/allVenues", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
         if (response.ok) {
           const data = await response.json();
-          setVenues(data.venues);
+          setVenues(data.message);
         } else {
           toast.error("Error fetching venues");
         }
@@ -45,8 +51,8 @@ export default function Venues() {
           "Content-Type": "application/json",
         },
       });
-        if (response.ok) {
-          setIsEdit(false);
+      if (response.ok) {
+        setIsEdit(false);
         toast.success("Venues updated successfully");
       } else {
         toast.error("Error updating venues");

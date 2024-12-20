@@ -1,31 +1,71 @@
-// API route for creating a new event
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import Events from "@/models/events";
-import eventDetails from "@/app/events/[eventID]/page";
 import { authenticate } from "@/lib/authenticate";
 import { logger } from "@/lib/logger";
 
 export async function POST(req) {
-  const user = await authenticate(req);
-  // Ensure database connection
-  await connectMongoDB();
+    const ACTION = "Event Details";
+    let user;
 
-  const {eventId} = await req.json();
-  let eventDetails;
-  try {
-    if(user.userType !== 'student'){
-      //fetch all the events pending for approval
-      eventDetails = await Events.find({_id:eventId})
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
     }
-    logger(user._id,"Event Details","Fetched Successfully",200);
-    return NextResponse.json({ message: eventDetails }, { status: 200 });
-  } catch (error) {
-    logger(user._id,"Event Details",error,500);
-    console.error('Error fetching event details:', error);
-    return NextResponse.json(
-      { message: "An error occurred while fetching data." },
-      { status: 500 }
-    );
-  }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
+    try {
+        const { eventId } = await req.json();
+        let eventDetails;
+
+        if (user.userType !== 'student') {
+            eventDetails = await Events.find({ _id: eventId });
+        }
+
+        await logger(
+            user._id,
+            ACTION,
+            `Event Details Fetched Successfully - ID: ${eventId}`,
+            200
+        );
+        return NextResponse.json(
+            { message: eventDetails },
+            { status: 200 }
+        );
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Event Details Fetch Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while fetching data." },
+            { status: 500 }
+        );
+    }
 }

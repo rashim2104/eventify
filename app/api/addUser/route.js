@@ -1,4 +1,3 @@
-// API route for creating a new user
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import User from "@/models/user";
@@ -8,50 +7,102 @@ import { logger } from "@/lib/logger";
 import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req) {
+  const ACTION = "Add User";
 
-  // Authenticate the user
+  // Authentication check
   let user;
   try {
     user = await authenticate(req, authOptions);
   } catch (error) {
-    logger("Not Auth", "Add User", "Unknown Session", 401);
+    await logger(
+      "UNKNOWN",
+      ACTION,
+      "Authentication Failed: " + error.message,
+      401
+    );
     return NextResponse.json(
       { message: error.message },
       { status: 401 }
     );
   }
+
+  // Authorization check
   if (user.isSuperAdmin === 0) {
-    logger(user._id, "Add User", "Not Authorized", 401);
+    await logger(
+      user._id,
+      ACTION,
+      "Authorization Failed: Not a super admin",
+      403
+    );
     return NextResponse.json(
       { message: "You are not authorized to perform this action." },
-      { status: 401 }
+      { status: 403 }
     );
   }
-  // Ensure database connection
-  await connectMongoDB();
 
-  let valueToJson = await req.json();
-
-  const { name, dept, mail, password, userType, isSuperAdmin, college, role, phone, id } = valueToJson;
+  // Database connection
   try {
-    // Encrypt the password using bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10);
+    await connectMongoDB();
+  } catch (error) {
+    await logger(
+      user._id,
+      ACTION,
+      "Database Connection Failed: " + error.message,
+      500
+    );
+    return NextResponse.json(
+      { message: "Database connection failed" },
+      { status: 500 }
+    );
+  }
 
-    // Insert the user into the collection
+  // Parse request body
+  let valueToJson;
+  try {
+    valueToJson = await req.json();
+  } catch (error) {
+    await logger(
+      user._id,
+      ACTION,
+      "Invalid Request Body: " + error.message,
+      400
+    );
+    return NextResponse.json(
+      { message: "Invalid request body" },
+      { status: 400 }
+    );
+  }
+
+  return handleUserCreation(user, valueToJson, ACTION);
+}
+
+async function handleUserCreation(user, valueToJson, ACTION) {
+  const { name, dept, mail, password, userType, isSuperAdmin, college, role, phone, id } = valueToJson;
+
+  try {
+    // Check for existing user
     const existingUser = await User.findOne({ email: mail });
-
     if (existingUser) {
-      logger(user._id, "Add User", " User already exists", 400);
+      await logger(
+        user._id,
+        ACTION,
+        `User Creation Failed: Email ${mail} already exists`,
+        409
+      );
       return NextResponse.json(
         { message: "Email already exists." },
-        { status: 500 }
+        { status: 409 }
       );
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
     const createdUser = await User.create({
       name,
       dept,
-      college: college,
+      college,
       email: mail,
       password: hashedPassword,
       userType,
@@ -60,13 +111,29 @@ export async function POST(req) {
       phone,
       id,
     });
-    logger(user._id, "Add User", "User Added Successfully", 201);
-    return NextResponse.json({ message: "User Created." }, { status: 201 });
-  } catch (error) {
-    logger(user._id, "Add User", error, 500);
-    console.error('Error Creating User: ', error);
+
+    await logger(
+      user._id,
+      ACTION,
+      `User Created Successfully: ${mail}`,
+      201
+    );
+
     return NextResponse.json(
-      { message: "An error occurred while Creating User." },
+      { message: "User Created." },
+      { status: 201 }
+    );
+
+  } catch (error) {
+    await logger(
+      user._id,
+      ACTION,
+      `User Creation Failed: ${error.message}`,
+      500
+    );
+    console.error('Error Creating User:', error);
+    return NextResponse.json(
+      { message: "An error occurred while creating user." },
       { status: 500 }
     );
   }

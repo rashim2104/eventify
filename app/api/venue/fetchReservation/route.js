@@ -6,30 +6,65 @@ import { authenticate } from "@/lib/authenticate";
 import { logger } from "@/lib/logger";
 
 export async function POST(req) {
+    const ACTION = "Fetch Reservations";
+    let user;
 
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
+    }
 
-  let user = {
-    _id: "615c4e3a1b8c6f001f1e9f9b",
-    name: "admin",
-    userType: "admin"
-  }
-  // user = await authenticate(req);
-  
-  await connectMongoDB();
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
 
-  let valueToJson = await req.json();
+    try {
+        const valueToJson = await req.json();
+        const reservationDetails = await Reservation.find({ 
+            _id: { $in: valueToJson.resList } 
+        });
 
-  try {
-    const reservationDetails = await Reservation.find({ _id: { $in: valueToJson.resList } });
-
-    logger(user._id,"Fetch Reservations","Fetched Successfully",200);
-    return NextResponse.json({ message: reservationDetails }, { status: 200 });
-  } catch (error) {
-    logger(user._id,"Fetch Reservations",error,500);
-    console.error('Error Reservations: ', error);
-    return NextResponse.json(
-      { message: "An error occurred while fetching details." },
-      { status: 500 }
-    );
-  }
+        await logger(
+            user._id,
+            ACTION,
+            `Reservations Fetched Successfully - Count: ${reservationDetails.length}`,
+            200
+        );
+        return NextResponse.json(
+            { message: reservationDetails },
+            { status: 200 }
+        );
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Reservations Fetch Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while fetching details." },
+            { status: 500 }
+        );
+    }
 }

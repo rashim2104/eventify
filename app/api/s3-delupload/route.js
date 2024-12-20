@@ -13,65 +13,136 @@ const s3Client = new S3Client({
     }
 });
 
-async function uploadFiletoS3(buffer, fileName){
+async function uploadFiletoS3(buffer, fileName) {
     const fileBuffer = buffer;
     const fileParts = fileName.split('.');
     const fileExtension = fileParts.pop();
     const baseFileName = fileParts.join('.');
     const newFileName = `${baseFileName}-${Date.now()}.${fileExtension}`;
     const contentType = fileExtension === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    
     const uploadParams = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: newFileName,
         Body: fileBuffer,
         ContentType: contentType
     };
+    
     const command = new PutObjectCommand(uploadParams);
-    const data = await s3Client.send(command);
+    await s3Client.send(command);
     return newFileName;
 }
-async function deleteFileS3(fileName){
+
+async function deleteFileS3(fileName) {
     const deleteParams = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: fileName,
     };
-    const command = new DeleteObjectCommand (deleteParams);
-    const data = await s3Client.send(command);
-    return data;
+    const command = new DeleteObjectCommand(deleteParams);
+    return await s3Client.send(command);
 }
- 
-export async function POST(req){
-    const user = await authenticate(req);
-    await connectMongoDB();
+
+export async function POST(req) {
+    const ACTION = "S3 DeleteUpload";
+    let user;
+
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
+    }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
     try {
         const formData = await req.formData();
         const file = formData.get('file');
         const oldFileName = formData.get('oldFileName').replace("https://eventifys3.s3.ap-south-1.amazonaws.com/", "");
         const id = formData.get('id');
         const action = `eventData.fileUrl.${formData.get('action')}`;
-        if(!file){
-            logger(user._id,"S3 DeleteUpload","No file found",400);
-            return NextResponse.json({message: "No file found"}, { status: 400 });
+
+        if (!file) {
+            await logger(
+                user._id,
+                ACTION,
+                "No File Found",
+                400
+            );
+            return NextResponse.json(
+                { message: "No file found" },
+                { status: 400 }
+            );
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileName = await uploadFiletoS3(buffer, file.name);
-        
-        const delResponse = await deleteFileS3(oldFileName);
+        await logger(
+            user._id,
+            ACTION,
+            `File Uploaded Successfully: ${fileName}`,
+            200
+        );
+
+        await deleteFileS3(oldFileName);
+        await logger(
+            user._id,
+            ACTION,
+            `Old File Deleted Successfully: ${oldFileName}`,
+            200
+        );
 
         const updatedEvent = await Events.findOneAndUpdate(
             { _id: id },
             {
                 $set: {
-                    [action] : "https://eventifys3.s3.ap-south-1.amazonaws.com/" + fileName
+                    [action]: "https://eventifys3.s3.ap-south-1.amazonaws.com/" + fileName
                 },
-            },
+            }
         );
-        logger(user._id,"S3 DeleteUpload","Success",200);
-        return NextResponse.json({message: "https://eventifys3.s3.ap-south-1.amazonaws.com/"+fileName}, { status: 200 });        
+
+        await logger(
+            user._id,
+            ACTION,
+            `Event Updated Successfully - ID: ${id}`,
+            200
+        );
+        return NextResponse.json(
+            { message: "https://eventifys3.s3.ap-south-1.amazonaws.com/" + fileName },
+            { status: 200 }
+        );
+
     } catch (error) {
-        console.log(error);
-        logger(user._id,"S3 DeleteUpload",error,400);
-        return NextResponse.json({message: error}, { status: 400 });
+        await logger(
+            user._id,
+            ACTION,
+            "Operation Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred during the operation" },
+            { status: 500 }
+        );
     }
 }

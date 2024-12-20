@@ -4,52 +4,104 @@ import User from "@/models/user";
 import { authenticate } from '@/lib/authenticate';
 import { logger } from "@/lib/logger";
 
-// API route for updating a user
 export async function POST(req) {
-  const user = await authenticate(req);
-  if (!user.isSuperAdmin) {
-    logger(user._id, "Update User", "Not Authorized", 401);
-    return NextResponse.json(
-      { message: "You are not authorized to update a user." },
-      { status: 401 }
-    );
-  }
+    const ACTION = "Update User";
+    let user;
 
-  await connectMongoDB();
-
-  const valueToJson = await req.json();
-  const { _id, name, dept, mail, userType, isSuperAdmin, college, phoneNumber } = valueToJson; // Include new fields
-
-  try {
-    const existingUser = await User.findById(_id);
-
-    if (!existingUser) {
-      logger(user._id, "Update User", "User not found", 404);
-      return NextResponse.json(
-        { message: "User not found." },
-        { status: 404 }
-      );
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
+        );
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
     }
 
-    // Update the user details with new schema fields
+    if (!user.isSuperAdmin) {
+        await logger(
+            user._id,
+            ACTION,
+            "Authorization Failed: Not Super Admin",
+            403
+        );
+        return NextResponse.json(
+            { message: "You are not authorized to update a user" },
+            { status: 403 }
+        );
+    }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
+    try {
+        return await updateUser(user, req);
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "User Update Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while updating user" },
+            { status: 500 }
+        );
+    }
+}
+
+async function updateUser(user, req) {
+    const { _id, name, dept, mail, userType, isSuperAdmin, college, phoneNumber } = await req.json();
+        
+    const existingUser = await User.findById(_id);
+    if (!existingUser) {
+        await logger(
+            user._id,
+            "Update User",
+            "User Not Found",
+            404
+        );
+        return NextResponse.json(
+            { message: "User not found" },
+            { status: 404 }
+        );
+    }
+
     existingUser.name = name;
     existingUser.dept = dept;
     existingUser.email = mail;
     existingUser.userType = userType;
     existingUser.isSuperAdmin = isSuperAdmin ? 1 : 0;
     existingUser.college = college;
-    existingUser.phoneNumber = phoneNumber; // Update new field
+    existingUser.phoneNumber = phoneNumber;
 
     await existingUser.save();
-    logger(user._id, "Update User", "User Updated", 200);
-
-    return NextResponse.json({ message: "User updated." }, { status: 200 });
-  } catch (error) {
-    logger(user._id, "Update User", error, 500);
-    console.error('Error updating user: ', error);
-    return NextResponse.json(
-      { message: "An error occurred while updating user." },
-      { status: 500 }
+    
+    await logger(
+        user._id,
+        "Update User",
+        "User Updated Successfully",
+        200
     );
-  }
+    return NextResponse.json(
+        { message: "User updated" },
+        { status: 200 }
+    );
 }

@@ -2,49 +2,96 @@
 import { NextResponse } from "next/server";
 import { connectMongoDB } from "@/lib/mongodb";
 import User from "@/models/user";
-import { authenticate } from '@/lib/authenticate';
+import { authenticate } from "@/lib/authenticate";
 import { logger } from "@/lib/logger";
 
 export async function POST(req) {
-  const user = await authenticate(req);
-  if(!user.isSuperAdmin){
-    logger(user._id,"Fetch User","Not Authorized",401);
-    return NextResponse.json(
-      { message: "You are not authorized to perform this action." },
-      { status: 401 }
-    );
-  }
-  // Ensure database connection
-  await connectMongoDB();
+    const ACTION = "Fetch User";
+    let user;
 
-  const {action, mail} = await req.json();
-  let userDetails;
-  try {
-    if(action === 'fetchUser'){
-      // Fetch the details of the user.
-      userDetails = await User.find({ email: mail });
-      if (userDetails.length === 0) {
-        logger(user._id,"Fetch User","Not Found",404);
-        return NextResponse.json(
-          { message: "User not found" },
-          { status: 200 }
+    try {
+        user = await authenticate(req);
+    } catch (error) {
+        await logger(
+            "UNKNOWN",
+            ACTION,
+            "Authentication Failed: " + error.message,
+            401
         );
-      } else {
-        logger(user._id,"Fetch User","Fetched Successfully",200);
-        return NextResponse.json({ message: userDetails }, { status: 200 });
-      }
-    }else if(action === 'deleteUser'){
-      // Delete the user from the collection
-      const deletedUser = await User.deleteOne({ email: mail });
-      logger(user._id,"Delete User","Deleted Successfully",200);
-      return NextResponse.json({ message: "User Deleted Successfully" }, { status: 200 });
+        return NextResponse.json(
+            { message: "Authentication failed" },
+            { status: 401 }
+        );
     }
-  } catch (error) {
-    console.error('Error processing event:', error);
-    logger(user._id,"Fetch User",error,500);
-    return NextResponse.json(
-      { message: "An error occurred while fetching data." },
-      { status: 500 }
-    );
-  }
+
+    if (!user.isSuperAdmin) {
+        await logger(
+            user._id,
+            ACTION,
+            "Authorization Failed: Not Super Admin",
+            403
+        );
+        return NextResponse.json(
+            { message: "You are not authorized to perform this action." },
+            { status: 403 }
+        );
+    }
+
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "Database Connection Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "Database connection failed" },
+            { status: 500 }
+        );
+    }
+
+    try {
+        const { action, mail } = await req.json();
+
+        if (action === "fetchUser") {
+            const userDetails = await User.find({ email: mail });
+            
+            if (userDetails.length === 0) {
+                await logger(
+                    user._id,
+                    ACTION,
+                    `User Not Found: ${mail}`,
+                    404
+                );
+                return NextResponse.json(
+                    { message: "User not found" },
+                    { status: 404 }
+                );
+            }
+
+            await logger(
+                user._id,
+                ACTION,
+                `User Details Fetched Successfully - Email: ${mail}`,
+                200
+            );
+            return NextResponse.json(
+                { message: userDetails },
+                { status: 200 }
+            );
+        }
+    } catch (error) {
+        await logger(
+            user._id,
+            ACTION,
+            "User Fetch Failed: " + error.message,
+            500
+        );
+        return NextResponse.json(
+            { message: "An error occurred while fetching user details" },
+            { status: 500 }
+        );
+    }
 }
