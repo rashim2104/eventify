@@ -3,46 +3,33 @@ name: Deploy to EC2 on Push
 on:
   push:
     branches:
-      - main # Trigger this workflow on push to the 'main' branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the Repository
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }} # Use your configured SSH key
+      - name: Create SSH key file
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_PEM_KEY }}" > ~/.ssh/eventify.pem
+          chmod 600 ~/.ssh/eventify.pem
 
-      # Step 3: Deploy to EC2 Instance
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@52.66.242.74 << 'EOF'
-            # Navigate to your project directory
+          ssh -i ~/.ssh/eventify.pem -o StrictHostKeyChecking=no ubuntu@ec2-52-66-242-74.ap-south-1.compute.amazonaws.com << 'EOF'
             cd /home/ubuntu/eventify
-
-            # Pull the latest changes from the main branch
             git pull origin main
-
-            # Install dependencies
             npm install
-
-            # Build the project (if applicable)
             npm run build
-
-            # Start or restart the application using PM2
             if pm2 list | grep -q 'eventify'; then
-              pm2 restart eventify  # Restart if already running
+              pm2 restart eventify
             else
-              pm2 start npm --name "eventify" -- start  # Start if not running
+              pm2 start npm --name "eventify" -- start
             fi
-
-            # Save the PM2 process list to make it persist across reboots
             pm2 save
           EOF
