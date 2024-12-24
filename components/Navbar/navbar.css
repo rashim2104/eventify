@@ -76,3 +76,13 @@ nav{
     width:120px;
   }
 }
+
+@media (max-width: 768px) {
+  .logo-img {
+    max-width: 150px;
+  }
+  
+  .spacer {
+    height: 1rem;
+  }
+}

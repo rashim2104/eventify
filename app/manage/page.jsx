@@ -9,6 +9,7 @@ import {
   clubs,
   clubsShort,
 } from "../../public/data/data";
+import { set } from "lodash";
 
 export default function Manage() {
   const { data: session, status } = useSession();
@@ -19,6 +20,8 @@ export default function Manage() {
   const [collegeName, setCollegeName] = useState("");
   const [dept, setDept] = useState("");
   const [mail, setMail] = useState("");
+  const [staffId, setstaffId] = useState("");
+  const [college, setCollege] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState("");
@@ -41,7 +44,11 @@ export default function Manage() {
     setMail("");
     setPassword("");
     setUserType("");
+    setstaffId("");
     setIsSuperAdmin("");
+    setPhone("");
+    setRole("");
+    setCollege("");
   };
   const handleFetch = async (e) => {
     e.preventDefault();
@@ -60,7 +67,7 @@ export default function Manage() {
       if (response.ok) {
         const data = await response.json();
         if (data.message === "User not found") {
-          toast.error("User not found");
+          toast.error("User not found!");
           return;
         }
         setId(data.message[0]._id);
@@ -69,6 +76,10 @@ export default function Manage() {
         setMail(data.message[0].email);
         setUserType(data.message[0].userType);
         setIsSuperAdmin(data.message[0].isSuperAdmin);
+        setstaffId(data.message[0].id);
+        setPhone(data.message[0].phone);
+        setRole(data.message[0].role);
+        setCollege(data.message[0].college);
         const receivedDept = data.message[0].dept;
         let college = data.message[0].college;
         if (ieeeSocietiesShort.includes(receivedDept)) {
@@ -94,7 +105,6 @@ export default function Manage() {
     } catch (error) {
       console.error("Failed to fetch user", error);
     }
-    // <Toaster richColors/>toast.success('User fetched successfully.');
   };
 
   const handleChangePassword = async () => {
@@ -135,6 +145,7 @@ export default function Manage() {
       });
       if (response.ok) {
         clearForm();
+        toast.success("User updated successfully!");
       }
     } catch (error) {
       console.error("Failed to update user", error);
@@ -195,7 +206,6 @@ export default function Manage() {
       });
 
       if (response.ok) {
-        // Reset form
         clearForm();
         setDisplayForm(false);
         toast.success("User added successfully!");
@@ -580,94 +590,130 @@ export default function Manage() {
           )
         : null}
 
-      {selectedHosting === "hosting-big"
-        ? displayEditForm && (
-            <>
-              <p className="text-3xl m-3 font-bold">Edit User</p>
-              <form
-                onSubmit={handleFetch}
-                className="bg-gray-200 p-4 rounded m-2 md:w-2/3"
-              >
-                <label className="block mb-4">
-                  Email Address
-                  <input
-                    type="email"
-                    required
-                    name="fetchEmail"
-                    id="fetchEmail"
-                    onChange={(e) => setFetchEmail(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
-                  onClick={handleFetch}
+      {selectedHosting === "hosting-big" && displayEditForm && (
+        <>
+          <p className="text-3xl m-3 font-bold">Edit User</p>
+          
+          {/* Fetch Form */}
+          <form onSubmit={handleFetch} className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
+            <label className="block mb-4">
+              Email Address
+              <input
+                type="email"
+                required
+                name="fetchEmail"
+                id="fetchEmail"
+                onChange={(e) => setFetchEmail(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+              />
+            </label>
+            <button
+              type="button"
+              className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+              onClick={handleFetch}
+            >
+              Fetch User
+            </button>
+          </form>
+      
+          {/* Edit Form */}
+          {id.length !== "" && (
+            <form className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
+              <label className="block mb-4">
+                Name
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="border rounded-md px-3 py-2 mt-1 w-full"
+                  required
+                />
+              </label>
+              
+              <label className="block mb-4">
+                Email Address
+                <input
+                  type="email"
+                  value={mail}
+                  disabled
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full bg-gray-100"
+                />
+              </label>
+      
+              <label className="block mb-4">
+                Staff ID
+                <input
+                  type="text"
+                  value={staffId}
+                  onChange={(e) => setStaffId(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  required
+                />
+              </label>
+      
+              <label className="block mb-4">
+                Phone Number
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  pattern="[0-9]{10}"
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  required
+                />
+              </label>
+      
+              <label className="block mb-4">
+                Role
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  required
+                />
+              </label>
+      
+              <label className="block mb-4">
+                User Type
+                <select
+                  value={userType}
+                  onChange={(e) => setUserType(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  required
                 >
-                  Fetch User
-                </button>
-              </form>
-
-              {id.length !== "" && (
-                <form className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
-                  {/* Add fields as per the new schema */}
-                  <label className="block mb-4">
-                    User Name
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="border rounded-md px-3 py-2 mt-1 w-full"
-                    />
-                  </label>
-                  <label className="block mb-4">
-                    Email Address
-                    <input
-                      type="email"
-                      value={mail}
-                      onChange={(e) => setMail(e.target.value)}
-                      disabled
-                      className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                    />
-                  </label>
-                  {/* Additional fields specific to the new schema */}
-                  <label className="block mb-4">
-                    Phone Number
-                    <input
-                      type="text"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                    />
-                  </label>
-                  <label className="block mb-4">
-                    Role
-                    <select
-                      value={userType}
-                      onChange={(e) => setUserType(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                    >
-                      <option value="" disabled selected>
-                        Select a role
-                      </option>
-                      <option value="admin">Admin</option>
-                      <option value="HOD">HOD</option>
-                      <option value="staff">Staff</option>
-                    </select>
-                  </label>
-                  {/* Add any other new fields */}
-                  <button
-                    type="button"
-                    className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
-                    onClick={handleUpdate}
-                  >
-                    Update User
-                  </button>
-                </form>
-              )}
-            </>
-          )
-        : null}
+                  <option value="">Select User Type</option>
+                  <option value="admin">Admin</option>
+                  <option value="HOD">HOD</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </label>
+      
+              <label className="block mb-4">
+                College
+                <select
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  required
+                >
+                  <option value="">Select College</option>
+                  <option value="SIT">SIT</option>
+                  <option value="SEC">SEC</option>
+                </select>
+              </label>
+      
+              <button
+                type="button"
+                className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                onClick={handleUpdate}
+              >
+                Update User
+              </button>
+            </form>
+          )}
+        </>
+      )}
     </>
   );
 }

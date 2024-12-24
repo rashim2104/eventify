@@ -33,36 +33,37 @@ function Navbar() {
   }, [pathname]);
 
   return (
-      <>
-        {print && (
-          <>
-            <nav className="flex justify-between items-center p-4 text-white">
-              <Link href="/dashboard">
-                <Image
-                  className="logo-img"
-                  src="/assets/images/logo.png"
-                  width={185}
-                  height={100}
-                  alt="logo"
-                />
-              </Link>
-              <div className="flex items-center text-black font-bold">
-                {session && session.user && (
-                  <span className="mr-4">Hello, {session.user.name}</span>
-                )}
-                <button
-                  onClick={() => signOut()}
-                  className="sign-out-btn bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
-                >
-                  <span>Sign out</span>
-                </button>
-              </div>
-            </nav>
-            <div className="spacer">&nbsp;</div>
-          </>
-        )}
-      </>
-    );
+    <>
+      {print && (
+        <>
+          <nav className="flex justify-between items-center p-4 text-white">
+            <Link href="/dashboard">
+              <Image
+                className="logo-img"
+                src="/assets/images/logo.png"
+                width={185}
+                height={100}
+                quality={100}
+                alt="logo"
+              />
+            </Link>
+            <div className="flex items-center text-black font-bold">
+              {session && session.user && (
+                <span className="mr-4">Hello, {session.user.name}</span>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="sign-out-btn bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
+              >
+                <span>Sign out</span>
+              </button>
+            </div>
+          </nav>
+          <div className="spacer">&nbsp;</div>
+        </>
+      )}
+    </>
+  );
 }
 
 export default Navbar;
