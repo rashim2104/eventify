@@ -22,12 +22,12 @@ jobs:
 
       # Step 3: Test SSH Connection (Debugging Step)
       - name: Test SSH Connection
-        run: ssh -o StrictHostKeyChecking=no ubuntu@52.66.242.74 echo "SSH connection successful"
+        run: ssh -o StrictHostKeyChecking=no ubuntu@13.232.47.245 echo "SSH connection successful"
 
-      # Step 4: Deploy to EC2 Instance
+      # Step 4: Deploy to EC2
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@52.66.242.74 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@13.232.47.245 << 'EOF'
             # Navigate to your project directory
             cd /home/ubuntu/eventify
 
@@ -49,4 +49,12 @@ jobs:
 
             # Save the PM2 process list to make it persist across reboots
             pm2 save
+          EOF
+
+      # Step 5: Restart Nginx (if needed)
+      - name: Restart Nginx
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@13.232.47.245 << 'EOF'
+            # Restart Nginx if there are any configuration changes
+            sudo systemctl restart nginx
           EOF
