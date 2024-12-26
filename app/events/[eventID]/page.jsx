@@ -87,15 +87,13 @@ export default function EventInfo({ params }) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      if (redirectStatus) {
-        router.replace("/approve");
-        return;
-      }
-
-      if (status === "authenticated" || status === "unauthenticated") {
+      if (redirectStatus) router.replace("/approve");
+      // Only run getEvents() when the session is resolved (status is not 'loading')
+      else if (status === "authenticated" || status === "unauthenticated") {
+        console.log("Use Effect");
         const eventId = params.eventID;
+        // const dept = session?.user?.dept;
         const userType = session?.user?.userType;
-
         try {
           const response = await fetch("/api/eventDetails", {
             method: "POST",
@@ -107,7 +105,6 @@ export default function EventInfo({ params }) {
               userType,
             }),
           });
-          
           const data = await response.json();
           if (
             data.message &&
@@ -115,15 +112,18 @@ export default function EventInfo({ params }) {
             data.message !== "An error occurred while fetching data."
           ) {
             setEventDetails(data.message);
+            console.log(data.message);
             setStatusMessage("");
           } else {
             setStatusMessage("Error fetching details.");
             setEventDetails([]);
+            console.log(eventDetails);
           }
         } catch (error) {
           console.error("Error:", error);
           setStatusMessage("Error fetching details.");
           setEventDetails([]);
+          console.log(eventDetails);
         } finally {
           setLoading(false);
         }
@@ -131,14 +131,7 @@ export default function EventInfo({ params }) {
     };
 
     fetchData();
-  }, [
-    status,
-    redirectStatus,
-    router,
-    params.eventID,
-    session?.user?.userType,
-    eventDetails
-  ]);
+  }, [status, redirectStatus]);
 
   if (status === "loading") {
     return (
@@ -148,8 +141,12 @@ export default function EventInfo({ params }) {
     );
   }
   const currUser = session?.user?.userType;
-  if(currUser === 'student'){
-    return <h1 className='grid place-items-center h-screen text-7xl text-red-600	font-extrabold'>Not Authorized !!</h1>
+  if (currUser === "student") {
+    return (
+      <h1 className="grid place-items-center h-screen text-7xl text-red-600	font-extrabold">
+        Not Authorized !!
+      </h1>
+    );
   }
   return (
     <>
@@ -192,7 +189,7 @@ export default function EventInfo({ params }) {
                         const approvalNeeded = window.prompt(
                           "Does this event need principal's approval? (yes/no)"
                         );
-                        if (approvalNeeded.toLowerCase() === "yes"){
+                        if (approvalNeeded.toLowerCase() === "yes") {
                           handleChange(eventDetails[0]._id, "ApprovePrinc");
                         } else {
                           handleChange(eventDetails[0]._id, "Approve");
