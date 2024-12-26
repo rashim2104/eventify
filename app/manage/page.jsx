@@ -135,12 +135,14 @@ export default function Manage() {
         body: JSON.stringify({
           _id: id,
           name,
-          college: collegeName,
+          college,
           dept: dept === "IEEE" ? currSoc : userType === "admin" ? "-" : dept,
           mail,
-          phoneNumber, // New field
           userType,
           isSuperAdmin,
+          phoneNumber: phone,
+          staffId,
+          role
         }),
       });
       if (response.ok) {
@@ -149,6 +151,7 @@ export default function Manage() {
       }
     } catch (error) {
       console.error("Failed to update user", error);
+      toast.error("Failed to update user");
     }
   };
 
