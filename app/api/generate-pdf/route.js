@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 export async function POST(req) {
   const ACTION = "Generate PDF";
   let user;
+  let browser;
 
   try {
     user = await authenticate(req);
@@ -41,12 +42,56 @@ export async function POST(req) {
       );
     }
 
-    const browser = await puppeteer.launch({
+    const browserOptions = {
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+      executablePath: '/usr/bin/chromium-browser',  // Use system Chromium
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',  // Disable /dev/shm use
+        '--disable-gpu',            // Disable GPU hardware acceleration
+        '--no-zygote',             // Disable zygote process
+        '--single-process',         // Run in single process mode
+        '--disable-extensions',     // Disable extensions
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--disable-translate',
+        '--hide-scrollbars',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--window-size=1920,1080',
+      ],
+      ignoreHTTPSErrors: true,
+      timeout: 30000,              // 30 second timeout
+    };
+
+    try {
+      browser = await puppeteer.launch(browserOptions);
+    } catch (browserError) {
+      await logger(
+        user._id,
+        ACTION,
+        "Browser Launch Failed: " + browserError.message,
+        500
+      );
+      throw new Error(`Failed to launch browser: ${browserError.message}`);
+    }
 
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(30000);  // 30 second navigation timeout
+    
+    // Minimize memory usage
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      if (['image', 'stylesheet', 'font'].includes(request.resourceType())) {
+        request.continue();
+      } else {
+        request.abort();
+      }
+    });
 
     const htmlContent = `
       <html>
@@ -267,36 +312,49 @@ export async function POST(req) {
       </html>
     `;
 
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    try {
+      await page.setContent(htmlContent, { 
+        waitUntil: "networkidle0",
+        timeout: 30000 
+      });
 
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "0.5in",
-        right: "0.5in",
-        bottom: "0.5in",
-        left: "0.5in",
-      },
-    });
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "0.5in",
+          right: "0.5in",
+          bottom: "0.5in",
+          left: "0.5in",
+        },
+        timeout: 30000
+      });
 
-    await browser.close();
+      await browser.close();
 
-    await logger(
-      user._id,
-      ACTION,
-      `PDF Generated Successfully - Event: ${eventData.eventData.EventName}`,
-      200
-    );
+      await logger(
+        user._id,
+        ACTION,
+        `PDF Generated Successfully - Event: ${eventData.eventData.EventName}`,
+        200
+      );
 
-    return new Response(pdfBuffer, {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${eventData.eventData.EventName}.pdf"`,
-      },
-    });
+      return new Response(pdfBuffer, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${eventData.eventData.EventName}.pdf"`,
+        },
+      });
+
+    } catch (pageError) {
+      await browser.close();
+      throw new Error(`PDF generation failed: ${pageError.message}`);
+    }
 
   } catch (error) {
+    if (browser) {
+      await browser.close();
+    }
     await logger(
       user?._id || "UNKNOWN",
       ACTION,
