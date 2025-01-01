@@ -36,6 +36,15 @@ body {
   box-shadow: 0 0 5px black;
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;
+}
+
 @media screen and (max-width: 768px) {
   .marker {
     width: 16px;

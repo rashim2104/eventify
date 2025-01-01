@@ -40,7 +40,7 @@ export default function HomePage() {
               </Link>
             ) : (
               <Link
-                href="/login"
+                href="/dashboard"
                 className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5"
               >
                 Login
@@ -85,55 +85,55 @@ export default function HomePage() {
       <div id="features" className="py-20 bg-white/50 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16">
-            Everything You Need to Manage Events
+            Comprehensive Event Management Features
           </h2>
           <div className="grid md:grid-cols-3 gap-10">
             {[
               {
-                title: "Smart Event Creation",
+                title: "Smart Event Forms",
                 description:
-                  "Create detailed event proposals with custom forms and automated validation.",
+                  "Create and edit event proposals with customizable forms and detailed planning options.",
                 icon: "📝",
                 color: "bg-blue-50",
                 iconBg: "bg-blue-500",
               },
               {
-                title: "Streamlined Approvals",
+                title: "Venue Management",
                 description:
-                  "Track multi-level approvals in real-time with automatic notifications.",
-                icon: "✅",
+                  "Book venues, check availability, and manage reservations with calendar integration.",
+                icon: "🏛️",
                 color: "bg-green-50",
                 iconBg: "bg-green-500",
               },
               {
-                title: "Resource Management",
+                title: "Approval Tracking",
                 description:
-                  "Efficiently manage venues, equipment, and staff assignments.",
-                icon: "🎯",
+                  "Real-time tracking of multi-level approvals with status updates and history.",
+                icon: "✅",
                 color: "bg-orange-50",
                 iconBg: "bg-orange-500",
               },
               {
-                title: "Real-time Tracking",
+                title: "Post-Event Documentation",
                 description:
-                  "Get live updates on event status and progress for better decision-making.",
-                icon: "📊",
+                  "Collect event photos, attendance records, and OD lists through structured forms.",
+                icon: "📸",
                 color: "bg-purple-50",
                 iconBg: "bg-purple-500",
               },
               {
-                title: "Role-based Access",
+                title: "Email Notifications",
                 description:
-                  "HODs, staff, and students get tailored access to streamline responsibilities.",
-                icon: "👥",
+                  "Automated alerts for approvals, rejections, and important updates.",
+                icon: "✉️",
                 color: "bg-yellow-50",
                 iconBg: "bg-yellow-500",
               },
               {
-                title: "Email Notifications",
+                title: "Report Generation",
                 description:
-                  "Stay updated with automated email alerts for approvals and tasks.",
-                icon: "✉️",
+                  "Generate comprehensive reports for multiple events with custom filters.",
+                icon: "📊",
                 color: "bg-red-50",
                 iconBg: "bg-red-500",
               },
@@ -160,29 +160,34 @@ export default function HomePage() {
       <div className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16">
-            Simple 4-Step Process
+            Event Management Workflow
           </h2>
           <div className="space-y-6 max-w-3xl mx-auto">
             {[
               {
                 step: "1",
-                title: "Sign In",
-                description: "Secure institutional login.",
+                title: "Create Event Request",
+                description: "Submit detailed event proposals using smart forms.",
               },
               {
                 step: "2",
-                title: "Create Event",
-                description: "Use intuitive forms to submit details.",
+                title: "Book Venue",
+                description: "Check availability and reserve venues for your dates.",
               },
               {
                 step: "3",
-                title: "Get Approved",
-                description: "Quick multi-level approval system.",
+                title: "Track Approvals",
+                description: "Monitor approval status across different levels.",
               },
               {
                 step: "4",
-                title: "Execute Event",
-                description: "Coordinate resources efficiently.",
+                title: "Conduct Event",
+                description: "Execute event and submit post-event documentation.",
+              },
+              {
+                step: "5",
+                title: "Generate Reports",
+                description: "Create comprehensive event reports and analytics.",
               },
             ].map((step, index) => (
               <div
@@ -225,8 +230,7 @@ export default function HomePage() {
             />
           </div>
           <p className="text-gray-400">
-            © {new Date().getFullYear()} Eventify - Transforming College Event
-            Management.
+            © {new Date().getFullYear()} Eventify - Sairam Institutions.
           </p>
         </div>
       </footer>
