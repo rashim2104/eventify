@@ -11,7 +11,7 @@ const reservationSchema = new Schema(
       required: true,
     },
     reservationDate: {
-      type: String,
+      type: Date,  // Change to Date type
       required: true,
     },
     venueName: {
