@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function Venues() {
   const { data: session, status } = useSession();
@@ -81,26 +82,40 @@ export default function Venues() {
     <div className="bg-gray-200 flex flex-col mt-5 p-12 rounded-xl">
       <div className="flex gap-3 items-center">
         <p className="text-3xl font-bold">Venues</p>
-        {venues.length > 0 && (
-          <div
-            className="cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center"
-            onClick={() => {
-              setIsEdit((prevIsEdit) => !prevIsEdit);
-              toast.info(
-                !isEdit
-                  ? "You can edit the details now!"
-                  : "Editing is disabled."
-              );
-            }}
-          >
-            <Image
-              src={"/assets/icons/edit.png"}
-              width={30}
-              height={30}
-              alt="Edit"
-            />
-          </div>
-        )}
+        <div className="flex gap-2">
+          {venues.length > 0 && (
+            <>
+              <div
+                className="cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center"
+                onClick={() => {
+                  setIsEdit((prevIsEdit) => !prevIsEdit);
+                  toast.info(
+                    !isEdit
+                      ? "You can edit the details now!"
+                      : "Editing is disabled."
+                  );
+                }}
+              >
+                <Image
+                  src={"/assets/icons/edit.png"}
+                  width={30}
+                  height={30}
+                  alt="Edit"
+                />
+              </div>
+              <Link href="/venues/reservations">
+                <div className="cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center">
+                  <Image
+                    src={"/assets/icons/edit.png"}
+                    width={30}
+                    height={30}
+                    alt="Reservations"
+                  />
+                </div>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
       {venues.length > 0 ? (
         <table className="w-full table-auto mt-4">

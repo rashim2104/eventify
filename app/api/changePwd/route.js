@@ -100,8 +100,17 @@ export async function POST(req) {
                 "Password Changed Successfully",
                 201
             );
+
+            // Send updated session info
             return NextResponse.json(
-                { message: "Password Changed" },
+                { 
+                    message: "Password Changed",
+                    hasDefaultPassword: false,
+                    user: {
+                        ...user.toObject(),
+                        password: newPasswordHashed
+                    }
+                },
                 { status: 201 }
             );
         }

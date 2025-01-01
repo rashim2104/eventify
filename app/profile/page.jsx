@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function Profile() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,8 +41,16 @@ export default function Profile() {
     checkPasswordStrength(newPassword);
   }, [newPassword]);
 
+  useEffect(() => {
+    if (session?.user?.hasDefaultPassword) {
+      toast.warning("Please change your default password to continue using the application", {
+        duration: 5000,
+      });
+    }
+  }, [session]);
+
   const handleChangePassword = async () => {
-    var email = session?.user?.email;
+    const email = session?.user?.email;
     setSubmitting(true);
 
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -66,30 +74,33 @@ export default function Profile() {
     try {
       const response = await fetch("/api/changePwd", {
         method: "POST",
-        body: JSON.stringify({
-          action: "user",
-          email,
-          oldPassword,
-          newPassword,
-        }),
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          email,
+          oldPassword,
+          newPassword,
+          action: "user"
+        }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        if (data.message === "Password Changed") {
-          toast.success("Password changed successfully");
-          setOldPassword("");
-          setNewPassword("");
-          setConfirmPassword("");
-        } else {
-          toast.error(data.message || "Failed to change password");
+      if (response.ok && data.message === "Password Changed") {
+        toast.success("Password changed successfully");
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+
+        // Only update session if user had default password
+        if (session?.user?.hasDefaultPassword === true) {
+          await updateSession({
+            hasDefaultPassword: false,
+          });
         }
       } else {
-        toast.error(data.message || "Error changing password");
+        toast.error(data.message || "Failed to change password");
       }
     } catch (error) {
       toast.error("An error occurred while changing password");
@@ -107,7 +118,13 @@ export default function Profile() {
   }
 
   return (
-    <div>
+    <div className="p-6">
+      {session?.user?.hasDefaultPassword && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+          <p className="font-bold">Warning!</p>
+          <p>You are using the default password. Please change it before continuing.</p>
+        </div>
+      )}
       <p className="text-4xl font-bold"> Hello, {session?.user?.name}</p>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="bg-gray-200 flex flex-col md:w-1/2 mt-5 p-12 rounded-xl">
