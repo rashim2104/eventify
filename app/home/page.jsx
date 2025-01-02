@@ -216,7 +216,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-6">
             <div className="w-48 md:w-auto">
               <Image
-                src="/assets/images/SairamEOMS.png"
+                src="/assets/images/SairamEOMS-white.png"
                 width={180}
                 height={70}
                 quality={100}
@@ -228,7 +228,7 @@ export default function HomePage() {
             <div className="hidden md:block border-l border-gray-600 h-16"></div>
             <div className="w-48 md:w-auto">
               <Image
-                src="/assets/images/logo.png"
+                src="/assets/images/logo-white.png"
                 width={180}
                 height={70}
                 quality={100}
