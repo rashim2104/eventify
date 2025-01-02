@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import "../styles/doodle.css";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -20,7 +21,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navigation Bar */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-md fixed w-full z-10">
+      <nav className="bg-white/80 backdrop-blur-md shadow-md fixed w-full z-50">
         <div className="w-full px-4">
           <div className="flex justify-between items-center h-16">
             <Image
@@ -51,32 +52,34 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="pt-24 pb-16">
-        <div className="max-w-6xl mx-auto text-center px-4 mt-8">
-          <h1 className="text-6xl md:text-7xl font-bold text-gray-800 mb-8 leading-tight">
-            Transform Your
-            <br />
-            <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-              College Events
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-4 max-w-2xl mx-auto">
-            Streamline planning, approvals, and management in one powerful
-            platform.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 items-center">
-            <Link
-              href="/dashboard"
-              className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5 text-lg font-semibold"
-            >
-              Get Started Now
-            </Link>
-            <Link
-              href="#features"
-              className="w-full sm:w-auto bg-white text-gray-800 px-8 py-4 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5 border border-gray-200 text-lg font-semibold"
-            >
-              See How It Works
-            </Link>
+      <div className="pt-24 pb-16 relative doodle-background">
+        <div className="relative z-10 pt-8">
+          <div className="max-w-6xl mx-auto text-center px-4 mt-8">
+            <h1 className="text-6xl md:text-7xl font-bold text-gray-800 mb-8 leading-tight">
+              Transform Your
+              <br />
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                College Events
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-4 max-w-2xl mx-auto">
+              Streamline planning, approvals, and management in one powerful
+              platform.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 items-center">
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5 text-lg font-semibold"
+              >
+                Get Started Now
+              </Link>
+              <Link
+                href="#features"
+                className="w-full sm:w-auto bg-white text-gray-800 px-8 py-4 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5 border border-gray-200 text-lg font-semibold"
+              >
+                See How It Works
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -194,7 +197,7 @@ export default function HomePage() {
                 key={index}
                 className="flex items-start gap-4 bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-300"
               >
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold">
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold shrink-0 aspect-square">
                   {step.step}
                 </div>
                 <div>
@@ -208,27 +211,34 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-12">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex justify-center items-center gap-6 mb-4">
-            <Image
-              src="/assets/images/SairamEOMS.png"
-              width={200}
-              height={80}
-              quality={100}
-              priority
-              alt="Sairam EOMS Logo"
-            />
-            <div className="border-l border-gray-600 h-8"></div>
-            <Image
-              src="/assets/images/logo.png"
-              width={200}
-              height={80}
-              quality={100}
-              priority
-              alt="Eventify Logo"
-            />
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-6">
+            <div className="w-48 md:w-auto">
+              <Image
+                src="/assets/images/SairamEOMS.png"
+                width={180}
+                height={70}
+                quality={100}
+                priority
+                alt="Sairam EOMS Logo"
+                className="object-contain"
+              />
+            </div>
+            <div className="hidden md:block border-l border-gray-600 h-16"></div>
+            <div className="w-48 md:w-auto">
+              <Image
+                src="/assets/images/logo.png"
+                width={180}
+                height={70}
+                quality={100}
+                priority
+                alt="Eventify Logo"
+                className="object-contain"
+              />
+            </div>
           </div>
+          <div className="h-px w-full max-w-md mx-auto bg-gradient-to-r from-transparent via-gray-500 to-transparent mb-6"></div>
           <p className="text-gray-400">
             © {new Date().getFullYear()} Eventify - Sairam Institutions.
           </p>
