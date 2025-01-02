@@ -1,0 +1,15 @@
+.doodle-background {
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ff6b00' fill-opacity='0.05'%3E%3Cpath d='M20 15c0 5.5-4.5 10-10 10S0 20.5 0 15 4.5 5 10 5s10 4.5 10 10'/%3E%3Cpath d='M70 15c0 5.5-4.5 10-10 10s-10-4.5-10-15S55.5 5 60 5s10 4.5 10 10'/%3E%3Cpath d='M20 65c0 5.5-4.5 10-10 10S0 70.5 0 65s4.5-10 10-10 10 4.5 10 10'/%3E%3Cpath d='M70 65c0 5.5-4.5 10-10 10s-10-4.5-10-10 4.5-10 10-10 10 4.5 10 10'/%3E%3Cpath d='M30 40l3-3 3 3-3 3-3-3zm20 0l3-3 3 3-3 3-3-3z'/%3E%3Cpath d='M40 50l3-3 3 3-3 3-3-3zm10-10l3-3 3 3-3 3-3-3zm-20 0l3-3 3 3-3 3-3-3z'/%3E%3Cpath d='M50 55l3-3 3 3-3 3-3-3z'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3Crect x='68' y='8' width='4' height='4'/%3E%3Crect x='8' y='68' width='4' height='4'/%3E%3Crect x='68' y='68' width='4' height='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  animation: float 60s linear infinite;
+}
+
+@keyframes float {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100% 100%;
+  }
+}
