@@ -90,7 +90,6 @@ export default function EventInfo({ params }) {
       if (redirectStatus) router.replace("/approve");
       // Only run getEvents() when the session is resolved (status is not 'loading')
       else if (status === "authenticated" || status === "unauthenticated") {
-        console.log("Use Effect");
         const eventId = params.eventID;
         // const dept = session?.user?.dept;
         const userType = session?.user?.userType;
@@ -112,18 +111,15 @@ export default function EventInfo({ params }) {
             data.message !== "An error occurred while fetching data."
           ) {
             setEventDetails(data.message);
-            console.log(data.message);
             setStatusMessage("");
           } else {
             setStatusMessage("Error fetching details.");
             setEventDetails([]);
-            console.log(eventDetails);
           }
         } catch (error) {
           console.error("Error:", error);
           setStatusMessage("Error fetching details.");
           setEventDetails([]);
-          console.log(eventDetails);
         } finally {
           setLoading(false);
         }

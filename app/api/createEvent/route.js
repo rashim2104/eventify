@@ -237,7 +237,6 @@ export async function POST(req) {
     user_ins_id = null,
     user_iqac_id = null,
     user_dept = dept;
-  console.log(eventData.eventOrganizer);
   let eventCollege =
     eventData.EventOrganizer === 1 ||
       eventData.EventOrganizer === 1 ||

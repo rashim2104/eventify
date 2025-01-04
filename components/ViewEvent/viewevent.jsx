@@ -64,7 +64,6 @@ function ViewEvent(props) {
     },
   });
   useEffect(() => {
-    console.log(props);
     if (ieeeSocietiesShort.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
       setValue("EventOrganizer", 2, true);
@@ -91,7 +90,6 @@ function ViewEvent(props) {
         props.eventData.eventLocation === "On-Campus" ? true : false,
       isEventOnline: props.eventData.EventVenue === "online" ? true : false,
     });
-    console.log(isValid, errors);
     // console.log(eventData);
   }, [isValid, errors, props, setValue]);
 
@@ -317,7 +315,6 @@ function ViewEvent(props) {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(data.message);
         // location.reload();
         if (action === "poster") {
           setFileUrl((prevState) => ({ ...prevState, poster: data.message }));

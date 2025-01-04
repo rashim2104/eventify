@@ -7,10 +7,10 @@ import { logger } from "@/lib/logger";
 
 export async function POST(req) {
     const ACTION = "Change Password";
-    let authenticatedUser;
+    let user;
 
     try {
-        authenticatedUser = await authenticate(req);
+        user = await authenticate(req);
     } catch (error) {
         await logger(
             "UNKNOWN",
@@ -24,13 +24,13 @@ export async function POST(req) {
         );
     }
 
-    const { email, isSuperAdmin } = authenticatedUser;
+    const { email, isSuperAdmin } = user;
 
     try {
         await connectMongoDB();
     } catch (error) {
         await logger(
-            email,
+            user._id,
             ACTION,
             "Database Connection Failed: " + error.message,
             500
@@ -50,7 +50,7 @@ export async function POST(req) {
 
             if (!user) {
                 await logger(
-                    email,
+                    user._id,
                     ACTION,
                     "User Not Found",
                     404
@@ -118,7 +118,7 @@ export async function POST(req) {
         if (valueToJson.action === 'admin') {
             if (!isSuperAdmin) {
                 await logger(
-                    email,
+                    user._id,
                     ACTION,
                     "Unauthorized Access: Not Super Admin",
                     403
@@ -128,11 +128,10 @@ export async function POST(req) {
                     { status: 403 }
                 );
             }
-
             const existingUser = await User.findById(valueToJson._id);
             if (!existingUser) {
                 await logger(
-                    email,
+                    user._id,
                     ACTION,
                     "User Not Found",
                     404
@@ -147,7 +146,7 @@ export async function POST(req) {
             await existingUser.save();
 
             await logger(
-                email,
+                user._id,
                 ACTION,
                 "Password Reset to Default",
                 200
@@ -160,11 +159,12 @@ export async function POST(req) {
 
     } catch (error) {
         await logger(
-            email,
+            user._id,
             ACTION,
             "Password Change Failed: " + error.message,
             500
         );
+        console.log(error);
         return NextResponse.json(
             { message: "An error occurred while changing password." },
             { status: 500 }

@@ -63,11 +63,11 @@ export async function POST(req) {
                     user._id,
                     ACTION,
                     `User Not Found: ${mail}`,
-                    404
+                    200
                 );
                 return NextResponse.json(
                     { message: "User not found" },
-                    { status: 404 }
+                    { status: 200 }
                 );
             }
 
@@ -81,6 +81,10 @@ export async function POST(req) {
                 { message: userDetails },
                 { status: 200 }
             );
+        } else if (action === 'deleteUser') {
+            const deletedUser = await User.deleteOne({ email: mail });
+            logger(user._id, "Delete User", "Deleted Successfully", 200);
+            return NextResponse.json({ message: "User Deleted Successfully" }, { status: 200 });
         }
     } catch (error) {
         await logger(

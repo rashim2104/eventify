@@ -75,7 +75,6 @@ export default function Calven(props) {
       };
       setSelectedSessions((prevSessions) => [...prevSessions, newEntry]);
     } else {
-      console.log();
       setSelectedSessions((prevSessions) =>
         prevSessions.filter(
           (entry) =>
@@ -126,7 +125,6 @@ export default function Calven(props) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log(data);
 
           setVenues((prevState) => ({
             ...prevState,
