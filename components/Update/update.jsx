@@ -107,7 +107,7 @@ export default function Update() {
         }
         break;
       default:
-        console.log("Invalid action");
+        toast.info("Invalid action");
     }
   };
 
@@ -128,12 +128,11 @@ export default function Update() {
         currFile = file.eventPoster;
         break;
       default:
-        console.log("Invalid action");
+        toast.info("Invalid action");
     }
     if (!currFile) return;
 
     setUploading((prevState) => ({ ...prevState, [action]: true }));
-    console.log(action, uploading);
 
     const uploadPromises = Array.from(currFile).map(async (currFile) => {
       const formData = new FormData();
@@ -495,7 +494,6 @@ export default function Update() {
                       }
                       onClick={(e) => {
                         handleUpload(e, "financialCommitments");
-                        console.log(fileUrl);
                       }}
                     >
                       {uploading.financialCommitments
@@ -554,7 +552,6 @@ export default function Update() {
                       }
                       onClick={(e) => {
                         handleUpload(e, "report");
-                        console.log(fileUrl);
                       }}
                     >
                       {uploading.report ? "Uploading..." : "Upload"}

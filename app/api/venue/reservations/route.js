@@ -49,14 +49,12 @@ export async function POST(req) {
       }
     }
 
-    console.log('Query:', JSON.stringify(query, null, 2)); // For debugging
 
     // Get all reservations matching the filters
     const reservations = await Reservation.find(query)
       .sort({ reservationDate: 1 })
       .lean();
 
-    console.log('Found reservations:', reservations.length); // For debugging
 
     // Convert dates to readable format before sending
     const formattedReservations = reservations.map(res => ({

@@ -9,6 +9,7 @@ import {
   clubs,
   clubsShort,
 } from "../../public/data/data";
+import { data } from "autoprefixer";
 
 export default function Manage() {
   const { data: session, status } = useSession();
@@ -59,7 +60,6 @@ export default function Manage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         if (data.message === "User not found") {
           toast.error("User not found");
           return;
@@ -95,11 +95,12 @@ export default function Manage() {
 
         setCollegeName(college);
         toast.success("User fetched successfully.");
+      } else {
+        toast.error("Failed to fetch user");
       }
     } catch (error) {
       console.error("Failed to fetch user", error);
     }
-    // <Toaster richColors/>toast.success('User fetched successfully.');
   };
 
   const handleChangePassword = async () => {

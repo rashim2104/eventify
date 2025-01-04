@@ -9,7 +9,6 @@ export default function Venue() {
   const [selectedVenues, setSelectedVenues] = useState([]);
   const handleChange = (venue) => {
     setSelectedVenues([...selectedVenues, venue]);
-    console.log(selectedVenues);
   };
   useEffect(() => {
     fetch("/api/allEvents", {

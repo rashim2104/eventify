@@ -321,7 +321,6 @@ function Form() {
     const user_id = session?.user?._id;
     let dept = "";
     let college = session?.user?.college;
-    console.log(college);
 
     // Existing logic for dept and college determination
     if (eventData.dept === "SBIT") {
@@ -333,20 +332,16 @@ function Form() {
       if (eventSociety === "IEEE" || EventOrganizer === "4") {
         dept = currSoc;
         college = "common";
-        console.log(2, "IEEE");
       } else {
         dept = eventSociety;
         college = "common";
-        console.log(2, "Other");
       }
     } else if (eventOrigin == 3) {
       dept = eventSociety;
       college = "common";
-      console.log(3);
     } else if (eventOrigin == 4) {
       dept = currSoc;
       college = "common";
-      console.log(4);
     }
 
     const userType = session?.user?.userType;

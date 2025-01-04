@@ -185,7 +185,6 @@ export default function Report() {
                   value={startDate}
                   onChange={(e) => {
                     setStartDate(e.target.value);
-                    console.log(e.target.value);
                   }}
                 />
               </label>
@@ -256,7 +255,6 @@ export default function Report() {
                   value={startDate}
                   onChange={(e) => {
                     setStartDate(e.target.value);
-                    console.log(e.target.value);
                   }}
                 />
               </label>
