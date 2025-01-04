@@ -60,9 +60,8 @@ const Login = () => {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  gap: "20px",
                 }}
-                className="text-center"
+                className="text-center flex flex-col md:flex-row md:gap-5"
               >
                 <Image
                   src="/assets/images/SairamEOMS.png"
@@ -75,6 +74,7 @@ const Login = () => {
                 />
                 <div
                   style={{ borderLeft: "1px solid #000", height: "80px" }}
+                  className="hidden md:block" 
                 ></div>
                 <Image
                   src="/assets/images/logo.png"
@@ -147,10 +147,10 @@ const Login = () => {
                 </form>
               </div>
             </div>
+            <Waves />
           </MDBCol>
         </MDBRow>
       </MDBContainer>
-      <Waves />
     </>
   );
 };

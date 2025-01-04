@@ -56,7 +56,7 @@ export async function POST(req) {
         const { action, mail } = await req.json();
 
         if (action === "fetchUser") {
-            const userDetails = await User.find({ email: mail });
+            const userDetails = await User.find({ email: mail }, { password: 0 });
             
             if (userDetails.length === 0) {
                 await logger(

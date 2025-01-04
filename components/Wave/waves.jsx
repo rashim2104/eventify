@@ -17,10 +17,10 @@ const Waves = () => {
   setTimeout(() => setActive(!active), 3000);
   return (
       <>
-      <WaveWrap style={{position : 'fixed'}} z={0} active={active} options={{ height: 40 , amplitude :100 , points : 3 }} />
+      <WaveWrap style={{position : 'fixed'}} z={-1} active={active} options={{ height: 40 , amplitude :100 , points : 3 }} />
       <WaveWrap
         style={{position : 'fixed'}}
-        z={0}
+        z={-1}
         active={active}
         options={{ height: 80, amplitude:10, speed: 0.4, points: 4 }}
       />

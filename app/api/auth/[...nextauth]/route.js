@@ -61,6 +61,7 @@ export const authOptions = {
         token.dept = user.dept;
         token.role = user.role;
         token.phone = user.phone;
+        token.isSuperAdmin = user.isSuperAdmin;
         token.id = user.id;  // Staff ID
       }
 
@@ -69,18 +70,7 @@ export const authOptions = {
     async session({ session, token }) {
       if (token) {
         // Pass all fields from token to session
-        session.user = {
-          userType: token.userType,
-          userId: token.userId,
-          hasDefaultPassword: token.hasDefaultPassword,
-          name: token.name,
-          email: token.email,
-          college: token.college,
-          dept: token.dept,
-          role: token.role,
-          phone: token.phone,
-          id: token.id  // Staff ID
-        };
+        session.user = token;
       }
       return session;
     },

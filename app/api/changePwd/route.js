@@ -143,7 +143,7 @@ export async function POST(req) {
                 );
             }
 
-            existingUser.password = "$2a$10$2IW2QdaUVRs.8VpgriyqZ.oY34Skm0Sli6E95s09Ax3gqe5gWr2VK";
+            existingUser.password = "$2a$10$OTAVa.umH/vANyQ53DCpCOM9XrKAguEatocXzWSUQiXFSEIyTYcqG";
             await existingUser.save();
 
             await logger(
@@ -153,7 +153,7 @@ export async function POST(req) {
                 200
             );
             return NextResponse.json(
-                { message: "Password updated to Welcome@123" },
+                { message: "Password updated to Welcome@321" },
                 { status: 200 }
             );
         }
