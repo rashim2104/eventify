@@ -283,7 +283,7 @@ export async function POST(req) {
       eventData,
       StartTime,
       EndTime,
-      fileUrl, // Directly insert the JSON object
+      fileUrl,
     });
 
     //     if (userType === "staff") {

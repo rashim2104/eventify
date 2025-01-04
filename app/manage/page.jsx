@@ -9,19 +9,18 @@ import {
   clubs,
   clubsShort,
 } from "../../public/data/data";
-import { set } from "lodash";
 
 export default function Manage() {
   const { data: session, status } = useSession();
   const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState(""); 
   const [fetchEMail, setFetchEmail] = useState("");
   const [currSoc, setCurrSoc] = useState("");
   const [collegeName, setCollegeName] = useState("");
   const [dept, setDept] = useState("");
   const [mail, setMail] = useState("");
-  const [staffId, setstaffId] = useState("");
-  const [college, setCollege] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [role, setRole] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState("");
@@ -29,8 +28,6 @@ export default function Manage() {
   const [displayEditForm, setDisplayEditForm] = useState(true);
   const [selectedHosting, setSelectedHosting] = useState("hosting-small");
   const [id, setId] = useState("");
-  const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("");
 
   const handleHostingChange = (value) => {
     setSelectedHosting(value);
@@ -44,11 +41,7 @@ export default function Manage() {
     setMail("");
     setPassword("");
     setUserType("");
-    setstaffId("");
     setIsSuperAdmin("");
-    setPhone("");
-    setRole("");
-    setCollege("");
   };
   const handleFetch = async (e) => {
     e.preventDefault();
@@ -66,8 +59,9 @@ export default function Manage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         if (data.message === "User not found") {
-          toast.error("User not found!");
+          toast.error("User not found");
           return;
         }
         setId(data.message[0]._id);
@@ -76,10 +70,10 @@ export default function Manage() {
         setMail(data.message[0].email);
         setUserType(data.message[0].userType);
         setIsSuperAdmin(data.message[0].isSuperAdmin);
-        setstaffId(data.message[0].id);
-        setPhone(data.message[0].phone);
+        setIdNumber(data.message[0].id);
+        setCollegeName(data.message[0].college);
         setRole(data.message[0].role);
-        setCollege(data.message[0].college);
+        setPhone(data.message[0].phone);
         const receivedDept = data.message[0].dept;
         let college = data.message[0].college;
         if (ieeeSocietiesShort.includes(receivedDept)) {
@@ -105,6 +99,7 @@ export default function Manage() {
     } catch (error) {
       console.error("Failed to fetch user", error);
     }
+    // <Toaster richColors/>toast.success('User fetched successfully.');
   };
 
   const handleChangePassword = async () => {
@@ -135,23 +130,24 @@ export default function Manage() {
         body: JSON.stringify({
           _id: id,
           name,
-          college,
+          college: collegeName,
           dept: dept === "IEEE" ? currSoc : userType === "admin" ? "-" : dept,
           mail,
-          userType,
+          userType:
+            userType === "professionalsocieties" || userType === "clubincharge"
+              ? "HOD"
+              : userType,
           isSuperAdmin,
-          phoneNumber: phone,
-          staffId,
-          role
+          phone,
+          role,
+          id: idNumber,
         }),
       });
       if (response.ok) {
         clearForm();
-        toast.success("User updated successfully!");
       }
     } catch (error) {
       console.error("Failed to update user", error);
-      toast.error("Failed to update user");
     }
   };
 
@@ -202,13 +198,11 @@ export default function Manage() {
               ? "HOD"
               : userType,
           isSuperAdmin,
-          id,
-          phone,
-          role,
         }),
       });
 
       if (response.ok) {
+        // Reset form
         clearForm();
         setDisplayForm(false);
         toast.success("User added successfully!");
@@ -525,6 +519,10 @@ export default function Manage() {
                   </div>
                 )}
 
+                {/* <label className="block mb-4">
+          Dept
+          <input type="text" value={dept} onChange={(e) => setDept(e.target.value)} className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full" />
+        </label> */}
                 <label className="block mb-4">
                   Mail
                   <input
@@ -543,37 +541,6 @@ export default function Manage() {
                     className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
                   />
                 </label>
-
-                <label className="block mb-4">
-                  ID
-                  <input
-                    type="text"
-                    value={id}
-                    onChange={(e) => setId(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  />
-                </label>
-
-                <label className="block mb-4">
-                  Phone Number
-                  <input
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  />
-                </label>
-
-                <label className="block mb-4">
-                  Role
-                  <input
-                    type="text"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  />
-                </label>
-
                 <label className="mb-4 flex align-middle gap-2 ">
                   <input
                     type="checkbox"
@@ -593,130 +560,322 @@ export default function Manage() {
           )
         : null}
 
-      {selectedHosting === "hosting-big" && displayEditForm && (
-        <>
-          <p className="text-3xl m-3 font-bold">Edit User</p>
-          
-          {/* Fetch Form */}
-          <form onSubmit={handleFetch} className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
-            <label className="block mb-4">
-              Email Address
-              <input
-                type="email"
-                required
-                name="fetchEmail"
-                id="fetchEmail"
-                onChange={(e) => setFetchEmail(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-              />
-            </label>
-            <button
-              type="button"
-              className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
-              onClick={handleFetch}
-            >
-              Fetch User
-            </button>
-          </form>
-      
-          {/* Edit Form */}
-          {id.length !== "" && (
-            <form className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
-              <label className="block mb-4">
-                Name
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="border rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                />
-              </label>
-              
-              <label className="block mb-4">
-                Email Address
-                <input
-                  type="email"
-                  value={mail}
-                  disabled
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full bg-gray-100"
-                />
-              </label>
-      
-              <label className="block mb-4">
-                Staff ID
-                <input
-                  type="text"
-                  value={staffId}
-                  onChange={(e) => setStaffId(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                />
-              </label>
-      
-              <label className="block mb-4">
-                Phone Number
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  pattern="[0-9]{10}"
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                />
-              </label>
-      
-              <label className="block mb-4">
-                Role
-                <input
-                  type="text"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                />
-              </label>
-      
-              <label className="block mb-4">
-                User Type
-                <select
-                  value={userType}
-                  onChange={(e) => setUserType(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                >
-                  <option value="">Select User Type</option>
-                  <option value="admin">Admin</option>
-                  <option value="HOD">HOD</option>
-                  <option value="staff">Staff</option>
-                </select>
-              </label>
-      
-              <label className="block mb-4">
-                College
-                <select
-                  value={college}
-                  onChange={(e) => setCollege(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  required
-                >
-                  <option value="">Select College</option>
-                  <option value="SIT">SIT</option>
-                  <option value="SEC">SEC</option>
-                </select>
-              </label>
-      
-              <button
-                type="button"
-                className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
-                onClick={handleUpdate}
+      {selectedHosting === "hosting-big"
+        ? displayEditForm && (
+            <>
+              <p className="text-3xl m-3 font-bold">Edit User</p>
+              <form
+                onSubmit={handleFetch}
+                className="bg-gray-200 p-4 rounded m-2 md:w-2/3"
               >
-                Update User
-              </button>
-            </form>
-          )}
-        </>
-      )}
+                <label className="block mb-4">
+                  Email Address
+                  <input
+                    type="email"
+                    required
+                    name="fetchEmail"
+                    id="fetchEmail"
+                    onChange={(e) => setFetchEmail(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                  onClick={(e) => {
+                    handleFetch(e);
+                  }}
+                >
+                  Fetch User
+                </button>
+              </form>
+
+              {id.length != "" && (
+                <form className="bg-gray-200 p-4 rounded m-2 md:w-2/3">
+                  <label className="block mb-4">
+                    User Name
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="border rounded-md px-3 py-2 mt-1 w-full"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    Email Address
+                    <input
+                      type="email"
+                      value={mail}
+                      onChange={(e) => setMail(e.target.value)}
+                      disabled
+                      className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                    />
+                  </label>
+                  {/* <label className="block mb-4">
+              User Password
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full" />
+            </label> */}
+                  <label className="block mb-4">
+                    User Type
+                    <select
+                      value={userType}
+                      onChange={(e) => setUserType(e.target.value)}
+                      className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                    >
+                      <option value="" disabled selected>
+                        Select a role
+                      </option>
+                      {/* <option value="student">Student</option> */}
+                      <option value="admin">Admin</option>
+                      <option value="HOD">HOD</option>
+                      <option value="professionalsocieties">
+                        Professional Society Head
+                      </option>
+                      <option value="clubincharge">Club Incharge</option>
+                      <option value="staff">Staff</option>
+                    </select>
+                  </label>
+
+                  {(userType === "staff" ||
+                    userType === "HOD" ||
+                    userType === "student" ||
+                    userType === "admin") && (
+                    <label className="block mb-4">
+                      College Name
+                      <select
+                        value={collegeName}
+                        onChange={(e) => {
+                          setCollegeName(e.target.value);
+                        }}
+                        className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                      >
+                        <option value="" disabled className="round">
+                          Select a College
+                        </option>
+                        <option value="SIT">SIT</option>
+                        <option value="SEC">SEC</option>
+                      </select>
+                    </label>
+                  )}
+
+                  {userType === "professionalsocieties" && (
+                    <label className="block mb-4">
+                      Professional Societies
+                      <select
+                        value={dept}
+                        onChange={(e) => {
+                          setDept(e.target.value);
+                        }}
+                        className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                      >
+                        {" "}
+                        <option value="" selected disabled>
+                          Select a Professional Society
+                        </option>
+                        {societies.map((society, index) => (
+                          <option key={index} value={society}>
+                            {society}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
+                  {userType === "professionalsocieties" &&
+                    (dept === "IEEE" || ieeeSocieties.includes(dept)) && (
+                      <label className="block mb-4">
+                        IEEE Society Name
+                        <select
+                          value={currSoc}
+                          onChange={(e) => setCurrSoc(e.target.value)}
+                          className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                        >
+                          <option value="" disabled>
+                            Select an Option
+                          </option>
+                          {ieeeSocieties.map((option, index) => (
+                            <option
+                              key={index}
+                              value={ieeeSocietiesShort[index]}
+                            >
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                  {(userType === "HOD" ||
+                    userType === "staff" ||
+                    userType === "student") &&
+                    collegeName === "SIT" && (
+                      <label className="block mb-4">
+                        Dept
+                        <select
+                          value={dept}
+                          onChange={(e) => setDept(e.target.value)}
+                          className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                        >
+                          <option value="" selected disabled>
+                            Select a Department
+                          </option>
+                          <option value="CS">CSE</option>
+                          <option value="IT">IT</option>
+                          <option value="EE">EEE</option>
+                          <option value="EC">ECE</option>
+                          <option value="ME">MECH</option>
+                          <option value="SC">Cyber Security</option>
+                          <option value="CO">CCE</option>
+                          <option value="AI">AI-DS</option>
+                          <option value="MB">MBA</option>
+                          <option value="PH">Physics</option>
+                          <option value="EN">English</option>
+                          <option value="MA">Maths</option>
+                          <option value="CH">Chemistry</option>
+                          <option value="PD">Physical Director</option>
+                          <option value="TA">Tamil</option>
+                          <option value="SBEC">IEEE Student Branch</option>
+                        </select>
+                      </label>
+                    )}
+
+                  {(userType === "HOD" ||
+                    userType === "staff" ||
+                    userType === "student") &&
+                    collegeName === "SEC" && (
+                      <label className="block mb-4">
+                        Dept
+                        <select
+                          value={dept}
+                          onChange={(e) => setDept(e.target.value)}
+                          className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                        >
+                          <option value="" selected disabled>
+                            Select a Department
+                          </option>
+                          <option value="AI">AI-DS</option>
+                          <option value="AM">AI-ML</option>
+                          <option value="CB">CSBS</option>
+                          <option value="CS">CSE</option>
+                          <option value="EE">EEE</option>
+                          <option value="EC">ECE</option>
+                          <option value="EI">E&I</option>
+                          <option value="ME">MECH</option>
+                          <option value="CE">CIVIL</option>
+                          <option value="IT">IT</option>
+                          <option value="IC">ICE</option>
+                          <option value="CI">IOT</option>
+                          <option value="MB">MBA</option>
+                          <option value="CJ">M.Tech CSE</option>
+                          <option value="MU">Mech & Auto</option>
+                          <option value="PH">Physics</option>
+                          <option value="EN">English</option>
+                          <option value="MA">Maths</option>
+                          <option value="CH">Chemistry</option>
+                          <option value="PD">Physical Director</option>
+                          <option value="TA">Tamil</option>
+                          <option value="SBEC">IEEE Student Branch</option>
+                        </select>
+                      </label>
+                    )}
+
+                  {userType === "clubincharge" && (
+                    <div>
+                      <label className="block mb-4">
+                        Clubs
+                        <select
+                          value={dept}
+                          onChange={(e) => setDept(e.target.value)}
+                          className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
+                        >
+                          <option value="" disabled selected>
+                            Select a Club
+                          </option>
+                          {clubs.map((club, index) => (
+                            <option key={index} value={clubsShort[index]}>
+                              {club}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+
+                  <label className="block mb-4">
+                    ID Number
+                    <input
+                      type="text"
+                      value={idNumber}
+                      onChange={(e) => setIdNumber(e.target.value)}
+                      className="border rounded-md px-3 py-2 mt-1 w-full"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    Role
+                    <input
+                      type="text"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="border rounded-md px-3 py-2 mt-1 w-full"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    Phone Number
+                    <input
+                      type="number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="border rounded-md px-3 py-2 mt-1 w-full"
+                    />
+                  </label>
+                  <label className="mb-4 flex align-middle gap-2 ">
+                    <input
+                      type="checkbox"
+                      checked={isSuperAdmin}
+                      onChange={(e) => setIsSuperAdmin(e.target.checked)}
+                    />
+                    <span>Is Super-Admin?</span>
+                  </label>
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <button
+                      type="button"
+                      className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                      onClick={(e) => {
+                        handleUpdate(e);
+                        toast.success("User updated successfully.");
+                      }}
+                    >
+                      Update User
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                      onClick={(e) => {
+                        handleDelete(e);
+                        toast.success("User deleted successfully.");
+                      }}
+                    >
+                      Delete User
+                    </button>
+                    {id.length != "" && (
+                      <>
+                        <button
+                          type="button"
+                          className="bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded"
+                          onClick={(e) => {
+                            handleChangePassword(e);
+                          }}
+                        >
+                          Reset Password
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </form>
+              )}
+            </>
+          )
+        : null}
     </>
   );
 }
