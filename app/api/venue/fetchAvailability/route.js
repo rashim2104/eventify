@@ -42,7 +42,6 @@ export async function POST(req) {
     try {
         const valueToJson = await req.json();
         const dates = valueToJson.selectedSessions.map(item => item.date);
-
         const venueList = await Venue.find({ isAvailable: true });
         const prevReservations = await Reservation.find({
             reservationDate: { $in: dates }

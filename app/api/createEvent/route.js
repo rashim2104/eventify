@@ -10,11 +10,6 @@ import Joi from "joi";
 import { logger } from "@/lib/logger";
 
 const schema = Joi.object({
-  user_id: Joi.string().required().messages({
-    'any.required': 'User ID is required',
-    'string.empty': 'User ID cannot be an empty string',
-    'string.base': 'User ID must be a string',
-  }),
   dept: Joi.string().required().messages({
     'any.required': 'Department is required',
     'string.empty': 'Department cannot be an empty string',
@@ -98,6 +93,7 @@ const schema = Joi.object({
           userId: Joi.string().required().messages({
             'any.required': 'Booker ID is required',
             'string.empty': 'Booker ID cannot be an empty string',
+            'string.base': 'Booker ID must be a string'
           }),
           venueId: Joi.string().required().messages({
             'any.required': 'Venue ID is required',
@@ -203,18 +199,25 @@ export async function POST(req) {
   let user;
   try {
     user = await authenticate(req);
-    // Continue with your logic here
   } catch (error) {
     logger("Not Auth", "Create Event", error, 401);
     return NextResponse.json({ message: error.message }, { status: 401 });
   }
 
-  // Event data and user_id from the request
-  // console.log(req.body)
-
   let valueToJson = await req.json();
+  
+  const user_id = user._id.toString();
+  const { userType, dept, college } = user;
+  const { eventData, fileUrl } = valueToJson;
 
-  // Validate the request body
+  if (valueToJson.eventData?.venueList) {
+    valueToJson.eventData.venueList = valueToJson.eventData.venueList.map(venue => ({
+      ...venue,
+      userId: user_id
+    }));
+  }
+
+  // Validate request body
   try {
     const { error } = schema.validate(valueToJson);
     if (error) {
@@ -229,7 +232,6 @@ export async function POST(req) {
   // Ensure database connection
   await connectMongoDB();
 
-  const { user_id, userType, dept, eventData, college, fileUrl } = valueToJson;
   const crtuser = await User.findOne({ _id: user_id });
   const StartTime = new Date(eventData.StartTime);
   const EndTime = new Date(eventData.EndTime);
@@ -267,7 +269,12 @@ export async function POST(req) {
   }
   try {
     //Insert into reservations collection
-    const createdReservations = await Reservation.insertMany(eventData.venueList);
+    const modifiedVenueList = eventData.venueList.map(venue => ({
+        ...venue,
+        userId: user_id // Ensure string userId here as well
+    }));
+    
+    const createdReservations = await Reservation.insertMany(modifiedVenueList);
     const reservationIds = createdReservations.map(item => item._id.toString());
     eventData.venueList = reservationIds;
 

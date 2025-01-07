@@ -232,6 +232,8 @@ export default function Calven(props) {
     props.handleVenueChange(tempVenues,userVenue);
   };
 
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   return (
     <div className="">
       <div className="px-4 sm:px6 w-full mb-4">
@@ -457,7 +459,10 @@ export default function Calven(props) {
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => {handleDialogClose(); setUserVenue("");}}
+                        onClick={() => {
+                          handleDialogClose();
+                          setUserVenue("");
+                        }}
                         className="bg-gray-300 p-2 rounded"
                       >
                         Cancel
@@ -503,7 +508,8 @@ export default function Calven(props) {
             <p>Please confirm the selected venues</p>
             {tempVenues.map((venue) => (
               <p key={venue.venueId}>
-                {venue.date} - {venue.session} - {venue.venueName}
+                {capitalize(venue.date)} - {capitalize(venue.session)} -{" "}
+                {capitalize(venue.venueName)}{" "}
               </p>
             ))}
           </div>
@@ -539,7 +545,7 @@ export default function Calven(props) {
           )}
           {venueFormStep == 3 && (
             <button
-              type="button" 
+              type="button"
               className={
                 selectedSessions.length != 0
                   ? "bg-blue-500 text-white py-2 px-4 rounded"
