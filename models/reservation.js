@@ -2,23 +2,23 @@ import mongoose, { Schema, models } from "mongoose";
 
 const reservationSchema = new Schema(
   {
-    venueId:{
+    venueId: {
       type: String,
-      required:true,
+      required: true,
     },
     userId: {
       type: String,
       required: true,
     },
     reservationDate: {
-      type: Date,  
+      type: String,  // Changed from Date to String
       required: true,
     },
     venueName: {
       type: String,
       required: true,
     },
-    reservationSession:{
+    reservationSession: {
       type: String,
       required: true,
     }
