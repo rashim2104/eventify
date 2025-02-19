@@ -32,52 +32,44 @@ export async function POST(req) {
       query.venueId = venue;
     }
 
-    // Apply date filters
-    if (dateFrom || dateTo) {
-      query.reservationDate = {};
-      if (dateFrom) {
-        // Parse the date and set to start of day
-        const fromDate = new Date(dateFrom);
-        fromDate.setHours(0, 0, 0, 0);
-        query.reservationDate.$gte = fromDate;
-      }
-      if (dateTo) {
-        // Parse the date and set to end of day
-        const toDate = new Date(dateTo);
-        toDate.setHours(23, 59, 59, 999);
-        query.reservationDate.$lte = toDate;
-      }
+    // Fetch all reservations without date filtering
+    const reservations = await Reservation.find(query).lean();
+
+    // Function to convert "DD-MM-YY" to a JavaScript Date object
+    function parseCustomDate(dateStr) {
+      const [day, month, year] = dateStr.split("-");
+      return new Date(`20${year}-${month}-${day}`);  // Assuming all dates are 20XX
     }
 
+    // Convert input dates to Date objects for comparison
+    const fromDate = dateFrom ? new Date(dateFrom) : null;
+    const toDate = dateTo ? new Date(dateTo) : null;
 
-    // Get all reservations matching the filters
-    const reservations = await Reservation.find(query)
-      .sort({ reservationDate: 1 })
-      .lean();
+    // Filter reservations based on the date range
+    const filteredReservations = reservations.filter(res => {
+      const reservationDate = parseCustomDate(res.reservationDate);
 
+      if (fromDate && reservationDate < fromDate) return false;
+      if (toDate && reservationDate > toDate) return false;
+      return true;
+    });
 
-    // Convert dates to readable format before sending
-    const formattedReservations = reservations.map(res => ({
-      ...res,
-      reservationDate: new Date(res.reservationDate).toISOString(),
-    }));
-
-    // Filter by status if needed
+    // Further filter by status if needed
     const now = new Date();
-    const filteredReservations = status === "all" 
-      ? formattedReservations
-      : formattedReservations.filter(res => {
-          const resDate = new Date(res.reservationDate);
-          switch(status) {
-            case "upcoming": return resDate > now;
-            case "past": return resDate < now;
-            case "ongoing": return resDate.toDateString() === now.toDateString();
-            default: return true;
-          }
-        });
+    const finalReservations = status === "all"
+      ? filteredReservations
+      : filteredReservations.filter(res => {
+        const resDate = parseCustomDate(res.reservationDate);
+        switch (status) {
+          case "upcoming": return resDate > now;
+          case "past": return resDate < now;
+          case "ongoing": return resDate.toDateString() === now.toDateString();
+          default: return true;
+        }
+      });
 
     await logger(user._id, ACTION, "Reservations Fetched Successfully", 200);
-    return NextResponse.json({ reservations: filteredReservations }, { status: 200 });
+    return NextResponse.json({ reservations: finalReservations }, { status: 200 });
 
   } catch (error) {
     await logger(user._id, ACTION, "Fetch Failed: " + error.message, 500);

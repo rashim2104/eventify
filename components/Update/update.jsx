@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import "@/components/CreateForm/Form.css";
 import { toast } from "sonner";
 import Image from "next/image";
+import styles from '../ViewEvent/ViewEvent.module.css';
 
 export default function Update() {
   const { data: session, status } = useSession();
@@ -36,6 +37,11 @@ export default function Update() {
 
   const [eventNames, setEventNames] = useState([]);
   const [displayForm, setDisplayForm] = useState(true);
+
+  const [viewerState, setViewerState] = useState({
+    visible: false,
+    activeImage: null
+  });
 
   const handleFileChange = (e, action) => {
     e.preventDefault();
@@ -237,6 +243,90 @@ export default function Update() {
     setUploading(false);
   };
 
+  const handleImageView = (imageUrl) => {
+    setViewerState({
+      visible: true,
+      activeImage: imageUrl
+    });
+  };
+
+  const renderMedia = (url, type) => {
+    if (!url) return null;
+
+    if (url.endsWith('.pdf')) {
+      const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+      return (
+        <div className={styles['media-container']}>
+          <div className={styles['media-header']}>
+            <span className={styles['media-title']}>{type}</span>
+          </div>
+          <div className={styles['pdf-container']}>
+            <iframe
+              src={googleDocsUrl}
+              width="100%"
+              height="600"
+              frameBorder="0"
+              allowFullScreen
+            />
+            <div className={styles['loading-text']}>Loading PDF...</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles['media-container']}>
+        <div className={styles['media-header']}>
+          <span className={styles['media-title']}>{type}</span>
+        </div>
+        <div className={styles['image-container']}>
+          <Image
+            height={400}
+            width={600}
+            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            src={url}
+            alt={`${type} preview`}
+            onClick={() => handleImageView(url)}
+          />
+        </div>
+        <Viewer
+          visible={viewerState.visible}
+          onClose={() => setViewerState({ visible: false, activeImage: null })}
+          images={[{ src: viewerState.activeImage }]}
+          zoomable
+          scalable
+          rotatable
+          downloadable
+          noNavbar
+          className={styles['custom-viewer']}
+        />
+      </div>
+    );
+  };
+
+  const renderFileUpload = (type, label) => {
+    return (
+      <div className={styles['file-upload-container']}>
+        <label className={styles['media-label']}>{label}</label>
+        <p className={styles['helper-text']}>Accepted formats: Images or PDF • Max size: 5MB</p>
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={(e) => handleFileChange(e, type)}
+          className="file-input"
+        />
+        <button
+          type="button"
+          className="btn-style mt-2"
+          disabled={!file[type] || uploading[type]}
+          onClick={(e) => handleUpload(e, type)}
+        >
+          {uploading[type] ? "Uploading..." : "Upload"}
+        </button>
+      </div>
+    );
+  };
+
   useEffect(() => {
     // Fetch event names from the database and update the state
     const fetchEventNames = async () => {
@@ -288,13 +378,53 @@ export default function Update() {
     );
   }
 
+  const validateSubmission = () => {
+    const errors = [];
+    
+    if (!watch("selectedEvent")) {
+      errors.push("Event Selection");
+    }
+    
+    if (fileUrl.geoPhotos.length === 0) {
+      errors.push("Geo Tagged Photos");
+    }
+    
+    if (!fileUrl.financialCommitments) {
+      errors.push("Financial Commitments Document");
+    }
+    
+    if (!fileUrl.report) {
+      errors.push("Event Report");
+    }
+    
+    if (!watch("videoLinks")) {
+      errors.push("Video Links");
+    }
+    
+    if (!watch("amountSpent")) {
+      errors.push("Amount Spent");
+    }
+  
+    if (errors.length > 0) {
+      toast.error(`Please complete the following: ${errors.join(", ")}`);
+      return false;
+    }
+    
+    return true;
+  };
+  
   const onSubmit = async (data) => {
+    if (!validateSubmission()) {
+      return;
+    }
+  
     const jsonData = {
       selectedEvent: data.selectedEvent,
       videoLinks: data.videoLinks,
       amountSpent: data.amountSpent,
       fileUrl: fileUrl,
     };
+  
     try {
       const user_id = session?.user?._id;
       const response = await fetch("/api/updateEvent", {
@@ -309,12 +439,13 @@ export default function Update() {
       });
       if (response.ok) {
         setDisplayForm(false);
+        toast.success("Event updated successfully!");
       } else {
-        toast.error("Error Updating Details!");
+        toast.error("Error updating event details!");
       }
     } catch (error) {
-      toast.error("Error Updating");
-      console.error("Error fetching event names:", error);
+      toast.error("Error updating event");
+      console.error("Error updating event:", error);
     }
   };
 
@@ -353,6 +484,7 @@ export default function Update() {
                 <div>
                   <form>
                     <label>Geo Tagged Photos:</label>
+                    <p className="text-sm text-gray-600">Accepted formats: Images only • Max size: 5MB</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -376,23 +508,16 @@ export default function Update() {
               ) : null}
 
               {fileUrl.geoPhotos.length != 0 && (
-                <div>
-                  <label>Geo Tagged Photos:</label>
+                <div className={styles['media-wrapper']}>
+                  <label className={styles['media-label']}>Geo Tagged Photos:</label>
                   <br />
-                  <label>Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.geoPhotos.map((photoUrl, index) => (
-                    <Image
-                      key={index}
-                      className="rounded-md"
-                      height={300}
-                      width={300}
-                      src={photoUrl}
-                      alt={`Geo Photo ${index + 1}`}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {fileUrl.geoPhotos.map((photoUrl, index) => (
+                      renderMedia(photoUrl, `Geo Photo ${index + 1}`)
+                    ))}
+                  </div>
                   <button
-                    className="mt-2 mb-2 btn-style"
+                    className="mt-4 btn-style"
                     onClick={(e) => handleDelete(e, "geoPhotos")}
                   >
                     Delete Photos
@@ -426,6 +551,7 @@ export default function Update() {
                     >
                       Event Poster
                     </label>
+                    <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                     <input
                       type="file"
                       id="eventPoster"
@@ -443,28 +569,10 @@ export default function Update() {
                 </>
               )}
               {fileUrl.eventPoster !== "" && (
-                <div>
-                  <label>Event Posters:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.eventPoster.endsWith(".pdf") ? (
-                    <iframe
-                      src={fileUrl.eventPoster}
-                      width={450}
-                      height={500}
-                    />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.eventPoster}
-                      alt="Event Poster"
-                    />
-                  )}
+                <div className={styles['media-wrapper']}>
+                  {renderMedia(fileUrl.eventPoster, "Event Poster")}
                   <button
-                    className="mt-2 mb-2 btn-style"
+                    className="mt-4 btn-style"
                     onClick={(e) => handleDelete(e, "eventPoster")}
                   >
                     Delete File
@@ -477,6 +585,7 @@ export default function Update() {
                 <div>
                   <form>
                     <label>Financial Commitments: </label>
+                    <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                     <input
                       type="file"
                       accept="image/*,application/pdf"
@@ -505,28 +614,10 @@ export default function Update() {
               )}
 
               {fileUrl.financialCommitments !== "" && (
-                <div>
-                  <label>Financial Commitments:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.financialCommitments.endsWith(".pdf") ? (
-                    <iframe
-                      src={fileUrl.financialCommitments}
-                      width={450}
-                      height={500}
-                    />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.financialCommitments}
-                      alt="Financial Commitments Document"
-                    />
-                  )}
+                <div className={styles['media-wrapper']}>
+                  {renderMedia(fileUrl.financialCommitments, "Financial Commitments")}
                   <button
-                    className="mt-2 mb-2 btn-style"
+                    className="mt-4 btn-style"
                     onClick={(e) => handleDelete(e, "financialCommitments")}
                   >
                     Delete File
@@ -539,9 +630,10 @@ export default function Update() {
                 <div>
                   <form>
                     <label>Event Report: </label>
+                    <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                     <input
                       type="file"
-                      accept="pdf"
+                      accept="image/*,application/pdf"
                       onChange={(e) => handleFileChange(e, "report")}
                     />
                     <button
@@ -561,24 +653,10 @@ export default function Update() {
               )}
 
               {fileUrl.report !== "" && (
-                <div>
-                  <label>Event Report:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.report.endsWith(".pdf") ? (
-                    <iframe src={fileUrl.report} width={450} height={500} />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.report}
-                      alt="Event Report"
-                    />
-                  )}
+                <div className={styles['media-wrapper']}>
+                  {renderMedia(fileUrl.report, "Event Report")}
                   <button
-                    className="mt-2 mb-2 btn-style"
+                    className="mt-4 btn-style"
                     onClick={(e) => handleDelete(e, "report")}
                   >
                     Delete File
@@ -611,6 +689,10 @@ export default function Update() {
               <button
                 type="submit"
                 className="btn-style"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(onSubmit)();
+                }}
                 disabled={
                   !(
                     fileUrl.geoPhotos.length > 0 &&

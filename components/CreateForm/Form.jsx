@@ -70,9 +70,142 @@ function Form() {
   const [formStep, setFormStep] = useState(0);
   const [fetchedCoordinators, setFetchedCoordinators] = useState([]); // Track which coordinators have been fetched
 
+  // Add new validation helper functions after useState declarations
+  const validateStep0 = () => {
+    if (!isValid) {
+      const errors = [];
+      if (!watch("EventOrganizer")) errors.push("Event Organizer");
+      if (eventOrigin === "2" && !eventSociety) errors.push("Professional Society");
+      if (eventOrigin === "3" && !eventSociety) errors.push("Club/Cell");
+      if (eventOrigin === "4" && !currSoc) errors.push("Other Organization");
+      if (!watch("EventName")) errors.push("Event Name");
+      if (!watch("EventType.eventType")) errors.push("Event Type");
+      if (watch("EventType.eventType") === "other" && !watch("EventType.eventTypeOtherOption")) errors.push("Event Type Details");
+      if (!watch("EventObjective")) errors.push("Event Objective");
+      if (!watch("EventParticipants")) errors.push("Expected Participants");
+      if (!watch("EventVenue")) errors.push("Event Venue");
+      if (!watch("eventLocation")) errors.push("Event Location");
+      if (!watch("StartTime")) errors.push("Start Date & Time");
+      if (!watch("EndTime")) errors.push("End Date & Time");
+      if (!watch("EventDuration")) errors.push("Event Duration");
+      if (fileUrl.poster === "") errors.push("Permission Letter");
+
+      if (errors.length > 0) {
+        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep1 = () => {
+    if (isEventVenueOnline === "offline" && isEventVenueOffCampus === "On-Campus") {
+      if (venueList.length === 0 && userVenue === "") {
+        toast.error("Please select a venue");
+        return false;
+      }
+    } else if (!watch("eventVenueAddInfo")) {
+      toast.error("Please enter the event venue details");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!isValid) {
+      const errors = [];
+      coordinatorfields.forEach((_, index) => {
+        const coord = watch(`eventCoordinators.${index}`);
+        if (!coord.coordinatorName) errors.push(`Coordinator ${index + 1} Name`);
+        if (!coord.coordinatorMail) errors.push(`Coordinator ${index + 1} Email`);
+        if (!coord.coordinatorPhone) errors.push(`Coordinator ${index + 1} Phone`);
+        if (!coord.coordinatorRole) errors.push(`Coordinator ${index + 1} Role`);
+      });
+      if (errors.length > 0) {
+        toast.error(`Please fill in coordinator details: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (hasResourcePersons === null) {
+      toast.error("Please select whether there are resource persons for the event");
+      return false;
+    }
+    if (hasResourcePersons && !isValid) {
+      const errors = [];
+      resourcepersonfields.forEach((_, index) => {
+        const person = watch(`eventResourcePerson.${index}`);
+        if (!person.ResourcePersonName) errors.push(`Resource Person ${index + 1} Name`);
+        if (!person.ResourcePersonMail) errors.push(`Resource Person ${index + 1} Email`);
+        if (!person.ResourcePersonPhone) errors.push(`Resource Person ${index + 1} Phone`);
+        if (!person.ResourcePersonDesgn) errors.push(`Resource Person ${index + 1} Designation`);
+        if (!person.ResourcePersonAddr) errors.push(`Resource Person ${index + 1} Address`);
+      });
+      if (errors.length > 0) {
+        toast.error(`Please fill in resource person details: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep4 = () => {
+    if (!isValid) {
+      const errors = [];
+      const stakeholders = watch("eventStakeholders");
+      if (!stakeholders || stakeholders.length === 0) {
+        errors.push("Event Stakeholders");
+      }
+      if (!watch("isSponsored")) {
+        errors.push("Sponsorship Status");
+      }
+      if (watch("isSponsored") === "true") {
+        if (!watch("Budget")) errors.push("Budget");
+        if (fileUrl.sanctionLetter === "") errors.push("Sanction Letter");
+        const sponsors = watch("eventSponsors");
+        sponsors.forEach((sponsor, index) => {
+          if (!sponsor.name) errors.push(`Sponsor ${index + 1} Name`);
+          if (!sponsor.address) errors.push(`Sponsor ${index + 1} Address`);
+        });
+      }
+      if (errors.length > 0) {
+        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Function to proceed to the next form step
   const completeFormStep = () => {
-    setFormStep((curr) => curr + 1);
+    let isValid = false;
+    switch (formStep) {
+      case 0:
+        isValid = validateStep0();
+        break;
+      case 1:
+        isValid = validateStep1();
+        break;
+      case 2:
+        isValid = validateStep2();
+        break;
+      case 3:
+        isValid = validateStep3();
+        break;
+      case 4:
+        isValid = validateStep4();
+        break;
+      default:
+        isValid = true;
+    }
+
+    if (isValid) {
+      setFormStep((curr) => curr + 1);
+      toast.success("Proceeding to next step");
+    }
   };
 
   // Options for a dropdown or other selection element
@@ -725,6 +858,7 @@ function Form() {
           <label>Permission Letter: </label>
           {fileUrl.poster === "" && (
             <div>
+              <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
               <input
                 type="file"
                 accept="image/*, application/pdf"
@@ -821,7 +955,6 @@ function Form() {
           </div>
 
           <button
-            disabled={!isValid || fileUrl.poster === ""}
             onClick={completeFormStep}
             type="button"
             className="btn btn-style"
@@ -860,7 +993,6 @@ function Form() {
                   </p>
                 </div>
                 <button
-                  disabled={!isValid}
                   onClick={completeFormStep}
                   type="button"
                   className="btn btn-style"
@@ -1077,7 +1209,6 @@ function Form() {
               Reset
             </button>
             <button
-              disabled={!isValid}
               onClick={completeFormStep}
               className="btn-style"
             >
@@ -1327,7 +1458,6 @@ function Form() {
                   Add Resource Person
                 </button>
                 <button
-                  disabled={!isValid} // Enable only if the form is valid
                   onClick={completeFormStep}
                   type="button"
                   className="btn btn-style"
@@ -1510,6 +1640,7 @@ function Form() {
               <label>Sanction Letter: </label>
               {fileUrl.sanctionLetter === "" && (
                 <>
+                  <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                   <input
                     type="file"
                     accept="image/*, application/pdf"
@@ -1553,11 +1684,13 @@ function Form() {
 
           <button
             className="btn-style"
-            disabled={
-              !isValid ||
-              isSubmitting ||
-              (isSponsored === "true" && fileUrl.sanctionLetter === "")
-            }
+            onClick={() => {
+              if (!validateStep4()) {
+                return;
+              }
+              handleSubmit(submitForm)();
+            }}
+            disabled={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>

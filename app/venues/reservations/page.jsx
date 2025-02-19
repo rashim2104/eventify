@@ -178,7 +178,7 @@ export default function VenueReservations() {
                     {reservation.venueName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {new Date(reservation.reservationDate).toLocaleDateString()}
+                    {reservation.reservationDate}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {reservation.reservationSession}
