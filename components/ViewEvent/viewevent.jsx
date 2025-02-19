@@ -60,17 +60,17 @@ function ViewEvent(props) {
       ...props.eventData,
       StartTime: props.eventData.StartTime
         ? new Date(
-            new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
-          )
-            .toISOString()
-            .substring(0, 16)
+          new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .substring(0, 16)
         : "",
       EndTime: props.eventData.EndTime
         ? new Date(
-            new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
-          )
-            .toISOString()
-            .substring(0, 16)
+          new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .substring(0, 16)
         : "",
     },
   });
@@ -127,7 +127,7 @@ function ViewEvent(props) {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement("a");
       link.href = url;
       link.download = `Event_Report - ${props.data.ins_id} ${props.data.eventData.EventName}.pdf`;
@@ -502,7 +502,7 @@ function ViewEvent(props) {
 
     if (url.endsWith('.pdf')) {
       const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-      
+
       return (
         <div className="media-container">
           <div className="pdf-container">
@@ -668,16 +668,16 @@ function ViewEvent(props) {
               {props.data.status == 0
                 ? "Pending"
                 : props.data.status == 1
-                ? "Approved by HOD/Society Incharge/Club Incharge"
-                : props.data.status == 2
-                ? `${props.data.ins_id}`
-                : props.data.status == 3
-                ? "Marked for Change by by HOD/Society Incharge/Club Incharge"
-                : props.data.status == 4
-                ? "Marked for Change by IQAC Member"
-                : props.data.status == 5
-                ? "Principal Approval Pending"
-                : "Rejected"}
+                  ? "Approved by HOD/Society Incharge/Club Incharge"
+                  : props.data.status == 2
+                    ? `${props.data.ins_id}`
+                    : props.data.status == 3
+                      ? "Marked for Change by by HOD/Society Incharge/Club Incharge"
+                      : props.data.status == 4
+                        ? "Marked for Change by IQAC Member"
+                        : props.data.status == 5
+                          ? "Principal Approval Pending"
+                          : "Rejected"}
             </h2>
           </div>
         </div>
@@ -690,8 +690,8 @@ function ViewEvent(props) {
               {statusEvent === 3
                 ? "Comment by HOD/Society Incharge/Club Incharge"
                 : statusEvent === 4
-                ? "Commented by IQAC Member"
-                : "Comment"}
+                  ? "Commented by IQAC Member"
+                  : "Comment"}
             </label>
             <input
               disabled
@@ -824,7 +824,7 @@ function ViewEvent(props) {
               name="EventName"
               {...register("EventName", { required: true })}
               required
-              // onChange={(e) => alert(e.target.value)}
+            // onChange={(e) => alert(e.target.value)}
             />
             <p className="error-msg">
               {errors.EventName && <span>*This field is required</span>}
@@ -1015,7 +1015,7 @@ function ViewEvent(props) {
               )}
             </div>
           )}
-
+          {/* Pushing code to git */}
           {fileUrl.poster === "" && renderFileUpload("poster", "Permission Letter")}
 
           <div className="space-box">
