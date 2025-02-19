@@ -492,6 +492,7 @@ export default function Calven(props) {
                     hasAc={venue.hasAc}
                     hasProjector={venue.hasProjector}
                     capacity={venue.seatingCapacity}
+                    desc = {venue.description}
                     action="create"
                     img="/assets/images/sairamEOMS.png"
                   />

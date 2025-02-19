@@ -106,7 +106,7 @@ export default function Venues() {
               <Link href="/venues/reservations">
                 <div className="cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center">
                   <Image
-                    src={"/assets/icons/edit.png"}
+                    src={"/assets/icons/calendar.png"}
                     width={30}
                     height={30}
                     alt="Reservations"

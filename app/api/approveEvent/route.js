@@ -57,7 +57,7 @@ export async function POST(req) {
     }
 
     try {
-        const { event_id, action, comment } = await req.json();
+        const { event_id, action, comment, customEventId } = await req.json();
         const eventDetails = await Events.findOne({ _id: event_id });
 
         if (!eventDetails) {
@@ -90,14 +90,21 @@ export async function POST(req) {
         } else if (userType === "admin") {
             switch (action) {
                 case "Approve":
-                    const eventId = await IdGen(
+                    // Use the customEventId directly if provided
+                    const eventId = customEventId || await IdGen(
                         eventDetails.user_id,
                         eventDetails.dept,
                         eventDetails.eventCollege
                     );
                     userEvents = await Events.updateOne(
                         { _id: event_id },
-                        { $set: { status: 2, iqac_id: user_id, ins_id: eventId } }
+                        { 
+                            $set: { 
+                                status: 2, 
+                                iqac_id: user_id, 
+                                ins_id: customEventId // Use customEventId directly here
+                            } 
+                        }
                     );
                     break;
                 case "Reject":

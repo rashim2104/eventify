@@ -6,7 +6,18 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { jsPDF } from "jspdf";
+import Viewer from 'react-viewer';
+import { Worker, Viewer as PDFViewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { zoomPlugin } from '@react-pdf-viewer/zoom';
+import * as pdfjs from 'pdfjs-dist';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import "@/components/CreateForm/Form.css";
+
+// Initialize PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
 import {
   societies,
   ieeeSocieties,
@@ -130,12 +141,6 @@ function ViewEvent(props) {
   };
 
   const [formStep, setFormStep] = useState(0);
-  const completeFormStep = () => {
-    if (props.eventData.isResourcePerson == false && formStep == 2) {
-      setFormStep((curr) => curr + 1);
-    }
-    setFormStep((curr) => curr + 1);
-  };
   const options = [
     {
       index: 0,
@@ -339,6 +344,231 @@ function ViewEvent(props) {
       setUploading(false);
     }
   };
+
+  const validateStep0 = () => {
+    if (!isValid) {
+      const errors = [];
+      if (!watch("EventName")) errors.push("Event Name");
+      if (!watch("EventType.eventType")) errors.push("Event Type");
+      if (!watch("EventObjective")) errors.push("Event Objective");
+      if (!watch("EventVenue")) errors.push("Event Venue");
+      if (!watch("eventLocation")) errors.push("Event Location");
+      if (!watch("StartTime")) errors.push("Start Date & Time");
+      if (!watch("EndTime")) errors.push("End Date & Time");
+      if (!watch("EventDuration")) errors.push("Event Duration");
+      if (fileUrl.poster === "") errors.push("Permission Letter");
+
+      if (errors.length > 0) {
+        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep1 = () => {
+    if (!isValid) {
+      if (isEventVenueOnline === "offline" && isEventVenueOffCampus === "On-Campus") {
+        if (venueList.length === 0) {
+          toast.error("Please select at least one venue");
+          return false;
+        }
+      } else if (!eventVenueAddInfo) {
+        toast.error("Please provide venue details");
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!isValid) {
+      const errors = [];
+      const coordinators = watch("eventCoordinators");
+      coordinators.forEach((coord, index) => {
+        if (!coord.coordinatorName) errors.push(`Coordinator ${index + 1} Name`);
+        if (!coord.coordinatorMail) errors.push(`Coordinator ${index + 1} Email`);
+        if (!coord.coordinatorPhone) errors.push(`Coordinator ${index + 1} Phone`);
+        if (!coord.coordinatorRole) errors.push(`Coordinator ${index + 1} Role`);
+      });
+      if (errors.length > 0) {
+        toast.error(`Please fill in coordinator details: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (!isValid && hasResourcePersons) {
+      const errors = [];
+      const resourcePersons = watch("eventResourcePerson");
+      resourcePersons.forEach((person, index) => {
+        if (!person.ResourcePersonName) errors.push(`Resource Person ${index + 1} Name`);
+        if (!person.ResourcePersonMail) errors.push(`Resource Person ${index + 1} Email`);
+        if (!person.ResourcePersonPhone) errors.push(`Resource Person ${index + 1} Phone`);
+        if (!person.ResourcePersonDesgn) errors.push(`Resource Person ${index + 1} Designation`);
+        if (!person.ResourcePersonAddr) errors.push(`Resource Person ${index + 1} Address`);
+      });
+      if (errors.length > 0) {
+        toast.error(`Please fill in resource person details: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep4 = () => {
+    if (!isValid) {
+      const errors = [];
+      if (!watch("eventStakeholders") || watch("eventStakeholders").length === 0) {
+        errors.push("Event Stakeholders");
+      }
+      if (!watch("isSponsored")) {
+        errors.push("Sponsorship Status");
+      }
+      if (watch("isSponsored") === "true") {
+        if (!watch("Budget")) errors.push("Budget");
+        if (fileUrl.sanctionLetter === "") errors.push("Sanction Letter");
+        const sponsors = watch("eventSponsors") || [];
+        sponsors.forEach((sponsor, index) => {
+          if (!sponsor.name) errors.push(`Sponsor ${index + 1} Name`);
+          if (!sponsor.address) errors.push(`Sponsor ${index + 1} Address`);
+        });
+      }
+      if (errors.length > 0) {
+        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const completeFormStep = () => {
+    let isValid = false;
+    switch (formStep) {
+      case 0:
+        isValid = validateStep0();
+        break;
+      case 1:
+        isValid = validateStep1();
+        break;
+      case 2:
+        isValid = validateStep2();
+        break;
+      case 3:
+        isValid = validateStep3();
+        break;
+      case 4:
+        isValid = validateStep4();
+        break;
+      default:
+        isValid = true;
+    }
+
+    if (isValid) {
+      setFormStep((curr) => curr + 1);
+      toast.success("Proceeding to next step");
+    }
+  };
+
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  const zoomPluginInstance = zoomPlugin();
+
+  const [viewerState, setViewerState] = useState({
+    visible: false,
+    activeImage: null
+  });
+
+  const handleImageView = (imageUrl) => {
+    setViewerState({
+      visible: true,
+      activeImage: imageUrl
+    });
+  };
+
+  // Add styles for the viewer backdrop
+  const viewerStyles = {
+    wrapper: {
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    container: {
+      backdropFilter: 'blur(10px)',
+    },
+  };
+
+  const renderMedia = (url) => {
+    if (!url) return null;
+
+    if (url.endsWith('.pdf')) {
+      const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+      
+      return (
+        <div className="media-container">
+          <div className="pdf-container">
+            <iframe
+              src={googleDocsUrl}
+              width="100%"
+              height="600"
+              frameBorder="0"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="media-container viewer-wrapper">
+        <div className="image-container">
+          <Image
+            height={400}
+            width={600}
+            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            src={url}
+            alt="Media preview"
+            onClick={() => handleImageView(url)}
+          />
+        </div>
+        <Viewer
+          visible={viewerState.visible}
+          onClose={() => setViewerState({ visible: false, activeImage: null })}
+          images={[{ src: viewerState.activeImage }]}
+          zoomable
+          scalable
+          rotatable
+          downloadable
+          noNavbar
+          className="custom-viewer"
+          styles={viewerStyles}
+        />
+      </div>
+    );
+  };
+
+  const renderFileUpload = (type, label) => {
+    return (
+      <div className="file-upload-container">
+        <label className="media-label">{label}</label>
+        <p className="helper-text">Accepted formats: Images or PDF • Max size: 5MB</p>
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={handleFileChange}
+          className="file-input"
+        />
+        <button
+          type="button"
+          className="btn-style mt-2"
+          disabled={!file || uploading}
+          onClick={(e) => handleDelUpload(e, type)}
+        >
+          {uploading ? "Uploading..." : "Upload"}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <form onSubmit={handleSubmit(submitForm)} className="form relative">
       <div className="flex absolute top-16 right-10 gap-3">
@@ -762,58 +992,31 @@ function ViewEvent(props) {
           </div>
 
           {fileUrl.poster && (
-            <div>
-              <label>Permission Letter:</label>
-              <br />
-              {fileUrl.poster.endsWith(".pdf") ? (
-                <iframe src={fileUrl.poster} width={450} height={500} />
-              ) : (
-                <Image
-                  height={300}
-                  width={300}
-                  className="rounded-md"
-                  src={fileUrl.poster}
-                  alt="poster"
-                />
-              )}
+            <div className="media-container">
+              <label className="media-label">Permission Letter:</label>
+              {renderMedia(fileUrl.poster)}
               {session?.user?._id === props.data.user_id && (
-                <button
-                  type="button"
-                  disabled={!isEdit}
-                  className="mt-2 mb-2 btn-style"
-                  onClick={() => {
-                    setTempFileUrl((prevState) => ({
-                      ...prevState,
-                      poster: fileUrl.poster,
-                    }));
-                    setFileUrl((prevState) => ({ ...prevState, poster: "" }));
-                  }}
-                >
-                  Replace Poster
-                </button>
+                <div className="media-actions">
+                  <button
+                    type="button"
+                    disabled={!isEdit}
+                    className="btn-style"
+                    onClick={() => {
+                      setTempFileUrl((prevState) => ({
+                        ...prevState,
+                        poster: fileUrl.poster,
+                      }));
+                      setFileUrl((prevState) => ({ ...prevState, poster: "" }));
+                    }}
+                  >
+                    Replace Permission Letter
+                  </button>
+                </div>
               )}
             </div>
           )}
 
-          {fileUrl.poster === "" && (
-            <div>
-              <form>
-                <label>Permission Letter: </label>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  onChange={handleFileChange}
-                />
-                <button
-                  type="button"
-                  disabled={!file || uploading}
-                  onClick={(e) => handleDelUpload(e, "poster")}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
-              </form>
-            </div>
-          )}
+          {fileUrl.poster === "" && renderFileUpload("poster", "Permission Letter")}
 
           <div className="space-box">
             <label>Start Date & Time:</label>
@@ -874,14 +1077,15 @@ function ViewEvent(props) {
             </p>
           </div>
 
-          <button
-            disabled={!isValid}
-            onClick={completeFormStep}
-            type="button"
-            className="btn-style"
-          >
-            Next
-          </button>
+          {session.user._id === props.data.user_id && (
+            <button
+              onClick={completeFormStep}
+              type="button"
+              className="btn btn-style"
+            >
+              Next
+            </button>
+          )}
         </section>
       )}
 
@@ -916,14 +1120,15 @@ function ViewEvent(props) {
                     )}
                   </p>
                 </div>
-                <button
-                  disabled={!isValid}
-                  onClick={completeFormStep}
-                  type="button"
-                  className="btn btn-style"
-                >
-                  Next
-                </button>
+                {session.user._id === props.data.user_id && (
+                  <button
+                    onClick={completeFormStep}
+                    type="button"
+                    className="btn btn-style"
+                  >
+                    Next
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -1088,13 +1293,15 @@ function ViewEvent(props) {
                 Add Coordinator
               </button>
             )}
-            <button
-              onClick={completeFormStep}
-              type="button"
-              className="btn-style"
-            >
-              Next
-            </button>
+            {session.user._id === props.data.user_id && (
+              <button
+                onClick={completeFormStep}
+                type="button"
+                className="btn btn-style"
+              >
+                Next
+              </button>
+            )}
           </div>
         </section>
       )}
@@ -1295,14 +1502,15 @@ function ViewEvent(props) {
                 Add Resource Person
               </button>
             )}
-            <button
-              disabled={!isValid}
-              className="btn-style"
-              onClick={completeFormStep}
-              type="button"
-            >
-              Next
-            </button>
+            {session.user._id === props.data.user_id && (
+              <button
+                onClick={completeFormStep}
+                type="button"
+                className="btn btn-style"
+              >
+                Next
+              </button>
+            )}
           </div>
         </section>
       )}
@@ -1504,6 +1712,7 @@ function ViewEvent(props) {
             <div>
               <form>
                 <label>Sanction Letter: </label>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                 {session.user._id === props.data.user_id && (
                   <>
                     <input
@@ -1527,17 +1736,7 @@ function ViewEvent(props) {
             <div>
               <br />
               <label>Sanction Letter: </label>
-              {fileUrl.sanctionLetter.endsWith(".pdf") ? (
-                <iframe src={fileUrl.sanctionLetter} width={450} height={500} />
-              ) : (
-                <Image
-                  height={300}
-                  width={300}
-                  className="rounded-md"
-                  src={fileUrl.sanctionLetter}
-                  alt="sanction letter"
-                />
-              )}
+              {renderMedia(fileUrl.sanctionLetter)}
               {session.user._id === props.data.user_id && (
                 <>
                   <button
@@ -1562,8 +1761,17 @@ function ViewEvent(props) {
             </div>
           )}
 
-          {isEdit && (
-            <button disabled={isSubmitting} className="btn-style">
+          {session.user._id === props.data.user_id && (
+            <button
+              onClick={() => {
+                if (!validateStep4()) {
+                  return;
+                }
+                submitForm(getValues());
+              }}
+              className="btn btn-style"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           )}

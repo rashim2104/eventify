@@ -569,6 +569,7 @@ function ViewEvent(props) {
             <div>
               <form>
                 <label>Event Poster: </label>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
@@ -1223,6 +1224,7 @@ function ViewEvent(props) {
             <div>
               <form>
                 <label>Sanction Letter: </label>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                 {session.user._id === props.data.user_id && (
                   <>
                     <input

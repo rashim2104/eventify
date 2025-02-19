@@ -13,6 +13,7 @@ export default function VenueCard(props) {
     hasProjector,
     capacity,
     img,
+    desc,
   } = props;
   const isSlotChecked = (date, session) => {
     return tempVenues.some(
@@ -30,10 +31,7 @@ export default function VenueCard(props) {
         <div className="flex flex-col gap-3">
           <p className="text-4xl font-bold">{title}</p>
           <p className="text-justify">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quibusdam
-            ratione vitae possimus dolor, quae magni, dolores nesciunt,
-            voluptatum repudiandae quam sequi debitis harum suscipit quas totam
-            perferendis laborum odit unde!
+            {desc}
           </p>
           <div className="flex gap-4 flex-col items-start sm:flex-row">
             {hasAc ? (
