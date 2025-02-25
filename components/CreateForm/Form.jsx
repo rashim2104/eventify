@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import Image from "next/image";
@@ -13,6 +14,12 @@ import {
   clubsShort,
 } from "@/public/data/data";
 import Calven from "../Calendar/calven";
+import dynamic from 'next/dynamic';
+
+// Dynamically import Viewer with SSR disabled
+const Viewer = dynamic(() => import('react-viewer'), {
+  ssr: false,
+});
 
 function Form() {
   const [eventOrigin, setEventOrigin] = useState("1");
@@ -72,116 +79,172 @@ function Form() {
 
   // Add new validation helper functions after useState declarations
   const validateStep0 = () => {
-    if (!isValid) {
-      const errors = [];
-      if (!watch("EventOrganizer")) errors.push("Event Organizer");
-      if (eventOrigin === "2" && !eventSociety) errors.push("Professional Society");
-      if (eventOrigin === "3" && !eventSociety) errors.push("Club/Cell");
-      if (eventOrigin === "4" && !currSoc) errors.push("Other Organization");
-      if (!watch("EventName")) errors.push("Event Name");
-      if (!watch("EventType.eventType")) errors.push("Event Type");
-      if (watch("EventType.eventType") === "other" && !watch("EventType.eventTypeOtherOption")) errors.push("Event Type Details");
-      if (!watch("EventObjective")) errors.push("Event Objective");
-      if (!watch("EventParticipants")) errors.push("Expected Participants");
-      if (!watch("EventVenue")) errors.push("Event Venue");
-      if (!watch("eventLocation")) errors.push("Event Location");
-      if (!watch("StartTime")) errors.push("Start Date & Time");
-      if (!watch("EndTime")) errors.push("End Date & Time");
-      if (!watch("EventDuration")) errors.push("Event Duration");
-      if (fileUrl.poster === "") errors.push("Permission Letter");
+    let hasErrors = false;
+    const fields = {
+      EventOrganizer: "Event Organizer",
+      EventName: "Event Name",
+      "EventType.eventType": "Event Type",
+      EventObjective: "Event Objective",
+      EventParticipants: "Expected Participants",
+      EventVenue: "Event Venue",
+      eventLocation: "Event Location",
+      StartTime: "Start Date & Time",
+      EndTime: "End Date & Time",
+      EventDuration: "Event Duration"
+    };
 
-      if (errors.length > 0) {
-        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
-        return false;
+    Object.entries(fields).forEach(([field, label]) => {
+      if (!watch(field)) {
+        toast.error(`${label} is required`);
+        hasErrors = true;
       }
+    });
+
+    // Special validations
+    if (eventOrigin === "2" && !eventSociety) {
+      toast.error("Professional Society is required");
+      hasErrors = true;
     }
-    return true;
+    if (eventOrigin === "3" && !eventSociety) {
+      toast.error("Club/Cell is required");
+      hasErrors = true;
+    }
+    if (eventOrigin === "4" && !currSoc) {
+      toast.error("Other Organization is required");
+      hasErrors = true;
+    }
+    if (watch("EventType.eventType") === "other" && !watch("EventType.eventTypeOtherOption")) {
+      toast.error("Event Type Details is required");
+      hasErrors = true;
+    }
+    if (fileUrl.poster === "") {
+      toast.error("Permission Letter is required");
+      hasErrors = true;
+    }
+
+    return !hasErrors;
   };
 
   const validateStep1 = () => {
+    let hasErrors = false;
     if (isEventVenueOnline === "offline" && isEventVenueOffCampus === "On-Campus") {
-      if (venueList.length === 0 && userVenue === "") {
+      if (venueList.length === 0) {
         toast.error("Please select a venue");
-        return false;
+        hasErrors = true;
       }
-    } else if (!watch("eventVenueAddInfo")) {
-      toast.error("Please enter the event venue details");
-      return false;
     }
-    return true;
+    if (!watch("eventVenueAddInfo")) {
+      toast.error("Please enter venue details");
+      hasErrors = true;
+    }
+    return !hasErrors;
   };
 
   const validateStep2 = () => {
-    if (!isValid) {
-      const errors = [];
-      coordinatorfields.forEach((_, index) => {
-        const coord = watch(`eventCoordinators.${index}`);
-        if (!coord.coordinatorName) errors.push(`Coordinator ${index + 1} Name`);
-        if (!coord.coordinatorMail) errors.push(`Coordinator ${index + 1} Email`);
-        if (!coord.coordinatorPhone) errors.push(`Coordinator ${index + 1} Phone`);
-        if (!coord.coordinatorRole) errors.push(`Coordinator ${index + 1} Role`);
-      });
-      if (errors.length > 0) {
-        toast.error(`Please fill in coordinator details: ${errors.join(", ")}`);
-        return false;
+    let hasErrors = false;
+    coordinatorfields.forEach((_, index) => {
+      const coordinator = watch(`eventCoordinators.${index}`);
+      const fieldPrefix = `Coordinator ${index + 1}:`;
+      
+      if (!coordinator.coordinatorName) {
+        toast.error(`${fieldPrefix} Name is required`);
+        hasErrors = true;
       }
-    }
-    return true;
+      if (!coordinator.coordinatorMail) {
+        toast.error(`${fieldPrefix} Email is required`);
+        hasErrors = true;
+      }
+      if (!coordinator.coordinatorPhone) {
+        toast.error(`${fieldPrefix} Phone is required`);
+        hasErrors = true;
+      }
+      if (!coordinator.coordinatorRole) {
+        toast.error(`${fieldPrefix} Role is required`);
+        hasErrors = true;
+      }
+    });
+    return !hasErrors;
   };
 
   const validateStep3 = () => {
+    let hasErrors = false;
+    
     if (hasResourcePersons === null) {
-      toast.error("Please select whether there are resource persons for the event");
+      toast.error("Please select whether there are resource persons");
       return false;
     }
-    if (hasResourcePersons && !isValid) {
-      const errors = [];
+
+    if (hasResourcePersons) {
       resourcepersonfields.forEach((_, index) => {
         const person = watch(`eventResourcePerson.${index}`);
-        if (!person.ResourcePersonName) errors.push(`Resource Person ${index + 1} Name`);
-        if (!person.ResourcePersonMail) errors.push(`Resource Person ${index + 1} Email`);
-        if (!person.ResourcePersonPhone) errors.push(`Resource Person ${index + 1} Phone`);
-        if (!person.ResourcePersonDesgn) errors.push(`Resource Person ${index + 1} Designation`);
-        if (!person.ResourcePersonAddr) errors.push(`Resource Person ${index + 1} Address`);
+        const fieldPrefix = `Resource Person ${index + 1}:`;
+
+        if (!person.ResourcePersonName) {
+          toast.error(`${fieldPrefix} Name is required`);
+          hasErrors = true;
+        }
+        if (!person.ResourcePersonMail) {
+          toast.error(`${fieldPrefix} Email is required`);
+          hasErrors = true;
+        }
+        if (!person.ResourcePersonPhone) {
+          toast.error(`${fieldPrefix} Phone is required`);
+          hasErrors = true;
+        }
+        if (!person.ResourcePersonDesgn) {
+          toast.error(`${fieldPrefix} Designation is required`);
+          hasErrors = true;
+        }
+        if (!person.ResourcePersonAddr) {
+          toast.error(`${fieldPrefix} Address is required`);
+          hasErrors = true;
+        }
       });
-      if (errors.length > 0) {
-        toast.error(`Please fill in resource person details: ${errors.join(", ")}`);
-        return false;
-      }
     }
-    return true;
+    return !hasErrors;
   };
 
   const validateStep4 = () => {
-    if (!isValid) {
-      const errors = [];
-      const stakeholders = watch("eventStakeholders");
-      if (!stakeholders || stakeholders.length === 0) {
-        errors.push("Event Stakeholders");
-      }
-      if (!watch("isSponsored")) {
-        errors.push("Sponsorship Status");
-      }
-      if (watch("isSponsored") === "true") {
-        if (!watch("Budget")) errors.push("Budget");
-        if (fileUrl.sanctionLetter === "") errors.push("Sanction Letter");
-        const sponsors = watch("eventSponsors");
-        sponsors.forEach((sponsor, index) => {
-          if (!sponsor.name) errors.push(`Sponsor ${index + 1} Name`);
-          if (!sponsor.address) errors.push(`Sponsor ${index + 1} Address`);
-        });
-      }
-      if (errors.length > 0) {
-        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
-        return false;
-      }
+    let hasErrors = false;
+    
+    if (!watch("eventStakeholders") || watch("eventStakeholders").length === 0) {
+      toast.error("Please select at least one stakeholder");
+      hasErrors = true;
     }
-    return true;
+    
+    if (!watch("isSponsored")) {
+      toast.error("Please specify if the event is sponsored");
+      hasErrors = true;
+    }
+
+    if (watch("isSponsored") === "true") {
+      if (!watch("Budget")) {
+        toast.error("Budget amount is required");
+        hasErrors = true;
+      }
+      if (fileUrl.sanctionLetter === "") {
+        toast.error("Sanction Letter is required");
+        hasErrors = true;
+      }
+      
+      const sponsors = watch("eventSponsors");
+      sponsors?.forEach((sponsor, index) => {
+        const fieldPrefix = `Sponsor ${index + 1}:`;
+        if (!sponsor.name) {
+          toast.error(`${fieldPrefix} Name is required`);
+          hasErrors = true;
+        }
+        if (!sponsor.address) {
+          toast.error(`${fieldPrefix} Address is required`);
+          hasErrors = true;
+        }
+      });
+    }
+    return !hasErrors;
   };
 
-  // Function to proceed to the next form step
   const completeFormStep = () => {
-    let isValid = false;
+    let isValid = true;
     switch (formStep) {
       case 0:
         isValid = validateStep0();
@@ -537,62 +600,195 @@ function Form() {
     setHasResourcePersons(value);
   };
 
-  return (
-    <form onSubmit={handleSubmit(submitForm)} className="form">
-      {formStep < 5 && (
-        <div className="status-panel">
-          {formStep >= 1 && (
-            <button
-              className="prevButton btn-style"
-              id="preBtn"
-              type="button"
-              onClick={prevForm}
-            >
-              <Image
-                src="/assets/icons/back.svg"
-                width={15}
-                height={15}
-                alt="back"
-              />
-            </button>
-          )}
-          <div className="progress-box">
-            Step {formStep + 1} of 5
-            <progress
-              id="step"
-              value={(formStep + 1) * 20}
-              max="100"
-            ></progress>
-          </div>
-        </div>
-      )}
-      {formStep === 0 && (
-        <section className="first">
-          <h1 className="form-section-title">Basic Details</h1>
-          <div className="input-container">
-            <Controller
-              name="EventOrganizer"
-              control={control}
-              defaultValue={1}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <div className="space-box">
-                  <label htmlFor="eventOrganizer">Event Organizer </label>
-                  <select {...field} className="round" defaultValue="">
-                    <option value="" disabled>
-                      Select an option
-                    </option>
-                    <option value="1">Department</option>
-                    <option value="5">AICTE Idea Lab</option>
-                    <option value="2">
-                      Professional Societies (IEEE,ISTE,EDS)
-                    </option>
-                    <option value="3">Clubs and Cells</option>
-                    <option value="4">Other</option>
-                  </select>
+  const [viewerState, setViewerState] = useState({
+    visible: false,
+    activeImage: null,
+    width: 0,
+    height: 0
+  });
 
-                  {field.value == 2 && (
-                    <div>
+  const handleImageView = (imageUrl) => {
+    if (typeof window === 'undefined') return;
+    
+    const img = new Image();
+    img.src = imageUrl;
+    
+    img.onload = () => {
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = window.innerHeight * 0.9;
+      
+      // Calculate dimensions maintaining aspect ratio
+      let width = img.naturalWidth;
+      let height = img.naturalHeight;
+      
+      if (width > maxWidth) {
+        const ratio = maxWidth / width;
+        width = maxWidth;
+        height = height * ratio;
+      }
+      
+      if (height > maxHeight) {
+        const ratio = maxHeight / height;
+        height = maxHeight;
+        width = width * ratio;
+      }
+
+      setViewerState({
+        visible: true,
+        activeImage: imageUrl,
+        width,
+        height
+      });
+    };
+  };
+
+  const renderMedia = (url, type) => {
+    if (!url) return null;
+
+    if (url.endsWith('.pdf')) {
+      return (
+        <iframe src={url} width={450} height={500} />
+      );
+    }
+
+    return (
+      <div>
+        <div className="image-container">
+          <Image
+            height={400}
+            width={600}
+            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            src={url}
+            alt={`${type} preview`}
+            onClick={() => handleImageView(url)}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const checkImageDimensions = (file) => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined') {
+        // Skip validation during server-side rendering
+        resolve(true);
+        return;
+      }
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        const { width, height } = tempImg;
+        resolve(width >= 800 && height >= 400);
+      };
+      tempImg.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+      tempImg.src = URL.createObjectURL(file);
+    });
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit(submitForm)} className="form">
+        {formStep < 5 && (
+          <div className="status-panel">
+            {formStep >= 1 && (
+              <button
+                className="prevButton btn-style"
+                id="preBtn"
+                type="button"
+                onClick={prevForm}
+              >
+                <Image
+                  src="/assets/icons/back.svg"
+                  width={15}
+                  height={15}
+                  alt="back"
+                />
+              </button>
+            )}
+            <div className="progress-box">
+              Step {formStep + 1} of 5
+              <progress
+                id="step"
+                value={(formStep + 1) * 20}
+                max="100"
+              ></progress>
+            </div>
+          </div>
+        )}
+        {formStep === 0 && (
+          <section className="first">
+            <h1 className="form-section-title">Basic Details</h1>
+            <div className="input-container">
+              <Controller
+                name="EventOrganizer"
+                control={control}
+                defaultValue={1}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <div className="space-box">
+                    <label htmlFor="eventOrganizer">Event Organizer </label>
+                    <select {...field} className="round" defaultValue="">
+                      <option value="" disabled>
+                        Select an option
+                      </option>
+                      <option value="1">Department</option>
+                      <option value="5">AICTE Idea Lab</option>
+                      <option value="2">
+                        Professional Societies (IEEE,ISTE,EDS)
+                      </option>
+                      <option value="3">Clubs and Cells</option>
+                      <option value="4">Other</option>
+                    </select>
+
+                    {field.value == 2 && (
+                      <div>
+                        <div>
+                          <select
+                            {...field}
+                            value={eventSociety}
+                            defaultValue=""
+                            onChange={(e) => {
+                              setEventSociety(e.target.value);
+                            }}
+                            className="round"
+                          >
+                            <option value="" disabled>
+                              Select an Option
+                            </option>
+                            {societies.map((option, index) => (
+                              <option key={index} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                    {eventOrigin == 2 &&
+                      (eventSociety === "IEEE" ||
+                        ieeeSocieties.includes(eventSociety)) && (
+                        <div>
+                          <select
+                            value={currSoc}
+                            onChange={(e) => setCurrSoc(e.target.value)}
+                            className="round"
+                          >
+                            <option value="" disabled>
+                              Select an Option
+                            </option>
+                            {ieeeSocieties.map((option, index) => (
+                              <option
+                                key={index}
+                                value={ieeeSocietiesShort[index]}
+                              >
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    {field.value == 3 && (
                       <div>
                         <select
                           {...field}
@@ -606,744 +802,477 @@ function Form() {
                           <option value="" disabled>
                             Select an Option
                           </option>
-                          {societies.map((option, index) => (
+                          {clubs.map((option, index) => (
                             <option key={index} value={option}>
                               {option}
                             </option>
                           ))}
                         </select>
                       </div>
-                    </div>
-                  )}
-                  {eventOrigin == 2 &&
-                    (eventSociety === "IEEE" ||
-                      ieeeSocieties.includes(eventSociety)) && (
+                    )}
+                    {field.value == 4 && (
                       <div>
-                        <select
-                          value={currSoc}
-                          onChange={(e) => setCurrSoc(e.target.value)}
-                          className="round"
-                        >
-                          <option value="" disabled>
-                            Select an Option
-                          </option>
-                          {ieeeSocieties.map((option, index) => (
-                            <option
-                              key={index}
-                              value={ieeeSocietiesShort[index]}
-                            >
-                              {option}
-                            </option>
-                          ))}
-                        </select>
+                        <label className="w-full">
+                          <input
+                            className="other-input mt-6 border-0.5 border-black"
+                            placeholder="Please specify"
+                            required
+                            onChange={(e) => setCurrSoc(e.target.value)}
+                          />
+                        </label>
                       </div>
                     )}
-                  {field.value == 3 && (
-                    <div>
-                      <select
-                        {...field}
-                        value={eventSociety}
-                        defaultValue=""
-                        onChange={(e) => {
-                          setEventSociety(e.target.value);
-                        }}
-                        className="round"
-                      >
-                        <option value="" disabled>
-                          Select an Option
-                        </option>
-                        {clubs.map((option, index) => (
-                          <option key={index} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  {field.value == 4 && (
-                    <div>
-                      <label className="w-full">
-                        <input
-                          className="other-input mt-6 border-0.5 border-black"
-                          placeholder="Please specify"
-                          required
-                          onChange={(e) => setCurrSoc(e.target.value)}
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-              )}
-            />
-          </div>
-          <div className="input-container">
-            <label htmlFor="EventName" className="label">
-              Event Name
-            </label>
-            <input
-              type="text"
-              id="EventName"
-              placeholder="Enter The Name Of The Event"
-              name="EventName"
-              {...register("EventName", { required: true })}
-            />
-            <p className="error-msg">
-              {errors.EventName && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          <div>
-            <Controller
-              name="EventType.eventType"
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <div className="space-box">
-                  <label htmlFor="eventType">Event Type </label>
-                  <select {...field} className="round" defaultValue="">
-                    <option disabled value="">
-                      Select an option
-                    </option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="FDP">FDP</option>
-                    <option value="Bootcamp">BootCamp</option>
-                    <option value="Conference">Conference</option>
-                    <option value="other">Other</option>
-                  </select>
-                  {field.value === "other" && (
-                    <div className="input-container">
-                      <br />
-                      <label>
-                        <input
-                          type="text"
-                          className="other-input"
-                          placeholder="Please specify"
-                          {...register("EventType.eventTypeOtherOption", {
-                            required: true,
-                          })}
-                        />
-                      </label>
-                      <p className="error-msg">
-                        {errors.EventType &&
-                          errors.EventType.eventTypeOtherOption && (
-                            <span>*This field is required</span>
-                          )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            />
-          </div>
-
-          <div className="text-area">
-            <label htmlFor="EventObj">Objective of the Event</label>
-            <textarea
-              {...register("EventObjective", { required: true })}
-              placeholder="Enter the objective"
-            ></textarea>
-            <p className="error-msg">
-              {errors.EventObjective && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          <div className="input-container">
-            <label htmlFor="EventName" className="label">
-              Expected Number of Participants
-            </label>
-            <input
-              type="number"
-              id="EventParticipants"
-              placeholder="Enter expected number of participants"
-              name="EventParticipants"
-              {...register("EventParticipants", { required: true, min: 0 })}
-            />
-            <p className="error-msg">
-              {errors.EventParticipants && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          <div className="input-container">
-            <label className="label">Event Venue</label>
-            <div className="mt-4 flex flex-col gap-3 items-start">
-              <label htmlFor="EventVenueOnline" className="flex gap-3">
-                <input
-                  type="radio"
-                  id="EventVenueOnline"
-                  value="online"
-                  name="EventVenue"
-                  {...register("EventVenue", { required: true })}
-                />
-                Online
-              </label>
-              <label htmlFor="EventVenueOffline" className="flex gap-3">
-                <input
-                  type="radio"
-                  id="EventVenueOffline"
-                  value="offline"
-                  name="EventVenue"
-                  {...register("EventVenue", { required: true })}
-                />
-                Offline
-              </label>
-            </div>
-            <p className="error-msg">
-              {errors.EventVenue && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          {/* <div>
-            <Controller
-                name="eventLocation"
-                rules={{ required: true }}
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <div className="space-box">
-                    <label htmlFor="eventLocation">Event Location : </label>
-                    <div className="radio-container">
-                      <input
-                        type="radio"
-                        value="On-Campus"
-                        onChange={onChange}
-                        checked={value === "On-Campus"}
-                      />
-                      <label>On-Campus</label>
-                    </div>
-                    <div className="radio-container">
-                      <input
-                        type="radio"
-                        value="Off-Campus"
-                        onChange={onChange}
-                        checked={value === "Off-Campus"}
-                      />
-                      <label>Off-Campus</label>
-                    </div>
-                    <p className="error-msg">
-                      {errors.eventLocation && "Please select one"}
-                    </p>
                   </div>
                 )}
               />
-          </div> */}
-
-          <div className="input-container">
-            <label className="label">Is Event On-campus?</label>
-            <div className="flex flex-col mt-4 gap-3 items-start ">
-              <label htmlFor="EventLocationOnCampus" className="flex gap-3">
-                <input
-                  type="radio"
-                  id="EventLocationOnCampus"
-                  value="On-Campus"
-                  name="eventLocation"
-                  {...register("eventLocation", { required: true })}
-                />
-                Yes
-              </label>
-              <label htmlFor="EventLocationOffCampus" className="flex gap-3">
-                <input
-                  type="radio"
-                  id="EventLocationOffCampus"
-                  value="Off-Campus"
-                  name="eventLocation"
-                  {...register("eventLocation", { required: true })}
-                />
-                No
-              </label>
             </div>
-            <p className="error-msg">
-              {errors.eventLocation && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          <label>Permission Letter: </label>
-          {fileUrl.poster === "" && (
-            <div>
-              <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+            <div className="input-container">
+              <label htmlFor="EventName" className="label">
+                Event Name
+              </label>
               <input
-                type="file"
-                accept="image/*, application/pdf"
-                onChange={handleFileChange}
+                type="text"
+                id="EventName"
+                placeholder="Enter The Name Of The Event"
+                name="EventName"
+                {...register("EventName", { required: true })}
               />
-              <button
-                className="btn-style"
-                type="button"
-                disabled={!file || uploading || fileUrl.poster}
-                onClick={(e) => handleUpload(e, "poster")}
-              >
-                {uploading ? "Uploading..." : "Upload"}
-              </button>
+              <p className="error-msg">
+                {errors.EventName && <span>*This field is required</span>}
+              </p>
             </div>
-          )}
 
-          {fileUrl.poster !== "" && (
             <div>
-              <label>File Uploaded Successfully!</label>
-              <br />
-              {fileUrl.poster.endsWith(".pdf") ? (
-                <iframe src={fileUrl.poster} width={450} height={500} />
-              ) : (
-                <Image
-                  height={300}
-                  width={300}
-                  className="rounded-md"
-                  src={fileUrl.poster}
-                  alt="poster"
-                />
-              )}
-              <button
-                className="mt-2 mb-2 btn-style"
-                onClick={(e) => handleDelete(e, "poster")}
-              >
-                Delete File
-              </button>
-            </div>
-          )}
-          <div className="space-box">
-            <label>Start Date & Time:</label>
-            <input
-              name="eventStartDateTime"
-              type="datetime-local"
-              className="calander"
-              {...register("StartTime", { required: true })}
-              min={new Date().toISOString().substring(0, 16)}
-            />
-            <p className="error-msg">
-              {errors.StartTime && <span>*This field is required</span>}
-            </p>
-          </div>
-
-          <div className="space-box">
-            <label>End Date & Time:</label>
-            <input
-              name="eventEndDateTime"
-              type="datetime-local"
-              className="calander"
-              {...register("EndTime", {
-                required: true,
-                validate: {
-                  isAfterStartTime: (value) =>
-                    new Date(value) > new Date(getValues("StartTime")) ||
-                    "End time must be after start time",
-                },
-              })}
-              min={new Date().toISOString().substring(0, 16)}
-            />
-            <p className="error-msg">
-              {errors.EndTime && <span>{errors.EndTime.message}</span>}
-            </p>
-          </div>
-
-          <div
-            className="input-container"
-            style={{ display: "flex", flexDirection: "column" }}
-          >
-            <label htmlFor="EventDuration" className="label">
-              Event Duration (in hours)
-            </label>
-            <input
-              type="number"
-              id="EventDuration"
-              name="EventDuration"
-              placeholder="Enter The Duration Of The Event"
-              className="input"
-              {...register("EventDuration", { required: true, min: 1 })}
-              min={0}
-            />
-            <p className="error-msg">
-              {errors.EventDuration && <span>*Invalid Event Duration</span>}
-            </p>
-          </div>
-
-          <button
-            onClick={completeFormStep}
-            type="button"
-            className="btn btn-style"
-          >
-            Next
-          </button>
-        </section>
-      )}
-      {formStep === 1 && (
-        <section>
-          <div>
-            {isEventVenueOnline === "offline" &&
-            isEventVenueOffCampus === "On-Campus" ? (
-              <Calven
-                handleVenueChange={handleVenueChange}
-                startDate={getValues("StartTime")}
-                endDate={getValues("EndTime")}
+              <Controller
+                name="EventType.eventType"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <div className="space-box">
+                    <label htmlFor="eventType">Event Type </label>
+                    <select {...field} className="round" defaultValue="">
+                      <option disabled value="">
+                        Select an option
+                      </option>
+                      <option value="Workshop">Workshop</option>
+                      <option value="FDP">FDP</option>
+                      <option value="Bootcamp">BootCamp</option>
+                      <option value="Conference">Conference</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {field.value === "other" && (
+                      <div className="input-container">
+                        <br />
+                        <label>
+                          <input
+                            type="text"
+                            className="other-input"
+                            placeholder="Please specify"
+                            {...register("EventType.eventTypeOtherOption", {
+                              required: true,
+                            })}
+                          />
+                        </label>
+                        <p className="error-msg">
+                          {errors.EventType &&
+                            errors.EventType.eventTypeOtherOption && (
+                              <span>*This field is required</span>
+                            )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               />
-            ) : (
-              <>
-                <div className="input-container mb-3">
-                  <label htmlFor="eventVenueAddInfo" className="label">
-                    Event Venue
-                  </label>
+            </div>
+
+            <div className="text-area">
+              <label htmlFor="EventObj">Objective of the Event</label>
+              <textarea
+                {...register("EventObjective", { required: true })}
+                placeholder="Enter the objective"
+              ></textarea>
+              <p className="error-msg">
+                {errors.EventObjective && <span>*This field is required</span>}
+              </p>
+            </div>
+
+            <div className="input-container">
+              <label htmlFor="EventName" className="label">
+                Expected Number of Participants
+              </label>
+              <input
+                type="number"
+                id="EventParticipants"
+                placeholder="Enter expected number of participants"
+                name="EventParticipants"
+                {...register("EventParticipants", { required: true, min: 0 })}
+              />
+              <p className="error-msg">
+                {errors.EventParticipants && <span>*This field is required</span>}
+              </p>
+            </div>
+
+            <div className="input-container">
+              <label className="label">Event Venue</label>
+              <div className="mt-4 flex flex-col gap-3 items-start">
+                <label htmlFor="EventVenueOnline" className="flex gap-3">
                   <input
-                    type="text"
-                    id="eventVenueAddInfo"
-                    placeholder="Enter The Event Venue"
-                    name="eventVenueAddInfo"
-                    {...register("eventVenueAddInfo", { required: true })}
+                    type="radio"
+                    id="EventVenueOnline"
+                    value="online"
+                    name="EventVenue"
+                    {...register("EventVenue", { required: true })}
                   />
-                  <p className="error-msg">
-                    {errors.eventVenueAddInfo && (
-                      <span>*This field is required</span>
-                    )}
-                  </p>
-                </div>
-                <button
-                  onClick={completeFormStep}
-                  type="button"
-                  className="btn btn-style"
-                >
-                  Next
-                </button>
-              </>
-            )}
-          </div>
-        </section>
-      )}
-      {formStep === 2 && (
-        <section>
-          <h1 className="form-section-title">Coordinator Details</h1>
-
-          {coordinatorfields.map((field, index) => {
-            const isFetched = watch(`eventCoordinators.${index}.fetched`);
-
-            return (
-              <div className="card" key={field.id}>
-                <h4 style={{ color: "#bbb" }}>Coordinator {index + 1}</h4>
-
-                {/* Conditionally render the Staff ID field and fetch button */}
-                {!isFetched && (
-                  <>
-                    <div className="input-container">
-                      <label htmlFor={`StaffId-${index}`} className="label">
-                        Staff ID Number
-                      </label>
-                      <input
-                        type="text"
-                        id={`StaffId-${index}`}
-                        name={`StaffId-${index}`}
-                        placeholder="Enter the Staff ID Number"
-                        {...register(`eventCoordinators.${index}.staffId`, {
-                          pattern: {
-                            message:
-                              "Invalid Staff ID. Please enter a valid number.",
-                          },
-                        })}
-                      />
-                      <p className="error-msg">
-                        {errors.eventCoordinators &&
-                          errors.eventCoordinators[index] &&
-                          errors.eventCoordinators[index].staffId && (
-                            <span>
-                              {errors.eventCoordinators[index].staffId.message}
-                            </span>
-                          )}
-                      </p>
-                      <button
-                        type="button"
-                        className="btn-style"
-                        onClick={() => fetchStaffDetails(index)}
-                      >
-                        Get Staff Details
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* Coordinator Name Field */}
-                <div className="input-container">
-                  <label htmlFor={`CoordinatorName-${index}`} className="label">
-                    Coordinator Name
-                  </label>
+                  Online
+                </label>
+                <label htmlFor="EventVenueOffline" className="flex gap-3">
                   <input
-                    type="text"
-                    id={`CoordinatorName-${index}`}
-                    name={`CoordinatorName-${index}`}
-                    placeholder="Enter The Name Of The Coordinator"
-                    {...register(`eventCoordinators.${index}.coordinatorName`, {
-                      required: "Coordinator Name is required",
-                      pattern: {
-                        value: /^[A-Za-z\s.]+$/,
-                        message:
-                          "Invalid name. Please enter a valid name without any special characters or numbers.",
-                      },
-                    })}
+                    type="radio"
+                    id="EventVenueOffline"
+                    value="offline"
+                    name="EventVenue"
+                    {...register("EventVenue", { required: true })}
                   />
-                  <p className="error-msg">
-                    {errors.eventCoordinators &&
-                      errors.eventCoordinators[index] &&
-                      errors.eventCoordinators[index].coordinatorName && (
-                        <span>
-                          {
-                            errors.eventCoordinators[index].coordinatorName
-                              .message
-                          }
-                        </span>
-                      )}
-                  </p>
-                </div>
-
-                {/* Coordinator E-mail Field */}
-                <div className="input-container">
-                  <label htmlFor={`CoordinatorMail-${index}`} className="label">
-                    Coordinator E-mail
-                  </label>
-                  <input
-                    type="email"
-                    id={`CoordinatorMail-${index}`}
-                    name={`CoordinatorMail-${index}`}
-                    placeholder="Enter The Mail Of The Coordinator"
-                    {...register(`eventCoordinators.${index}.coordinatorMail`, {
-                      required: "Coordinator Mail is required",
-                      pattern: /^\S+@\S+$/i,
-                    })}
-                  />
-                  <p className="error-msg">
-                    {errors.eventCoordinators &&
-                      errors.eventCoordinators[index] &&
-                      errors.eventCoordinators[index].coordinatorMail && (
-                        <span>
-                          {
-                            errors.eventCoordinators[index].coordinatorMail
-                              .message
-                          }
-                        </span>
-                      )}
-                  </p>
-                </div>
-
-                {/* Coordinator Phone Field */}
-                <div className="input-container">
-                  <label
-                    htmlFor={`CoordinatorPhone-${index}`}
-                    className="label"
-                  >
-                    Coordinator Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id={`CoordinatorPhone-${index}`}
-                    name={`CoordinatorPhone-${index}`}
-                    placeholder="Enter The No. Of The Coordinator"
-                    {...register(
-                      `eventCoordinators.${index}.coordinatorPhone`,
-                      {
-                        required: "Phone number is required",
-                        pattern: {
-                          value: /^[6-9]\d{9}$/,
-                          message: "Invalid phone number",
-                        },
-                      }
-                    )}
-                  />
-                  <p className="error-msg">
-                    {errors.eventCoordinators &&
-                      errors.eventCoordinators[index] &&
-                      errors.eventCoordinators[index].coordinatorPhone && (
-                        <span>
-                          {
-                            errors.eventCoordinators[index].coordinatorPhone
-                              .message
-                          }
-                        </span>
-                      )}
-                  </p>
-                </div>
-
-                {/* Coordinator Role Field */}
-                <div className="input-container">
-                  <label htmlFor={`CoordinatorRole-${index}`} className="label">
-                    Coordinator Role
-                  </label>
-                  <input
-                    type="text"
-                    id={`CoordinatorRole-${index}`}
-                    name={`CoordinatorRole-${index}`}
-                    placeholder="Enter The Role Of The Coordinator"
-                    {...register(`eventCoordinators.${index}.coordinatorRole`, {
-                      required: true,
-                    })}
-                  />
-                  <p className="error-msg">
-                    {errors.eventCoordinators &&
-                      errors.eventCoordinators[index] &&
-                      errors.eventCoordinators[index].coordinatorRole && (
-                        <span>*This field is required</span>
-                      )}
-                  </p>
-                </div>
-
-                {/* Remove Coordinator Button */}
-                {index > 0 && (
-                  <button
-                    type="button"
-                    className="btn-style"
-                    onClick={() => {
-                      coordinatorremove(index);
-                      setFetchedCoordinators((prev) =>
-                        prev.filter((id) => id !== index)
-                      );
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
+                  Offline
+                </label>
               </div>
-            );
-          })}
+              <p className="error-msg">
+                {errors.EventVenue && <span>*This field is required</span>}
+              </p>
+            </div>
 
-          {/* Buttons Section */}
-          <div className="buttons">
-            <button
-              type="button"
-              className="btn-style"
-              onClick={() => coordinatorappend({ staffId: "", fetched: false })}
+            {/* <div>
+              <Controller
+                  name="eventLocation"
+                  rules={{ required: true }}
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <div className="space-box">
+                      <label htmlFor="eventLocation">Event Location : </label>
+                      <div className="radio-container">
+                        <input
+                          type="radio"
+                          value="On-Campus"
+                          onChange={onChange}
+                          checked={value === "On-Campus"}
+                        />
+                        <label>On-Campus</label>
+                      </div>
+                      <div className="radio-container">
+                        <input
+                          type="radio"
+                          value="Off-Campus"
+                          onChange={onChange}
+                          checked={value === "Off-Campus"}
+                        />
+                        <label>Off-Campus</label>
+                      </div>
+                      <p className="error-msg">
+                        {errors.eventLocation && "Please select one"}
+                      </p>
+                    </div>
+                  )}
+                />
+            </div> */}
+
+            <div className="input-container">
+              <label className="label">Is Event On-campus?</label>
+              <div className="flex flex-col mt-4 gap-3 items-start ">
+                <label htmlFor="EventLocationOnCampus" className="flex gap-3">
+                  <input
+                    type="radio"
+                    id="EventLocationOnCampus"
+                    value="On-Campus"
+                    name="eventLocation"
+                    {...register("eventLocation", { required: true })}
+                  />
+                  Yes
+                </label>
+                <label htmlFor="EventLocationOffCampus" className="flex gap-3">
+                  <input
+                    type="radio"
+                    id="EventLocationOffCampus"
+                    value="Off-Campus"
+                    name="eventLocation"
+                    {...register("eventLocation", { required: true })}
+                  />
+                  No
+                </label>
+              </div>
+              <p className="error-msg">
+                {errors.eventLocation && <span>*This field is required</span>}
+              </p>
+            </div>
+
+            <label>Permission Letter: </label>
+            {fileUrl.poster === "" && (
+              <div>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                <input
+                  type="file"
+                  accept="image/*, application/pdf"
+                  onChange={handleFileChange}
+                />
+                <button
+                  className="btn-style"
+                  type="button"
+                  disabled={!file || uploading || fileUrl.poster}
+                  onClick={(e) => handleUpload(e, "poster")}
+                >
+                  {uploading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+            )}
+
+            {fileUrl.poster !== "" && (
+              <div>
+                <label>File Uploaded Successfully!</label>
+                <br />
+                {renderMedia(fileUrl.poster, "Permission Letter")}
+                <button
+                  className="mt-2 mb-2 btn-style"
+                  onClick={(e) => handleDelete(e, "poster")}
+                >
+                  Delete File
+                </button>
+              </div>
+            )}
+            <div className="space-box">
+              <label>Start Date & Time:</label>
+              <input
+                name="eventStartDateTime"
+                type="datetime-local"
+                className="calander"
+                {...register("StartTime", { required: true })}
+                min={new Date().toISOString().substring(0, 16)}
+              />
+              <p className="error-msg">
+                {errors.StartTime && <span>*This field is required</span>}
+              </p>
+            </div>
+
+            <div className="space-box">
+              <label>End Date & Time:</label>
+              <input
+                name="eventEndDateTime"
+                type="datetime-local"
+                className="calander"
+                {...register("EndTime", {
+                  required: true,
+                  validate: {
+                    isAfterStartTime: (value) =>
+                      new Date(value) > new Date(getValues("StartTime")) ||
+                      "End time must be after start time",
+                  },
+                })}
+                min={new Date().toISOString().substring(0, 16)}
+              />
+              <p className="error-msg">
+                {errors.EndTime && <span>{errors.EndTime.message}</span>}
+              </p>
+            </div>
+
+            <div
+              className="input-container"
+              style={{ display: "flex", flexDirection: "column" }}
             >
-              Add Coordinator
-            </button>
-            <button type="button" className="btn-style" onClick={resetForm}>
-              Reset
-            </button>
+              <label htmlFor="EventDuration" className="label">
+                Event Duration (in hours)
+              </label>
+              <input
+                type="number"
+                id="EventDuration"
+                name="EventDuration"
+                placeholder="Enter The Duration Of The Event"
+                className="input"
+                {...register("EventDuration", { required: true, min: 1 })}
+                min={0}
+              />
+              <p className="error-msg">
+                {errors.EventDuration && <span>*Invalid Event Duration</span>}
+              </p>
+            </div>
+
             <button
               onClick={completeFormStep}
-              className="btn-style"
+              type="button"
+              className="btn btn-style"
             >
-              Continue
+              Next
             </button>
-          </div>
-        </section>
-      )}
-
-      {formStep === 3 && (
-        <section>
-          <h1 className="form-section-title">Resource Person Details</h1>
-
-          {/* Question on whether there are resource persons */}
-          <div className="input-container">
-            <label htmlFor="hasResourcePersons" className="label">
-              Are there any resource persons for the event?
-            </label>
-            <select
-              id="hasResourcePersons"
-              name="hasResourcePersons"
-              onChange={handleResourcePersonQuestion}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select an option
-              </option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </div>
-
-          {/* Conditionally render resource person details if 'Yes' is selected */}
-          {hasResourcePersons && (
-            <>
-              {resourcepersonfields.map((field, index) => (
-                <div className="card" key={index}>
-                  <h4 style={{ color: "#bbb" }}>Resource Person {index + 1}</h4>
-
-                  {/* Name Field */}
-                  <div className="input-container">
-                    <label
-                      htmlFor={`ResourcePersonName-${index}`}
-                      className="label"
-                    >
-                      Name
+          </section>
+        )}
+        {formStep === 1 && (
+          <section>
+            <div>
+              {isEventVenueOnline === "offline" &&
+              isEventVenueOffCampus === "On-Campus" ? (
+                <Calven
+                  handleVenueChange={handleVenueChange}
+                  startDate={getValues("StartTime")}
+                  endDate={getValues("EndTime")}
+                />
+              ) : (
+                <>
+                  <div className="input-container mb-3">
+                    <label htmlFor="eventVenueAddInfo" className="label">
+                      Event Venue
                     </label>
                     <input
                       type="text"
-                      id={`ResourcePersonName-${index}`}
-                      name={`ResourcePersonName-${index}`}
-                      placeholder="Enter The Name Of The ResourcePerson"
-                      {...register(
-                        `eventResourcePerson.${index}.ResourcePersonName`,
-                        {
-                          required: "Resource Person name is required",
-                          pattern: {
-                            value: /^[A-Za-z\s]+$/,
-                            message:
-                              "Invalid name. Please enter a valid name without any special characters or numbers.",
-                          },
-                        }
-                      )}
+                      id="eventVenueAddInfo"
+                      placeholder="Enter The Event Venue"
+                      name="eventVenueAddInfo"
+                      {...register("eventVenueAddInfo", { required: true })}
                     />
                     <p className="error-msg">
-                      {errors.eventResourcePerson &&
-                        errors.eventResourcePerson[index] &&
-                        errors.eventResourcePerson[index]
-                          .ResourcePersonName && (
+                      {errors.eventVenueAddInfo && (
+                        <span>*This field is required</span>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={completeFormStep}
+                    type="button"
+                    className="btn btn-style"
+                  >
+                    Next
+                  </button>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+        {formStep === 2 && (
+          <section>
+            <h1 className="form-section-title">Coordinator Details</h1>
+
+            {coordinatorfields.map((field, index) => {
+              const isFetched = watch(`eventCoordinators.${index}.fetched`);
+
+              return (
+                <div className="card" key={field.id}>
+                  <h4 style={{ color: "#bbb" }}>Coordinator {index + 1}</h4>
+
+                  {/* Conditionally render the Staff ID field and fetch button */}
+                  {!isFetched && (
+                    <>
+                      <div className="input-container">
+                        <label htmlFor={`StaffId-${index}`} className="label">
+                          Staff ID Number
+                        </label>
+                        <input
+                          type="text"
+                          id={`StaffId-${index}`}
+                          name={`StaffId-${index}`}
+                          placeholder="Enter the Staff ID Number"
+                          {...register(`eventCoordinators.${index}.staffId`, {
+                            pattern: {
+                              message:
+                                "Invalid Staff ID. Please enter a valid number.",
+                            },
+                          })}
+                        />
+                        <p className="error-msg">
+                          {errors.eventCoordinators &&
+                            errors.eventCoordinators[index] &&
+                            errors.eventCoordinators[index].staffId && (
+                              <span>
+                                {errors.eventCoordinators[index].staffId.message}
+                              </span>
+                            )}
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-style"
+                          onClick={() => fetchStaffDetails(index)}
+                        >
+                          Get Staff Details
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Coordinator Name Field */}
+                  <div className="input-container">
+                    <label htmlFor={`CoordinatorName-${index}`} className="label">
+                      Coordinator Name
+                    </label>
+                    <input
+                      type="text"
+                      id={`CoordinatorName-${index}`}
+                      name={`CoordinatorName-${index}`}
+                      placeholder="Enter The Name Of The Coordinator"
+                      {...register(`eventCoordinators.${index}.coordinatorName`, {
+                        required: "Coordinator Name is required",
+                        pattern: {
+                          value: /^[A-Za-z\s.]+$/,
+                          message:
+                            "Invalid name. Please enter a valid name without any special characters or numbers.",
+                        },
+                      })}
+                    />
+                    <p className="error-msg">
+                      {errors.eventCoordinators &&
+                        errors.eventCoordinators[index] &&
+                        errors.eventCoordinators[index].coordinatorName && (
                           <span>
                             {
-                              errors.eventResourcePerson[index]
-                                .ResourcePersonName.message
+                              errors.eventCoordinators[index].coordinatorName
+                                .message
                             }
                           </span>
                         )}
                     </p>
                   </div>
 
-                  {/* E-mail Field */}
+                  {/* Coordinator E-mail Field */}
                   <div className="input-container">
-                    <label
-                      htmlFor={`ResourcePersonMail-${index}`}
-                      className="label"
-                    >
-                      E-mail
+                    <label htmlFor={`CoordinatorMail-${index}`} className="label">
+                      Coordinator E-mail
                     </label>
                     <input
                       type="email"
-                      id={`ResourcePersonMail-${index}`}
-                      name={`ResourcePersonMail-${index}`}
-                      placeholder="Enter The Mail Of The ResourcePerson"
-                      {...register(
-                        `eventResourcePerson.${index}.ResourcePersonMail`,
-                        {
-                          required: "Resource Person Mail is required",
-                          pattern: {
-                            value: /^\S+@\S+$/i,
-                            message: "Invalid email address",
-                          },
-                        }
-                      )}
+                      id={`CoordinatorMail-${index}`}
+                      name={`CoordinatorMail-${index}`}
+                      placeholder="Enter The Mail Of The Coordinator"
+                      {...register(`eventCoordinators.${index}.coordinatorMail`, {
+                        required: "Coordinator Mail is required",
+                        pattern: /^\S+@\S+$/i,
+                      })}
                     />
                     <p className="error-msg">
-                      {errors.eventResourcePerson &&
-                        errors.eventResourcePerson[index] &&
-                        errors.eventResourcePerson[index]
-                          .ResourcePersonMail && (
+                      {errors.eventCoordinators &&
+                        errors.eventCoordinators[index] &&
+                        errors.eventCoordinators[index].coordinatorMail && (
                           <span>
                             {
-                              errors.eventResourcePerson[index]
-                                .ResourcePersonMail.message
+                              errors.eventCoordinators[index].coordinatorMail
+                                .message
                             }
                           </span>
                         )}
                     </p>
                   </div>
 
-                  {/* Phone Field */}
+                  {/* Coordinator Phone Field */}
                   <div className="input-container">
                     <label
-                      htmlFor={`ResourcePersonPhone-${index}`}
+                      htmlFor={`CoordinatorPhone-${index}`}
                       className="label"
                     >
-                      Phone
+                      Coordinator Phone
                     </label>
                     <input
-                      type="number"
-                      id={`ResourcePersonPhone-${index}`}
-                      name={`ResourcePersonPhone-${index}`}
-                      placeholder="Enter The No. Of The ResourcePerson"
+                      type="tel"
+                      id={`CoordinatorPhone-${index}`}
+                      name={`CoordinatorPhone-${index}`}
+                      placeholder="Enter The No. Of The Coordinator"
                       {...register(
-                        `eventResourcePerson.${index}.ResourcePersonPhone`,
+                        `eventCoordinators.${index}.coordinatorPhone`,
                         {
-                          required: "Resource Person phone number is required",
+                          required: "Phone number is required",
                           pattern: {
                             value: /^[6-9]\d{9}$/,
                             message: "Invalid phone number",
@@ -1352,357 +1281,574 @@ function Form() {
                       )}
                     />
                     <p className="error-msg">
-                      {errors.eventResourcePerson &&
-                        errors.eventResourcePerson[index] &&
-                        errors.eventResourcePerson[index]
-                          .ResourcePersonPhone && (
+                      {errors.eventCoordinators &&
+                        errors.eventCoordinators[index] &&
+                        errors.eventCoordinators[index].coordinatorPhone && (
                           <span>
                             {
-                              errors.eventResourcePerson[index]
-                                .ResourcePersonPhone.message
+                              errors.eventCoordinators[index].coordinatorPhone
+                                .message
                             }
                           </span>
                         )}
                     </p>
                   </div>
 
-                  {/* Designation Field */}
+                  {/* Coordinator Role Field */}
                   <div className="input-container">
-                    <label
-                      htmlFor={`ResourcePersonDesgn-${index}`}
-                      className="label"
-                    >
+                    <label htmlFor={`CoordinatorRole-${index}`} className="label">
                       Designation
                     </label>
                     <input
                       type="text"
-                      id={`ResourcePersonDesgn-${index}`}
-                      name={`ResourcePersonDesgn-${index}`}
-                      placeholder="Enter The Designation Of The ResourcePerson"
-                      {...register(
-                        `eventResourcePerson.${index}.ResourcePersonDesgn`,
-                        {
-                          required: "Designation is Required",
-                        }
-                      )}
+                      id={`CoordinatorRole-${index}`}
+                      name={`CoordinatorRole-${index}`}
+                      placeholder="Enter The Designation Of The Coordinator"
+                      {...register(`eventCoordinators.${index}.coordinatorRole`, {
+                        required: true,
+                      })}
                     />
                     <p className="error-msg">
-                      {errors.eventResourcePerson &&
-                        errors.eventResourcePerson[index] &&
-                        errors.eventResourcePerson[index]
-                          .ResourcePersonDesgn && (
-                          <span>
-                            {
-                              errors.eventResourcePerson[index]
-                                .ResourcePersonDesgn.message
-                            }
-                          </span>
+                      {errors.eventCoordinators &&
+                        errors.eventCoordinators[index] &&
+                        errors.eventCoordinators[index].coordinatorRole && (
+                          <span>*This field is required</span>
                         )}
                     </p>
                   </div>
 
-                  {/* Official Address Field */}
-                  <div className="text-area">
-                    <label htmlFor={`ResourcePersonAddr-${index}`}>
-                      Official Address
-                    </label>
-                    <textarea
-                      id={`ResourcePersonAddr-${index}`}
-                      name={`ResourcePersonAddr-${index}`}
-                      placeholder="Enter The Official Address Of The ResourcePerson"
-                      {...register(
-                        `eventResourcePerson.${index}.ResourcePersonAddr`,
-                        {
-                          required: "Address is Required",
-                        }
-                      )}
-                    ></textarea>
-                    <p className="error-msg">
-                      {errors.eventResourcePerson &&
-                        errors.eventResourcePerson[index] &&
-                        errors.eventResourcePerson[index]
-                          .ResourcePersonAddr && (
-                          <span>
-                            {
-                              errors.eventResourcePerson[index]
-                                .ResourcePersonAddr.message
-                            }
-                          </span>
-                        )}
-                    </p>
-                  </div>
-
-                  {/* Remove button */}
+                  {/* Remove Coordinator Button */}
                   {index > 0 && (
                     <button
                       type="button"
-                      id="minus2"
                       className="btn-style"
-                      onClick={() => resourcepersonremove(index)}
+                      onClick={() => {
+                        coordinatorremove(index);
+                        setFetchedCoordinators((prev) =>
+                          prev.filter((id) => id !== index)
+                        );
+                      }}
                     >
-                      X
+                      Remove
                     </button>
                   )}
                 </div>
-              ))}
+              );
+            })}
 
-              {/* Add Resource Person button */}
-              <div className="buttons">
+            {/* Buttons Section */}
+            <div className="buttons">
+              <button
+                type="button"
+                className="btn-style"
+                onClick={() => coordinatorappend({ staffId: "", fetched: false })}
+              >
+                Add Coordinator
+              </button>
+              <button type="button" className="btn-style" onClick={resetForm}>
+                Reset
+              </button>
+              <button
+                onClick={completeFormStep}
+                className="btn-style"
+              >
+                Continue
+              </button>
+            </div>
+          </section>
+        )}
+
+        {formStep === 3 && (
+          <section>
+            <h1 className="form-section-title">Resource Person Details</h1>
+
+            {/* Question on whether there are resource persons */}
+            <div className="input-container">
+              <label htmlFor="hasResourcePersons" className="label">
+                Are there any resource persons for the event?
+              </label>
+              <select
+                id="hasResourcePersons"
+                name="hasResourcePersons"
+                onChange={handleResourcePersonQuestion}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select an option
+                </option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            {/* Conditionally render resource person details if 'Yes' is selected */}
+            {hasResourcePersons && (
+              <>
+                {resourcepersonfields.map((field, index) => (
+                  <div className="card" key={index}>
+                    <h4 style={{ color: "#bbb" }}>Resource Person {index + 1}</h4>
+
+                    {/* Name Field */}
+                    <div className="input-container">
+                      <label
+                        htmlFor={`ResourcePersonName-${index}`}
+                        className="label"
+                      >
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        id={`ResourcePersonName-${index}`}
+                        name={`ResourcePersonName-${index}`}
+                        placeholder="Enter The Name Of The ResourcePerson"
+                        {...register(
+                          `eventResourcePerson.${index}.ResourcePersonName`,
+                          {
+                            required: "Resource Person name is required",
+                            pattern: {
+                              value: /^[A-Za-z\s]+$/,
+                              message:
+                                "Invalid name. Please enter a valid name without any special characters or numbers.",
+                            },
+                          }
+                        )}
+                      />
+                      <p className="error-msg">
+                        {errors.eventResourcePerson &&
+                          errors.eventResourcePerson[index] &&
+                          errors.eventResourcePerson[index]
+                            .ResourcePersonName && (
+                            <span>
+                              {
+                                errors.eventResourcePerson[index]
+                                  .ResourcePersonName.message
+                              }
+                            </span>
+                          )}
+                      </p>
+                    </div>
+
+                    {/* E-mail Field */}
+                    <div className="input-container">
+                      <label
+                        htmlFor={`ResourcePersonMail-${index}`}
+                        className="label"
+                      >
+                        E-mail
+                      </label>
+                      <input
+                        type="email"
+                        id={`ResourcePersonMail-${index}`}
+                        name={`ResourcePersonMail-${index}`}
+                        placeholder="Enter The Mail Of The ResourcePerson"
+                        {...register(
+                          `eventResourcePerson.${index}.ResourcePersonMail`,
+                          {
+                            required: "Resource Person Mail is required",
+                            pattern: {
+                              value: /^\S+@\S+$/i,
+                              message: "Invalid email address",
+                            },
+                          }
+                        )}
+                      />
+                      <p className="error-msg">
+                        {errors.eventResourcePerson &&
+                          errors.eventResourcePerson[index] &&
+                          errors.eventResourcePerson[index]
+                            .ResourcePersonMail && (
+                            <span>
+                              {
+                                errors.eventResourcePerson[index]
+                                  .ResourcePersonMail.message
+                              }
+                            </span>
+                          )}
+                      </p>
+                    </div>
+
+                    {/* Phone Field */}
+                    <div className="input-container">
+                      <label
+                        htmlFor={`ResourcePersonPhone-${index}`}
+                        className="label"
+                      >
+                        Phone
+                      </label>
+                      <input
+                        type="number"
+                        id={`ResourcePersonPhone-${index}`}
+                        name={`ResourcePersonPhone-${index}`}
+                        placeholder="Enter The No. Of The ResourcePerson"
+                        {...register(
+                          `eventResourcePerson.${index}.ResourcePersonPhone`,
+                          {
+                            required: "Resource Person phone number is required",
+                            pattern: {
+                              value: /^[6-9]\d{9}$/,
+                              message: "Invalid phone number",
+                            },
+                          }
+                        )}
+                      />
+                      <p className="error-msg">
+                        {errors.eventResourcePerson &&
+                          errors.eventResourcePerson[index] &&
+                          errors.eventResourcePerson[index]
+                            .ResourcePersonPhone && (
+                            <span>
+                              {
+                                errors.eventResourcePerson[index]
+                                  .ResourcePersonPhone.message
+                              }
+                            </span>
+                          )}
+                      </p>
+                    </div>
+
+                    {/* Designation Field */}
+                    <div className="input-container">
+                      <label
+                        htmlFor={`ResourcePersonDesgn-${index}`}
+                        className="label"
+                      >
+                        Designation
+                      </label>
+                      <input
+                        type="text"
+                        id={`ResourcePersonDesgn-${index}`}
+                        name={`ResourcePersonDesgn-${index}`}
+                        placeholder="Enter The Designation Of The ResourcePerson"
+                        {...register(
+                          `eventResourcePerson.${index}.ResourcePersonDesgn`,
+                          {
+                            required: "Designation is Required",
+                          }
+                        )}
+                      />
+                      <p className="error-msg">
+                        {errors.eventResourcePerson &&
+                          errors.eventResourcePerson[index] &&
+                          errors.eventResourcePerson[index]
+                            .ResourcePersonDesgn && (
+                            <span>
+                              {
+                                errors.eventResourcePerson[index]
+                                  .ResourcePersonDesgn.message
+                              }
+                            </span>
+                          )}
+                      </p>
+                    </div>
+
+                    {/* Official Address Field */}
+                    <div className="text-area">
+                      <label htmlFor={`ResourcePersonAddr-${index}`}>
+                        Official Address
+                      </label>
+                      <textarea
+                        id={`ResourcePersonAddr-${index}`}
+                        name={`ResourcePersonAddr-${index}`}
+                        placeholder="Enter The Official Address Of The ResourcePerson"
+                        {...register(
+                          `eventResourcePerson.${index}.ResourcePersonAddr`,
+                          {
+                            required: "Address is Required",
+                          }
+                        )}
+                      ></textarea>
+                      <p className="error-msg">
+                        {errors.eventResourcePerson &&
+                          errors.eventResourcePerson[index] &&
+                          errors.eventResourcePerson[index]
+                            .ResourcePersonAddr && (
+                            <span>
+                              {
+                                errors.eventResourcePerson[index]
+                                  .ResourcePersonAddr.message
+                              }
+                            </span>
+                          )}
+                      </p>
+                    </div>
+
+                    {/* Remove button */}
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        id="minus2"
+                        className="btn-style"
+                        onClick={() => resourcepersonremove(index)}
+                      >
+                        X
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {/* Add Resource Person button */}
+                <div className="buttons">
+                  <button
+                    className="btn-style"
+                    type="button"
+                    onClick={() => {
+                      resourcepersonappend({});
+                    }}
+                  >
+                    Add Resource Person
+                  </button>
+                  <button
+                    onClick={completeFormStep}
+                    type="button"
+                    className="btn btn-style"
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Show 'Next' button if 'No' is selected */}
+            {hasResourcePersons === false && (
+              <button
+                onClick={completeFormStep}
+                type="button"
+                className="btn btn-style"
+              >
+                Next
+              </button>
+            )}
+          </section>
+        )}
+
+        {formStep === 4 && (
+          <section>
+            <h1 className="form-section-title">Budget Details</h1>
+            <div>
+              <Controller
+                name="eventStakeholders"
+                control={control}
+                defaultValue={[]}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <div>
+                    <label className="checkbox-box">Event Stakeholders : </label>
+                    {options.map((option) => (
+                      <div key={option.index} className="check-box">
+                        <label key={option.value} className="checkbox-label">
+                          <input
+                            type="checkbox"
+                            value={option.value}
+                            onChange={(e) => {
+                              const { checked, value } = e.target;
+                              if (checked) {
+                                field.onChange([...field.value, value]);
+                              } else {
+                                field.onChange(
+                                  field.value.filter((val) => val !== value)
+                                );
+                              }
+                            }}
+                            checked={field.value.includes(option.value)}
+                          />
+                          {option.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              />
+            </div>
+
+            <div>
+              <label>Is the event sponsored?</label>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    {...register("isSponsored", { required: true })}
+                    value={true}
+                  />
+                  Yes
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    {...register("isSponsored", { required: true })}
+                    value={false}
+                  />
+                  No
+                </label>
+                <p className="error-msg">
+                  {errors.isSponsored && <span>*This field is required</span>}
+                </p>
+              </div>
+            </div>
+
+            {isSponsored === "true" && (
+              <div>
+                <div className="input-container">
+                  <label htmlFor="Budget" className="label">
+                    Budget Rs.
+                  </label>
+                  <input
+                    type="number"
+                    id="Budget"
+                    name="Budget"
+                    placeholder="Enter The Budget"
+                    className="input"
+                    {...register("Budget", { required: true, min: 0 })}
+                    min={0}
+                  />
+                  <p className="error-msg">
+                    {errors.Budget && <span>*Invalid Budget</span>}
+                  </p>
+                </div>
+                <label>Sponsor(s) Information:</label>
+                <br />
+                <br></br>
+                {sponsorfield.map((sponsor, index) => (
+                  <div key={index} className="card">
+                    <div className="space-box">
+                      <h4 style={{ color: "#bbb" }}>Sponsor {index + 1}</h4>
+                    </div>
+                    <div className="input-container">
+                      <label htmlFor="eventSponsor" className="label">
+                        Sponsor name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter The Name Of The Sponsor"
+                        {...register(`eventSponsors.${index}.name`, {
+                          required: "Sponsor name is Required",
+                        })}
+                      />
+                      <p className="error-msg">
+                        {errors.eventSponsors &&
+                          errors.eventSponsors[index] &&
+                          errors.eventSponsors[index].name && (
+                            <span>
+                              {errors.eventSponsors[index].name.message}
+                            </span>
+                          )}
+                      </p>
+                    </div>
+                    <br />
+
+                    <div className="text-area">
+                      <label htmlFor="SponsorAddr">Sponsor Address</label>
+                      <textarea
+                        {...register(`eventSponsors.${index}.address`, {
+                          required: "Sponsor Address is Required",
+                        })}
+                      ></textarea>
+                      <p className="error-msg">
+                        {errors.eventSponsors &&
+                          errors.eventSponsors[index] &&
+                          errors.eventSponsors[index].address && (
+                            <span>
+                              {errors.eventSponsors[index].address.message}
+                            </span>
+                          )}
+                      </p>
+                    </div>
+                    <br />
+                    {index >= 0 && (
+                      <button
+                        type="button"
+                        id="minus3"
+                        className="btn-style"
+                        onClick={() => sponsorremove(index)}
+                      >
+                        X
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <br />
                 <button
                   className="btn-style"
                   type="button"
-                  onClick={() => {
-                    resourcepersonappend({});
-                  }}
+                  onClick={() => sponsorappend({})}
                 >
-                  Add Resource Person
-                </button>
-                <button
-                  onClick={completeFormStep}
-                  type="button"
-                  className="btn btn-style"
-                >
-                  Next
+                  Add Sponsor
                 </button>
               </div>
-            </>
-          )}
-
-          {/* Show 'Next' button if 'No' is selected */}
-          {hasResourcePersons === false && (
-            <button
-              onClick={completeFormStep}
-              type="button"
-              className="btn btn-style"
-            >
-              Next
-            </button>
-          )}
-        </section>
-      )}
-
-      {formStep === 4 && (
-        <section>
-          <h1 className="form-section-title">Budget Details</h1>
-          <div>
-            <Controller
-              name="eventStakeholders"
-              control={control}
-              defaultValue={[]}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <div>
-                  <label className="checkbox-box">Event Stakeholders : </label>
-                  {options.map((option) => (
-                    <div key={option.index} className="check-box">
-                      <label key={option.value} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          onChange={(e) => {
-                            const { checked, value } = e.target;
-                            if (checked) {
-                              field.onChange([...field.value, value]);
-                            } else {
-                              field.onChange(
-                                field.value.filter((val) => val !== value)
-                              );
-                            }
-                          }}
-                          checked={field.value.includes(option.value)}
-                        />
-                        {option.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            />
-          </div>
-
-          <div>
-            <label>Is the event sponsored?</label>
-            <div>
-              <label>
-                <input
-                  type="radio"
-                  {...register("isSponsored", { required: true })}
-                  value={true}
-                />
-                Yes
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  {...register("isSponsored", { required: true })}
-                  value={false}
-                />
-                No
-              </label>
-              <p className="error-msg">
-                {errors.isSponsored && <span>*This field is required</span>}
-              </p>
-            </div>
-          </div>
-
-          {isSponsored === "true" && (
-            <div>
-              <div className="input-container">
-                <label htmlFor="Budget" className="label">
-                  Budget Rs.
-                </label>
-                <input
-                  type="number"
-                  id="Budget"
-                  name="Budget"
-                  placeholder="Enter The Budget"
-                  className="input"
-                  {...register("Budget", { required: true, min: 0 })}
-                  min={0}
-                />
-                <p className="error-msg">
-                  {errors.Budget && <span>*Invalid Budget</span>}
-                </p>
-              </div>
-              <label>Sponsor(s) Information:</label>
-              <br />
-              <br></br>
-              {sponsorfield.map((sponsor, index) => (
-                <div key={index} className="card">
-                  <div className="space-box">
-                    <h4 style={{ color: "#bbb" }}>Sponsor {index + 1}</h4>
-                  </div>
-                  <div className="input-container">
-                    <label htmlFor="eventSponsor" className="label">
-                      Sponsor name
-                    </label>
+            )}
+            {isSponsored === "true" && (
+              <div>
+                <label>Sanction Letter: </label>
+                {fileUrl.sanctionLetter === "" && (
+                  <>
+                    <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                     <input
-                      type="text"
-                      placeholder="Enter The Name Of The Sponsor"
-                      {...register(`eventSponsors.${index}.name`, {
-                        required: "Sponsor name is Required",
-                      })}
+                      type="file"
+                      accept="image/*, application/pdf"
+                      onChange={handleFileChange}
                     />
-                    <p className="error-msg">
-                      {errors.eventSponsors &&
-                        errors.eventSponsors[index] &&
-                        errors.eventSponsors[index].name && (
-                          <span>
-                            {errors.eventSponsors[index].name.message}
-                          </span>
-                        )}
-                    </p>
-                  </div>
-                  <br />
-
-                  <div className="text-area">
-                    <label htmlFor="SponsorAddr">Sponsor Address</label>
-                    <textarea
-                      {...register(`eventSponsors.${index}.address`, {
-                        required: "Sponsor Address is Required",
-                      })}
-                    ></textarea>
-                    <p className="error-msg">
-                      {errors.eventSponsors &&
-                        errors.eventSponsors[index] &&
-                        errors.eventSponsors[index].address && (
-                          <span>
-                            {errors.eventSponsors[index].address.message}
-                          </span>
-                        )}
-                    </p>
-                  </div>
-                  <br />
-                  {index >= 0 && (
                     <button
                       type="button"
-                      id="minus3"
                       className="btn-style"
-                      onClick={() => sponsorremove(index)}
+                      disabled={!file || uploading || fileUrl.sanctionLetter}
+                      onClick={(e) => handleUpload(e, "sanctionLetter")}
                     >
-                      X
+                      {uploading ? "Uploading..." : "Upload"}
                     </button>
-                  )}
-                </div>
-              ))}
-              <br />
-              <button
-                className="btn-style"
-                type="button"
-                onClick={() => sponsorappend({})}
-              >
-                Add Sponsor
-              </button>
-            </div>
-          )}
-          {isSponsored === "true" && (
-            <div>
-              <label>Sanction Letter: </label>
-              {fileUrl.sanctionLetter === "" && (
-                <>
-                  <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
-                  <input
-                    type="file"
-                    accept="image/*, application/pdf"
-                    onChange={handleFileChange}
-                  />
-                  <button
-                    type="button"
-                    className="btn-style"
-                    disabled={!file || uploading || fileUrl.sanctionLetter}
-                    onClick={(e) => handleUpload(e, "sanctionLetter")}
-                  >
-                    {uploading ? "Uploading..." : "Upload"}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-          {isSponsored && fileUrl.sanctionLetter !== "" && (
-            <div>
-              <label>Sanction Letter Uploaded Successfully!</label>
-              <br />
-              {fileUrl.sanctionLetter.endsWith(".pdf") ? (
-                <iframe src={fileUrl.sanctionLetter} width={450} height={500} />
-              ) : (
-                <Image
-                  height={300}
-                  width={300}
-                  className="rounded-md"
-                  src={fileUrl.sanctionLetter}
-                  alt="sanction letter"
-                />
-              )}
-              <button
-                className="mt-2 mb-2 btn-style"
-                onClick={(e) => handleDelete(e, "sanctionLetter")}
-              >
-                Delete Letter
-              </button>
-            </div>
-          )}
+                  </>
+                )}
+              </div>
+            )}
+            {isSponsored && fileUrl.sanctionLetter !== "" && (
+              <div>
+                <label>Sanction Letter Uploaded Successfully!</label>
+                <br />
+                {renderMedia(fileUrl.sanctionLetter, "Sanction Letter")}
+                <button
+                  className="mt-2 mb-2 btn-style"
+                  onClick={(e) => handleDelete(e, "sanctionLetter")}
+                >
+                  Delete Letter
+                </button>
+              </div>
+            )}
 
-          <button
-            className="btn-style"
-            onClick={() => {
-              if (!validateStep4()) {
-                return;
-              }
-              handleSubmit(submitForm)();
-            }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </button>
-        </section>
-      )}
-      {formStep === 5 && (
-        <section>
-          <h1 className="form-section-title">Congratulations!</h1>
-          <h3>Event Created</h3>
-        </section>
-      )}
-    </form>
+            <button
+              className="btn-style"
+              onClick={() => {
+                if (!validateStep4()) {
+                  return;
+                }
+                handleSubmit(submitForm)();
+              }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
+          </section>
+        )}
+        {formStep === 5 && (
+          <section>
+            <h1 className="form-section-title">Congratulations!</h1>
+            <h3>Event Created</h3>
+          </section>
+        )}
+      </form>
+      <Viewer
+        visible={viewerState.visible}
+        onClose={() => setViewerState({ visible: false, activeImage: null })}
+        images={[{ src: viewerState.activeImage }]}
+        zoomable
+        scalable
+        rotatable
+        downloadable
+        noNavbar
+        className="custom-viewer"
+        drag={false}
+        noImgDetails
+        changeable={false}
+        zIndex={1001}
+      />
+    </>
   );
 }
 

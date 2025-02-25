@@ -1,16 +1,69 @@
 /* Viewer styles */
+.custom-viewer {
+  margin-top: 120px; /* Increased to account for navbar + spacer */
+}
+
 .custom-viewer :global(.react-viewer-mask) {
   background-color: rgba(0, 0, 0, 0.9) !important;
   backdrop-filter: blur(10px);
+  position: fixed;
+  top: var(--navbar-height) !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.custom-viewer :global(.react-viewer) {
+  position: fixed !important;
+  top: var(--navbar-height) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1001 !important;
+}
+
+.custom-viewer :global(.react-viewer-canvas) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.custom-viewer :global(.react-viewer-canvas img) {
+  max-width: 90% !important;
+  max-height: 90vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
 }
 
 .custom-viewer :global(.react-viewer-btn) {
   background-color: rgba(0, 0, 0, 0.5);
   transition: background-color 0.2s ease;
+  z-index: 1002;
 }
 
 .custom-viewer :global(.react-viewer-btn:hover) {
   background-color: rgba(0, 0, 0, 0.8);
+}
+
+.custom-viewer :global(.react-viewer-close) {
+  top: 20px !important;
+  right: 20px !important;
+  opacity: 0.8;
+  z-index: 1002;
+}
+
+.custom-viewer :global(.react-viewer-close:hover) {
+  opacity: 1;
+}
+
+/* Remove duplicate styles */
+.viewer-wrapper :global(.react-viewer-close),
+.viewer-container :global(.react-viewer),
+.viewer-container :global(.react-viewer-mask),
+.viewer-container :global(.react-viewer-close) {
+  display: none; /* Remove duplicate styles */
 }
 
 /* Wrapper for global selectors */
@@ -207,4 +260,33 @@
   font-size: 1.1rem;
   font-weight: 500;
   color: #2d3748;
+}
+
+.viewer-container {
+  position: relative;
+  z-index: 1000;
+}
+
+.viewer-container :global(.react-viewer) {
+  position: fixed;
+  top: 80px; /* Adjust this value based on your navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.viewer-container :global(.react-viewer-mask) {
+  position: fixed;
+  top: 80px; /* Should match the top value above */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px);
+}
+
+.viewer-container :global(.react-viewer-close) {
+  top: 20px !important;
+  right: 20px !important;
 }

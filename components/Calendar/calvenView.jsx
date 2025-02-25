@@ -71,7 +71,6 @@ export default function CalvenView(props) {
 
   useEffect(() => {
     setUserVenue(props.venueAddInfo);
-    console.log("Hello "+props.venueList);
     const fetchData = async () => {
       try {
         const resList = props.venueList;
