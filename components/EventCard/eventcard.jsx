@@ -344,7 +344,6 @@ export default function EventCard({ events, message }) {
 
                         <Link
                           href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-                          target="_blank"
                           className="hover:text-white"
                         >
                           <svg

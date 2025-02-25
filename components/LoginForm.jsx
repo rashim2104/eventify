@@ -74,7 +74,7 @@ const Login = () => {
                 />
                 <div
                   style={{ borderLeft: "1px solid #000", height: "80px" }}
-                  className="hidden md:block" 
+                  className="hidden md:block"
                 ></div>
                 <Image
                   src="/assets/images/logo.png"

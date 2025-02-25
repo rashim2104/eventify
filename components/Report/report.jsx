@@ -1,670 +1,225 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import viewEvent from "../ViewEvent/viewevent";
-import {
-  clubsShort,
-  clubs,
-  societies,
-  ieeeSocieties,
-  ieeeSocietiesShort,
-} from "@/public/data/data";
+import Link from 'next/link';
+import { societies } from "@/public/data/data";
+
+const statusTypes = {
+    0: "Created",
+    1: "HOD Approved",
+    2: "Approved",
+    3: "Changes Required",
+    4: "Updated & Pending",
+    "-1": "Rejected by HOD",
+    "-2": "Rejected by Admin"
+};
 
 export default function Report() {
   const { data: session, status } = useSession();
-
-  const [eventName, setEventName] = useState("");
-  const [department, setDepartment] = useState([]);
-  const [searchedEvents, setSearchedEvents] = useState([]);
-  const [organizer, setOrganizer] = useState("");
-
-  const [eventStatus, setEventStatus] = useState(["All"]);
-  const [eventCollege, setEventCollege] = useState([]);
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().substr(0, 10)
-  );
-  const [endDate, setEndDate] = useState(
-    new Date().toISOString().substr(0, 10)
-  );
   const [events, setEvents] = useState([]);
-  const [currSoc, setCurrSoc] = useState("");
+  const [filters, setFilters] = useState({
+    startDate: new Date().toISOString().substr(0, 10),
+    endDate: new Date().toISOString().substr(0, 10),
+    eventOrganizer: "",
+    society: "",  // For Professional Society filter
+  });
 
-  function handleChange(e) {
-    if (e.target.checked) {
-      setEventStatus((prevStatus) => [...prevStatus, e.target.value]);
-    } else {
-      setEventStatus((prevStatus) =>
-        prevStatus.filter((status) => status !== e.target.value)
-      );
-    }
-  }
+  // Add state for IEEE societies
+  const [showIEEESocieties, setShowIEEESocieties] = useState(false);
 
-  function handleCollegeChange(e) {
-    if (e.target.checked) {
-      setEventCollege((prevStatus) => [...prevStatus, e.target.value]);
-    } else {
-      setEventCollege((prevStatus) =>
-        prevStatus.filter((status) => status !== e.target.value)
-      );
-    }
-  }
-  // const handleEventNameChange = (e) => {
-  //   setEventName(e.target.value);
-  //   // Make an API call to fetch events based on the eventName
-  //   // You can modify the API endpoint and request payload as per your requirements
-  //   fetch("/api/searchEvent", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       eventName: e.target.value,
-  //     }),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => setSearchedEvents(data.events))
-  //     .catch((error) => console.error("Error searching events:", error));
-  // };
-
-  const handleSearch = async (e, action) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      let data;
-      if (action === "HOD") {
-        data = JSON.stringify({
-          eventStatus,
-          startDate,
-          endDate,
-        });
-      } else {
-        data = JSON.stringify({
-          organizer,
-          department: department === "IEEE" ? currSoc : department,
-          eventCollege,
-          startDate,
-          endDate,
-        });
+      // Format dates to ensure consistency
+      const formattedStartDate = new Date(filters.startDate).toISOString().split('T')[0];
+      const formattedEndDate = new Date(filters.endDate).toISOString().split('T')[0];
+
+      const searchFilters = {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        filters: {
+          'eventData.EventOrganizer': filters.eventOrganizer || undefined,
+        }
+      };
+
+      // Add society filter if Professional Society is selected
+      if (filters.eventOrganizer === "2" && filters.society) {
+        searchFilters.filters.dept = filters.society;
       }
-      // Make an API call to fetch events based on the search criteria
+
+      console.log("Frontend sending filters:", searchFilters);
       const response = await fetch("/api/filterEvent", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: data,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(searchFilters)
       });
+
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         setEvents(data.events);
-        toast.success("Events fetched successfully");
-        setCurrSoc("");
-        setOrganizer([]);
-        setDepartment("");
-        setEventCollege([]);
+        console.log("API Response debug info:", data.debug); // Always show debug info for now
+      } else {
+        console.error("API Error:", data);
       }
     } catch (error) {
-      console.error("Error searching events:", error);
+      console.error("Error fetching events:", error);
     }
   };
 
+  // Update the filter change handler to handle organizer dependencies
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => {
+      const newFilters = { ...prev, [name]: value };
+      
+      // Reset society field when organizer type changes
+      if (name === 'eventOrganizer') {
+        newFilters.society = '';
+        setShowIEEESocieties(false);
+      }
+      
+      // Handle IEEE societies special case
+      if (name === 'society' && value === 'IEEE') {
+        setShowIEEESocieties(true);
+      } else if (name === 'society') {
+        setShowIEEESocieties(false);
+      }
+      
+      return newFilters;
+    });
+  };
+
   if (status === "loading") {
-    return (
-      <div className="grid place-items-center h-screen text-xl font-extrabold">
-        Loading...
-      </div>
-    );
+    return <div className="grid place-items-center h-screen">Loading...</div>;
   }
 
-  const currUser = session?.user?.userType;
-  if (currUser === "student" || currUser === "staff") {
-    return (
-      <h1 className="grid place-items-center h-screen text-7xl text-red-600	font-extrabold">
-        Not Authorized !!
-      </h1>
-    );
+  if (!session?.user?.userType === "admin") {
+    return <div className="grid place-items-center h-screen">Not Authorized</div>;
   }
 
   return (
-    <div>
-      <div>
-        {currUser === "HOD" ? (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Events Admin Panel</h1>
+      
+      {/* Filters */}
+      <div className="mb-6 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="font-bold">Select Status</label>
-            <div className="p-2 m-2 border  flex flex-col">
-              <label>
-                <input
-                  type="checkbox"
-                  value="All"
-                  checked={eventStatus.includes("All")}
-                  onChange={handleChange}
-                />
-                All
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  value="Created"
-                  checked={eventStatus.includes("Created")}
-                  onChange={handleChange}
-                />
-                Created
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  value="Approved"
-                  checked={eventStatus.includes("Approved")}
-                  onChange={handleChange}
-                />
-                Approved
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  value="Rejected"
-                  checked={eventStatus.includes("Rejected")}
-                  onChange={handleChange}
-                />
-                Rejected
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  value="Marked for change"
-                  checked={eventStatus.includes("Marked for change")}
-                  onChange={handleChange}
-                />
-                Marked for change
-              </label>
-            </div>
-            <div className="flex flex-col gap-3 ml-3">
-              <label className="flex gap-3">
-                Start Date:
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                  }}
-                />
-              </label>
-              <label className="flex gap-3">
-                End Date:
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </label>
-            </div>
-            <button
-              className="px-4 py-2 rounded-full m-3 bg-orange-400 text-white"
-              onClick={(e) => handleSearch(e, "HOD")}
-            >
-              Search
-            </button>
-            {events.length > 0 ? (
-              <ul className="bg-gray-200 border border-gray-800 p-4 flex flex-col gap-2 mt-2 mb-5 rounded md:w-1/2">
-                {events.map((event) => (
-                  <li
-                    key={event._id}
-                    className="flex align-middle justify-between"
-                  >
-                    <span>{event.eventData.EventName}</span>
-                    <a
-                      target="blank"
-                      href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-                    >
-                      View
-                    </a>  
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className=" mb-2 mt-3 md:mt-0">No events found</p>
-            )}
+            <label className="block">Start Date</label>
+            <input
+              type="date"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleFilterChange}
+              className="border p-2 rounded w-full"
+            />
           </div>
-        ) : (
           <div>
-            <label className="font-bold">Select Status</label>
-            <div className="p-2 m-2 border  flex flex-col">
-              <label>
-                <input
-                  type="checkbox"
-                  value={session?.user?.college}
-                  checked={eventCollege.includes(session?.user?.college)}
-                  onChange={handleCollegeChange}
-                />
-                {session?.user?.college}
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  value="common"
-                  checked={eventCollege.includes("common")}
-                  onChange={handleCollegeChange}
-                />
-                Common
-              </label>
-            </div>
-            <div className="flex flex-col gap-3 ml-3">
-              <label className="flex gap-3">
-                Start Date:
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                  }}
-                />
-              </label>
-              <label className="flex gap-3">
-                End Date:
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </label>
-            </div>
-            <div className="flex flex-col w-1/2 mt-3">
-              <label className="font-bold" for="organizer">
-                Event Organizer
-              </label>
-              <select
-                value={organizer}
-                className="p-2 m-2 border"
-                id="organizer"
-                onChange={(e) => setOrganizer(e.target.value)}
+            <label className="block">End Date</label>
+            <input
+              type="date"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleFilterChange}
+              className="border p-2 rounded w-full"
+            />
+          </div>
+          <div>
+            <label className="block">Organizer Type</label>
+            <select 
+              name="eventOrganizer"
+              className="border p-2 rounded w-full"
+              value={filters.eventOrganizer}
+              onChange={handleFilterChange}
+            >
+              <option value="">All</option>
+              <option value="2">Professional Society</option>
+            </select>
+          </div>
+          {filters.eventOrganizer === "2" && (
+            <div>
+              <label className="block">Professional Society</label>
+              <select 
+                name="society"
+                className="border p-2 rounded w-full"
+                value={filters.society}
+                onChange={handleFilterChange}
               >
-                <option value="" selected disabled>
-                  Select an Option
-                </option>
-                <option value="department">Department</option>
-                <option value="aicte">AICTE Idea Lab</option>
-                <option value="professionalsocieties">
-                  Professional Societies (IEEE,ISTE,EDS)
-                </option>
-                <option value="clubs">Clubs and Cells</option>
-                <option value="others">Others</option>
-              </select>
-
-              {organizer === "department" &&
-                session?.user?.college === "SIT" && (
-                  <label className="block mb-4">
-                    Dept
-                    <div className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full">
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            value="all"
-                            checked={
-                              department.length ===
-                              [
-                                "CS",
-                                "IT",
-                                "EE",
-                                "EC",
-                                "ME",
-                                "SC",
-                                "CO",
-                                "AI",
-                                "MB",
-                                "PH",
-                                "EN",
-                                "MA",
-                                "CH",
-                                "PD",
-                                "TA",
-                              ].length
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setDepartment([
-                                  "CS",
-                                  "IT",
-                                  "EE",
-                                  "EC",
-                                  "ME",
-                                  "SC",
-                                  "CO",
-                                  "AI",
-                                  "MB",
-                                  "PH",
-                                  "EN",
-                                  "MA",
-                                  "CH",
-                                  "PD",
-                                  "TA",
-                                ]);
-                              } else {
-                                setDepartment([]);
-                              }
-                            }}
-                          />
-                          Select All
-                        </label>
-                      </div>
-                      {/* options */}
-                      {[
-                        { value: "CS", label: "CSE" },
-                        { value: "IT", label: "IT" },
-                        { value: "EE", label: "EEE" },
-                        { value: "EC", label: "ECE" },
-                        { value: "ME", label: "MECH" },
-                        { value: "SC", label: "Cyber Security" },
-                        { value: "CO", label: "CCE" },
-                        { value: "AI", label: "AI-DS" },
-                        { value: "MB", label: "MBA" },
-                        { value: "PH", label: "Physics" },
-                        { value: "EN", label: "English" },
-                        { value: "MA", label: "Maths" },
-                        { value: "CH", label: "Chemistry" },
-                        { value: "PD", label: "Physical Director" },
-                        { value: "TA", label: "Tamil" },
-                      ].map((option) => (
-                        <div key={option.value}>
-                          <label>
-                            <input
-                              type="checkbox"
-                              value={option.value}
-                              checked={department.includes(option.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setDepartment([
-                                    ...department,
-                                    e.target.value,
-                                  ]);
-                                } else {
-                                  setDepartment(
-                                    department.filter(
-                                      (dept) => dept !== e.target.value
-                                    )
-                                  );
-                                }
-                              }}
-                            />
-                            {option.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </label>
-                )}
-              {organizer === "department" &&
-                session?.user?.college === "SEC" && (
-                  <label className="block mb-4">
-                    Dept
-                    <div className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full">
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            value="all"
-                            checked={
-                              department.length ===
-                              [
-                                "AI",
-                                "AM",
-                                "CB",
-                                "CS",
-                                "EE",
-                                "EC",
-                                "EI",
-                                "ME",
-                                "CE",
-                                "IT",
-                                "IC",
-                                "CI",
-                                "MB",
-                                "CJ",
-                                "PH",
-                                "EN",
-                                "MA",
-                                "CH",
-                                "PD",
-                                "TA",
-                              ].length
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setDepartment([
-                                  "AI",
-                                  "AM",
-                                  "CB",
-                                  "CS",
-                                  "EE",
-                                  "EC",
-                                  "EI",
-                                  "ME",
-                                  "CE",
-                                  "IT",
-                                  "IC",
-                                  "CI",
-                                  "MB",
-                                  "CJ",
-                                  "PH",
-                                  "EN",
-                                  "MA",
-                                  "CH",
-                                  "PD",
-                                  "TA",
-                                ]);
-                              } else {
-                                setDepartment([]);
-                              }
-                            }}
-                          />
-                          Select All
-                        </label>
-                      </div>
-                      {/* options */}
-                      {[
-                        { value: "AI", label: "AI-DS" },
-                        { value: "AM", label: "AI-ML" },
-                        { value: "CB", label: "CSBS" },
-                        { value: "CS", label: "CSE" },
-                        { value: "EE", label: "EEE" },
-                        { value: "EC", label: "ECE" },
-                        { value: "EI", label: "E&I" },
-                        { value: "ME", label: "MECH" },
-                        { value: "CE", label: "CIVIL" },
-                        { value: "IT", label: "IT" },
-                        { value: "IC", label: "ICE" },
-                        { value: "CI", label: "IOT" },
-                        { value: "MB", label: "MBA" },
-                        { value: "CJ", label: "M.Tech CSE" },
-                        { value: "PH", label: "Physics" },
-                        { value: "EN", label: "English" },
-                        { value: "MA", label: "Maths" },
-                        { value: "CH", label: "Chemistry" },
-                        { value: "PD", label: "Physical Director" },
-                        { value: "TA", label: "Tamil" },
-                      ].map((option) => (
-                        <div key={option.value}>
-                          <label>
-                            <input
-                              type="checkbox"
-                              value={option.value}
-                              checked={department.includes(option.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setDepartment([
-                                    ...department,
-                                    e.target.value,
-                                  ]);
-                                } else {
-                                  setDepartment(
-                                    department.filter(
-                                      (dept) => dept !== e.target.value
-                                    )
-                                  );
-                                }
-                              }}
-                            />
-                            {option.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </label>
-                )}
-              {organizer === "professionalsocieties" && (
-                <label className="block mb-4">
-                  Professional Societies
-                  <select
-                    value={department}
-                    onChange={(e) => {
-                      setDepartment(e.target.value);
-                    }}
-                    className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full"
-                  >
-                    {" "}
-                    <option value="" selected disabled>
-                      Select a Professional Society
-                    </option>
-                    {societies.map((society, index) => (
-                      <option key={index} value={society}>
-                        {society}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              {organizer === "professionalsocieties" &&
-                (department === "IEEE" ||
-                  ieeeSocieties.includes(department)) && (
-                  <label className="block mb-4">
-                    IEEE Society Name
-                    <div className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full">
-                      {/* Select All option */}
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            value="all"
-                            checked={
-                              currSoc.length === ieeeSocietiesShort.length
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setCurrSoc(ieeeSocietiesShort);
-                              } else {
-                                setCurrSoc([]);
-                              }
-                            }}
-                          />
-                          Select All
-                        </label>
-                      </div>
-                      {/* options */}
-                      {ieeeSocieties.map((option, index) => (
-                        <div key={index}>
-                          <label>
-                            <input
-                              type="checkbox"
-                              value={ieeeSocietiesShort[index]}
-                              checked={currSoc.includes(
-                                ieeeSocietiesShort[index]
-                              )}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setCurrSoc([...currSoc, e.target.value]);
-                                } else {
-                                  setCurrSoc(
-                                    currSoc.filter(
-                                      (soc) => soc !== e.target.value
-                                    )
-                                  );
-                                }
-                              }}
-                            />
-                            {option}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </label>
-                )}
-              {organizer === "clubs" && (
-                <label className="block mb-4">
-                  Clubs
-                  <div className="border border-gray-300 rounded-md px-3 py-2 mt-1 w-full">
-                    {/* Select All option */}
-                    <div>
-                      <label>
-                        <input
-                          type="checkbox"
-                          value="all"
-                          checked={department.length === clubsShort.length}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setDepartment(clubsShort);
-                            } else {
-                              setDepartment([]);
-                            }
-                          }}
-                        />
-                        Select All
-                      </label>
-                    </div>
-                    {/* options */}
-                    {clubs.map((club, index) => (
-                      <div key={index}>
-                        <label>
-                          <input
-                            type="checkbox"
-                            value={clubsShort[index]}
-                            checked={department.includes(clubsShort[index])}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setDepartment([...department, e.target.value]);
-                              } else {
-                                setDepartment(
-                                  department.filter(
-                                    (dept) => dept !== e.target.value
-                                  )
-                                );
-                              }
-                            }}
-                          />
-                          {club}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </label>
-              )}
-            </div>
-            <button
-              className="px-4 py-2 rounded-full m-3 bg-orange-400 text-white"
-              onClick={(e) => handleSearch(e, "admin")}
-            >
-              Search
-            </button>
-            {events.length > 0 ? (
-              <ul className="bg-gray-200 border border-gray-800 p-4 flex flex-col gap-2 mt-2 mb-5 rounded md:w-1/2">
-                {events.map((event) => (
-                  <li
-                    key={event._id}
-                    className="flex align-middle justify-between"
-                  >
-                    <span>{event.eventData.EventName}</span>
-                    <a
-                      target="blank"
-                      href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-                    >
-                      View
-                    </a>
-                  </li>
+                <option value="">All</option>
+                {societies.map((society) => (
+                  <option key={society} value={society}>{society}</option>
                 ))}
-              </ul>
-            ) : (
-              <p className=" mb-2 mt-3 md:mt-0">No events found</p>
-            )}
-          </div>
-        )}
+              </select>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={handleSearch}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          Apply Filters
+        </button>
+      </div>
+
+      {/* Events Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="p-2 border">Event ID</th>
+              <th className="p-2 border">Event Name</th>
+              <th className="p-2 border">Type</th>
+              <th className="p-2 border">Organizer Type</th>
+              <th className="p-2 border">Organized by</th>
+              <th className="p-2 border">Date & Time</th>
+              <th className="p-2 border">Venue</th>
+              <th className="p-2 border">Status</th>
+              <th className="p-2 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((event) => (
+              <tr key={event._id} className="hover:bg-gray-50">
+                <td className="p-2 border">{event.ins_id || '-'}</td>
+                <td className="p-2 border">{event.eventData?.EventName || '-'}</td>
+                <td className="p-2 border">{event.eventData?.EventType?.eventType || '-'}</td>
+                <td className="p-2 border">Professional Society</td>
+                <td className="p-2 border">{event.dept || '-'}</td>
+                <td className="p-2 border">
+                  <div>Start: {event.eventData?.StartTime ? new Date(event.eventData.StartTime).toLocaleDateString() : '-'}</div>
+                  <div>End: {event.eventData?.EndTime ? new Date(event.eventData.EndTime).toLocaleDateString() : '-'}</div>
+                </td>
+                <td className="p-2 border">
+                  <div>{event.eventData?.EventVenue || '-'}</div>
+                  <div className="text-sm text-gray-500">
+                    {event.eventData?.eventVenueAddInfo || ''}
+                  </div>
+                </td>
+                <td className="p-2 border">
+                  <span className={`px-2 py-1 rounded ${
+                    event.status === 2 ? 'bg-green-100 text-green-800' :
+                    event.status === 1 ? 'bg-blue-100 text-blue-800' :
+                    event.status === 0 ? 'bg-yellow-100 text-yellow-800' :
+                    event.status === 3 ? 'bg-orange-100 text-orange-800' :
+                    event.status === 4 ? 'bg-purple-100 text-purple-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {statusTypes[event.status] || 'Unknown'}
+                  </span>
+                </td>
+                <td className="p-2 border">
+                  <Link
+                    href={`/events/${event._id}`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    View Details
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

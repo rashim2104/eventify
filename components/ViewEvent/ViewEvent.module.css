@@ -1,0 +1,292 @@
+/* Viewer styles */
+.custom-viewer {
+  margin-top: 120px; /* Increased to account for navbar + spacer */
+}
+
+.custom-viewer :global(.react-viewer-mask) {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: var(--navbar-height) !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.custom-viewer :global(.react-viewer) {
+  position: fixed !important;
+  top: var(--navbar-height) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1001 !important;
+}
+
+.custom-viewer :global(.react-viewer-canvas) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.custom-viewer :global(.react-viewer-canvas img) {
+  max-width: 90% !important;
+  max-height: 90vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.custom-viewer :global(.react-viewer-btn) {
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.2s ease;
+  z-index: 1002;
+}
+
+.custom-viewer :global(.react-viewer-btn:hover) {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.custom-viewer :global(.react-viewer-close) {
+  top: 20px !important;
+  right: 20px !important;
+  opacity: 0.8;
+  z-index: 1002;
+}
+
+.custom-viewer :global(.react-viewer-close:hover) {
+  opacity: 1;
+}
+
+/* Remove duplicate styles */
+.viewer-wrapper :global(.react-viewer-close),
+.viewer-container :global(.react-viewer),
+.viewer-container :global(.react-viewer-mask),
+.viewer-container :global(.react-viewer-close) {
+  display: none; /* Remove duplicate styles */
+}
+
+/* Wrapper for global selectors */
+.viewer-wrapper :global(.react-viewer-close) {
+  top: 40px !important;
+  right: 40px !important;
+  opacity: 0.8;
+}
+
+.viewer-wrapper :global(.react-viewer-close:hover) {
+  opacity: 1;
+}
+
+/* Media container styles */
+.media-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* PDF viewer container */
+.pdf-container {
+  position: relative;
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin: 1.5rem 0;
+  min-height: 800px;
+  aspect-ratio: 8.5 / 11;
+  max-width: 100%;
+  width: 100%;
+}
+
+.pdf-container iframe {
+  background: white;
+  transition: opacity 0.3s ease;
+  padding: 1rem;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.pdf-container::before {
+  content: "Loading PDF...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  color: #666;
+}
+
+.pdf-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.pdf-container.loading::after {
+  opacity: 1;
+}
+
+/* Media container for PDFs */
+.pdf-media-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Image container styles */
+.image-container {
+  cursor: zoom-in;
+  position: relative;
+  display: inline-block;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+
+.image-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.image-container img {
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* Media actions container */
+.media-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* File upload container */
+.file-upload-container {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.file-upload-container input[type="file"] {
+  margin: 1rem 0;
+}
+
+/* Label styles */
+.media-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #4a5568;
+}
+
+.helper-text {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.loading-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #666;
+  font-size: 16px;
+  animation: pulse 1.5s infinite;
+  z-index: 1;
+}
+
+/* Container wrapper */
+.media-wrapper {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.media-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.media-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.viewer-container {
+  position: relative;
+  z-index: 1000;
+}
+
+.viewer-container :global(.react-viewer) {
+  position: fixed;
+  top: 80px; /* Adjust this value based on your navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.viewer-container :global(.react-viewer-mask) {
+  position: fixed;
+  top: 80px; /* Should match the top value above */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px);
+}
+
+.viewer-container :global(.react-viewer-close) {
+  top: 20px !important;
+  right: 20px !important;
+}

@@ -1,10 +1,12 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import "@/components/CreateForm/Form.css";
 import { toast } from "sonner";
 import Image from "next/image";
+import styles from '../ViewEvent/ViewEvent.module.css';
+import dynamic from 'next/dynamic';
 
 export default function Update() {
   const { data: session, status } = useSession();
@@ -36,6 +38,93 @@ export default function Update() {
 
   const [eventNames, setEventNames] = useState([]);
   const [displayForm, setDisplayForm] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  // Function to handle image click
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setIsImageModalOpen(true);
+  };
+
+  // Function to close modal
+  const handleCloseModal = () => {
+    setSelectedImage(null);
+    setIsImageModalOpen(false);
+  };
+
+  // Image Modal Component
+  const ImageModal = ({ isOpen, onClose, imageUrl }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" onClick={onClose}>
+        <div className="relative max-w-4xl max-h-[90vh] p-4">
+          <button 
+            className="absolute top-4 right-4 text-white text-2xl font-bold z-50 bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center"
+            onClick={onClose}
+          >
+            ×
+          </button>
+          <Image
+            src={imageUrl}
+            alt="Preview"
+            width={1200}
+            height={800}
+            className="max-w-full max-h-[85vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const [navbarHeight, setNavbarHeight] = useState(0);
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    const updateNavbarHeight = () => {
+      const navbar = document.querySelector('nav');
+      const spacer = document.querySelector('.spacer');
+      if (navbar && spacer) {
+        const totalHeight = navbar.offsetHeight + spacer.offsetHeight;
+        setNavbarHeight(totalHeight);
+      }
+    };
+
+    updateNavbarHeight();
+    window.addEventListener('resize', updateNavbarHeight);
+    return () => window.removeEventListener('resize', updateNavbarHeight);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const navbar = document.querySelector('nav');
+      const spacer = document.querySelector('.spacer');
+      if (navbar && spacer) {
+        spacer.style.height = navbar.offsetHeight + 'px';
+      }
+    }
+  }, []);
+
+  const checkImageDimensions = (file) => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined') {
+        // Skip validation during server-side rendering
+        resolve(true);
+        return;
+      }
+      const tempImg = document.createElement('img');
+      tempImg.onload = () => {
+        const { width, height } = tempImg;
+        resolve(width >= 800 && height >= 400);
+      };
+      tempImg.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+      tempImg.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleFileChange = (e, action) => {
     e.preventDefault();
@@ -68,7 +157,7 @@ export default function Update() {
           }));
         } else {
           toast.error(
-            "Invalid file. Please upload an image or PDF file of size less than 5MB."
+"Invalid file. Please upload an image or PDF file of size less than 5MB."
           );
         }
         break;
@@ -237,6 +326,80 @@ export default function Update() {
     setUploading(false);
   };
 
+  const handleImageView = (imageUrl) => {
+    // Create a temporary HTML image element
+    const tempImg = document.createElement('img');
+    tempImg.src = imageUrl;
+    
+    tempImg.onload = () => {
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = (window.innerHeight - navbarHeight) * 0.9;
+      
+      // Calculate dimensions maintaining aspect ratio
+      let width = tempImg.naturalWidth;
+      let height = tempImg.naturalHeight;
+      
+      if (width > maxWidth) {
+        const ratio = maxWidth / width;
+        width = maxWidth;
+        height = height * ratio;
+      }
+      
+      if (height > maxHeight) {
+        const ratio = maxHeight / height;
+        height = maxHeight;
+        width = width * ratio;
+      }
+
+      setViewerState({
+        visible: true,
+        activeImage: imageUrl,
+        width,
+        height
+      });
+    };
+  };
+
+  const renderMedia = (url, type) => {
+    return (
+      <div>
+        <div className={styles['image-container']}>
+          <Image
+            height={400}
+            width={600}
+            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            src={url}
+            alt={`${type} preview`}
+            onClick={() => handleImageClick(url)}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderFileUpload = (type, label) => {
+    return (
+      <div className={styles['file-upload-container']}>
+        <label className={styles['media-label']}>{label}</label>
+        <p className={styles['helper-text']}>Accepted formats: Images or PDF • Max size: 5MB</p>
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={(e) => handleFileChange(e, type)}
+          className="file-input"
+        />
+        <button
+          type="button"
+          className="btn-style mt-2"
+          disabled={!file[type] || uploading[type]}
+          onClick={(e) => handleUpload(e, type)}
+        >
+          {uploading[type] ? "Uploading..." : "Upload"}
+        </button>
+      </div>
+    );
+  };
+
   useEffect(() => {
     // Fetch event names from the database and update the state
     const fetchEventNames = async () => {
@@ -288,13 +451,53 @@ export default function Update() {
     );
   }
 
+  const validateSubmission = () => {
+    const errors = [];
+    
+    if (!watch("selectedEvent")) {
+      errors.push("Event Selection");
+    }
+    
+    if (fileUrl.geoPhotos.length === 0) {
+      errors.push("Geo Tagged Photos");
+    }
+    
+    if (!fileUrl.financialCommitments) {
+      errors.push("Financial Commitments Document");
+    }
+    
+    if (!fileUrl.report) {
+      errors.push("Event Report");
+    }
+    
+    if (!watch("videoLinks")) {
+      errors.push("Video Links");
+    }
+    
+    if (!watch("amountSpent")) {
+      errors.push("Amount Spent");
+    }
+  
+    if (errors.length > 0) {
+      toast.error(`Please complete the following: ${errors.join(", ")}`);
+      return false;
+    }
+    
+    return true;
+  };
+  
   const onSubmit = async (data) => {
+    if (!validateSubmission()) {
+      return;
+    }
+  
     const jsonData = {
       selectedEvent: data.selectedEvent,
       videoLinks: data.videoLinks,
       amountSpent: data.amountSpent,
       fileUrl: fileUrl,
     };
+  
     try {
       const user_id = session?.user?._id;
       const response = await fetch("/api/updateEvent", {
@@ -309,323 +512,282 @@ export default function Update() {
       });
       if (response.ok) {
         setDisplayForm(false);
+        toast.success("Event updated successfully!");
       } else {
-        toast.error("Error Updating Details!");
+        toast.error("Error updating event details!");
       }
     } catch (error) {
-      toast.error("Error Updating");
-      console.error("Error fetching event names:", error);
+      toast.error("Error updating event");
+      console.error("Error updating event:", error);
     }
   };
 
   return (
     <>
       {displayForm ? (
-        <form
-          className="p-5 form flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <h1 className="form-section-title">Post Event Form</h1>
-          {/* Event Dropdown */}
-          <div className="input-container">
-            <label className="label">Select Event</label>
-            <select
-              {...register("selectedEvent", {
-                required: "Please select an event",
-              })}
-            >
-              <option value="">-- Select Event --</option>
-              {eventNames.map((eventName) => (
-                <option key={eventName.id} value={eventName.id}>
-                  {eventName.eventName}
-                </option>
-              ))}
-            </select>
-            {errors.selectedEvent && (
-              <p className="error-msg">{errors.selectedEvent.message}</p>
-            )}
-          </div>
-
-          {watch("selectedEvent") && (
-            <>
-              {/* Geo Tagged Photos - Multiple File Input */}
-              {fileUrl.geoPhotos.length === 0 ? (
-                <div>
-                  <form>
-                    <label>Geo Tagged Photos:</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, "geoPhotos")}
-                      multiple
-                    />
-                    <button
-                      type="button"
-                      className="btn-style"
-                      disabled={
-                        !file.geoPhotos ||
-                        uploading.geoPhotos ||
-                        fileUrl.geoPhotos.length
-                      }
-                      onClick={(e) => handleUpload(e, "geoPhotos")}
-                    >
-                      {uploading.geoPhotos ? "Uploading..." : "Upload"}
-                    </button>
-                  </form>
-                </div>
-              ) : null}
-
-              {fileUrl.geoPhotos.length != 0 && (
-                <div>
-                  <label>Geo Tagged Photos:</label>
-                  <br />
-                  <label>Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.geoPhotos.map((photoUrl, index) => (
-                    <Image
-                      key={index}
-                      className="rounded-md"
-                      height={300}
-                      width={300}
-                      src={photoUrl}
-                      alt={`Geo Photo ${index + 1}`}
-                    />
-                  ))}
-                  <button
-                    className="mt-2 mb-2 btn-style"
-                    onClick={(e) => handleDelete(e, "geoPhotos")}
-                  >
-                    Delete Photos
-                  </button>
-                </div>
+        <>
+          <form
+            className="p-5 form flex flex-col gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <h1 className="form-section-title">Post Event Form</h1>
+            {/* Event Dropdown */}
+            <div className="input-container">
+              <label className="label">Select Event</label>
+              <select
+                {...register("selectedEvent", {
+                  required: "Please select an event",
+                })}
+              >
+                <option value="">-- Select Event --</option>
+                {eventNames.map((eventName) => (
+                  <option key={eventName.id} value={eventName.id}>
+                    {eventName.eventName}
+                  </option>
+                ))}
+              </select>
+              {errors.selectedEvent && (
+                <p className="error-msg">{errors.selectedEvent.message}</p>
               )}
+            </div>
 
-              {/* Video Links - Input Box */}
-              <div className="input-container">
-                <label className="label">
-                  Video Links (Type none if there is not any)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter Video Links"
-                  {...register("videoLinks", {
-                    required: "This field is required",
-                  })}
-                />
-                {errors.videoLinks && (
-                  <p className="error-msg">{errors.videoLinks.message}</p>
-                )}
-              </div>
+            {watch("selectedEvent") && (
+              <>
+                {/* Geo Tagged Photos - Multiple File Input */}
+                {fileUrl.geoPhotos.length === 0 ? (
+                  <div>
+                    <form>
+                      <label>Geo Tagged Photos:</label>
+                      <p className="text-sm text-gray-600">Accepted formats: Images only • Max size: 5MB</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, "geoPhotos")}
+                        multiple
+                      />
+                      <button
+                        type="button"
+                        className="btn-style"
+                        disabled={
+                          !file.geoPhotos ||
+                          uploading.geoPhotos ||
+                          fileUrl.geoPhotos.length
+                        }
+                        onClick={(e) => handleUpload(e, "geoPhotos")}
+                      >
+                        {uploading.geoPhotos ? "Uploading..." : "Upload"}
+                      </button>
+                    </form>
+                  </div>
+                ) : null}
 
-              {fileUrl.eventPoster === "" && (
-                <>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="eventPoster"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Event Poster
-                    </label>
-                    <input
-                      type="file"
-                      id="eventPoster"
-                      {...register("eventPoster")}
-                      onChange={(e) => handleFileChange(e, "eventPoster")}
-                    />
+                {fileUrl.geoPhotos.length != 0 && (
+                  <div className={styles['media-wrapper']}>
+                    <label className={styles['media-label']}>Geo Tagged Photos:</label>
+                    <br />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {fileUrl.geoPhotos.map((photoUrl, index) => (
+                        renderMedia(photoUrl, `Geo Photo ${index + 1}`)
+                      ))}
+                    </div>
                     <button
-                      onClick={(e) => handleUpload(e, "eventPoster")}
-                      className="btn-style"
-                      disabled={uploading.eventPoster || !file.eventPoster}
+                      className="mt-4 btn-style"
+                      onClick={(e) => handleDelete(e, "geoPhotos")}
                     >
-                      {uploading.eventPoster ? "Uploading..." : "Upload"}
+                      Delete Photos
                     </button>
                   </div>
-                </>
-              )}
-              {fileUrl.eventPoster !== "" && (
-                <div>
-                  <label>Event Posters:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.eventPoster.endsWith(".pdf") ? (
-                    <iframe
-                      src={fileUrl.eventPoster}
-                      width={450}
-                      height={500}
-                    />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.eventPoster}
-                      alt="Event Poster"
-                    />
-                  )}
-                  <button
-                    className="mt-2 mb-2 btn-style"
-                    onClick={(e) => handleDelete(e, "eventPoster")}
-                  >
-                    Delete File
-                  </button>
-                </div>
-              )}
+                )}
 
-              {/* Financial Commitments - File Input (PDF) */}
-              {fileUrl.financialCommitments === "" && (
-                <div>
-                  <form>
-                    <label>Financial Commitments: </label>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={(e) =>
-                        handleFileChange(e, "financialCommitments")
-                      }
-                    />
+                {/* Video Links - Input Box */}
+                <div className="input-container">
+                  <label className="label">
+                    Video Links (Type none if there is not any)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter Video Links"
+                    {...register("videoLinks", {
+                      required: "This field is required",
+                    })}
+                  />
+                  {errors.videoLinks && (
+                    <p className="error-msg">{errors.videoLinks.message}</p>
+                  )}
+                </div>
+
+                {fileUrl.eventPoster === "" && (
+                  <>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="eventPoster"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Event Poster
+                      </label>
+                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                      <input
+                        type="file"
+                        id="eventPoster"
+                        {...register("eventPoster")}
+                        onChange={(e) => handleFileChange(e, "eventPoster")}
+                      />
+                      <button
+                        onClick={(e) => handleUpload(e, "eventPoster")}
+                        className="btn-style"
+                        disabled={uploading.eventPoster || !file.eventPoster}
+                      >
+                        {uploading.eventPoster ? "Uploading..." : "Upload"}
+                      </button>
+                    </div>
+                  </>
+                )}
+                {fileUrl.eventPoster !== "" && (
+                  <div className={styles['media-wrapper']}>
+                    {renderMedia(fileUrl.eventPoster, "Event Poster")}
                     <button
-                      type="button"
-                      className="btn-style"
-                      disabled={
-                        !file.financialCommitments ||
-                        uploading.financialCommitments ||
-                        fileUrl.financialCommitments
-                      }
-                      onClick={(e) => {
-                        handleUpload(e, "financialCommitments");
-                      }}
+                      className="mt-4 btn-style"
+                      onClick={(e) => handleDelete(e, "eventPoster")}
                     >
-                      {uploading.financialCommitments
-                        ? "Uploading..."
-                        : "Upload"}
+                      Delete File
                     </button>
-                  </form>
-                </div>
-              )}
+                  </div>
+                )}
 
-              {fileUrl.financialCommitments !== "" && (
-                <div>
-                  <label>Financial Commitments:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.financialCommitments.endsWith(".pdf") ? (
-                    <iframe
-                      src={fileUrl.financialCommitments}
-                      width={450}
-                      height={500}
-                    />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.financialCommitments}
-                      alt="Financial Commitments Document"
-                    />
-                  )}
-                  <button
-                    className="mt-2 mb-2 btn-style"
-                    onClick={(e) => handleDelete(e, "financialCommitments")}
-                  >
-                    Delete File
-                  </button>
-                </div>
-              )}
+                {/* Financial Commitments - File Input (PDF) */}
+                {fileUrl.financialCommitments === "" && (
+                  <div>
+                    <form>
+                      <label>Financial Commitments: </label>
+                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) =>
+                          handleFileChange(e, "financialCommitments")
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="btn-style"
+                        disabled={
+                          !file.financialCommitments ||
+                          uploading.financialCommitments ||
+                          fileUrl.financialCommitments
+                        }
+                        onClick={(e) => {
+                          handleUpload(e, "financialCommitments");
+                        }}
+                      >
+                        {uploading.financialCommitments
+                          ? "Uploading..."
+                          : "Upload"}
+                      </button>
+                    </form>
+                  </div>
+                )}
 
-              {/* Report - File Input (PDF) */}
-              {fileUrl.report === "" && (
-                <div>
-                  <form>
-                    <label>Event Report: </label>
-                    <input
-                      type="file"
-                      accept="pdf"
-                      onChange={(e) => handleFileChange(e, "report")}
-                    />
+                {fileUrl.financialCommitments !== "" && (
+                  <div className={styles['media-wrapper']}>
+                    {renderMedia(fileUrl.financialCommitments, "Financial Commitments")}
                     <button
-                      type="button"
-                      className="btn-style"
-                      disabled={
-                        !file.report || uploading.report || fileUrl.report
-                      }
-                      onClick={(e) => {
-                        handleUpload(e, "report");
-                      }}
+                      className="mt-4 btn-style"
+                      onClick={(e) => handleDelete(e, "financialCommitments")}
                     >
-                      {uploading.report ? "Uploading..." : "Upload"}
+                      Delete File
                     </button>
-                  </form>
+                  </div>
+                )}
+
+                {/* Report - File Input (PDF) */}
+                {fileUrl.report === "" && (
+                  <div>
+                    <form>
+                      <label>Event Report: </label>
+                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleFileChange(e, "report")}
+                      />
+                      <button
+                        type="button"
+                        className="btn-style"
+                        disabled={
+                          !file.report || uploading.report || fileUrl.report
+                        }
+                        onClick={(e) => {
+                          handleUpload(e, "report");
+                        }}
+                      >
+                        {uploading.report ? "Uploading..." : "Upload"}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {fileUrl.report !== "" && (
+                  <div className={styles['media-wrapper']}>
+                    {renderMedia(fileUrl.report, "Event Report")}
+                    <button
+                      className="mt-4 btn-style"
+                      onClick={(e) => handleDelete(e, "report")}
+                    >
+                      Delete File
+                    </button>
+                  </div>
+                )}
+
+                {/* Amount Spent - Input */}
+                <div
+                  className="input-container"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <label htmlFor="amountSpent" className="label">
+                    Amount Spent
+                  </label>
+                  <input
+                    type="number"
+                    id="amountSpent"
+                    name="amountSpent"
+                    placeholder="Enter Amount Spent"
+                    className="input"
+                    {...register("amountSpent", { required: true, min: 1 })}
+                    min={0}
+                  />
+                  <p className="error-msg">
+                    {errors.amountSpent && <span>*Invalid Amount Spent</span>}
+                  </p>
                 </div>
-              )}
 
-              {fileUrl.report !== "" && (
-                <div>
-                  <label>Event Report:</label>
-                  <br />
-                  <label>File Uploaded Successfully!</label>
-                  <br />
-                  {fileUrl.report.endsWith(".pdf") ? (
-                    <iframe src={fileUrl.report} width={450} height={500} />
-                  ) : (
-                    <Image
-                      height={300}
-                      width={300}
-                      className="rounded-md"
-                      src={fileUrl.report}
-                      alt="Event Report"
-                    />
-                  )}
-                  <button
-                    className="mt-2 mb-2 btn-style"
-                    onClick={(e) => handleDelete(e, "report")}
-                  >
-                    Delete File
-                  </button>
-                </div>
-              )}
-
-              {/* Amount Spent - Input */}
-              <div
-                className="input-container"
-                style={{ display: "flex", flexDirection: "column" }}
-              >
-                <label htmlFor="amountSpent" className="label">
-                  Amount Spent
-                </label>
-                <input
-                  type="number"
-                  id="amountSpent"
-                  name="amountSpent"
-                  placeholder="Enter Amount Spent"
-                  className="input"
-                  {...register("amountSpent", { required: true, min: 1 })}
-                  min={0}
-                />
-                <p className="error-msg">
-                  {errors.amountSpent && <span>*Invalid Amount Spent</span>}
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                className="btn-style"
-                disabled={
-                  !(
-                    fileUrl.geoPhotos.length > 0 &&
-                    fileUrl.financialCommitments &&
-                    fileUrl.report &&
-                    watch("videoLinks") &&
-                    watch("amountSpent")
-                  )
-                }
-              >
-                Submit
-              </button>
-            </>
-          )}
-        </form>
+                <button
+                  type="submit"
+                  className="btn-style"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit(onSubmit)();
+                  }}
+                  disabled={
+                    !(
+                      fileUrl.geoPhotos.length > 0 &&
+                      fileUrl.financialCommitments &&
+                      fileUrl.report &&
+                      watch("videoLinks") &&
+                      watch("amountSpent")
+                    )
+                  }
+                >
+                  Submit
+                </button>
+              </>
+            )}
+          </form>
+          <ImageModal 
+            isOpen={isImageModalOpen} 
+            onClose={handleCloseModal} 
+            imageUrl={selectedImage}
+          />
+        </>
       ) : (
         <div className="form">
           <section>

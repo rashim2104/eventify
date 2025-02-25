@@ -223,7 +223,6 @@ export async function POST(req) {
     if (error) {
       throw new Error(`Invalid data: ${error.details[0].message}`);
     }
-    // Continue with your logic here
   } catch (error) {
     logger(user._id, "Create Event", error, 400)
     return NextResponse.json({ message: error.message }, { status: 400 });
@@ -252,7 +251,6 @@ export async function POST(req) {
       userStatus = 0;
     }
   } else if (userType === "admin") {
-    //disabled event creation for admin
     userStatus = 2;
     user_ins_id = Array.from({ length: 14 }, () =>
       Math.random() > 0.5
@@ -267,11 +265,12 @@ export async function POST(req) {
       userStatus = 0;
     }
   }
+
   try {
     //Insert into reservations collection
     const modifiedVenueList = eventData.venueList.map(venue => ({
         ...venue,
-        userId: user_id // Ensure string userId here as well
+        userId: user_id
     }));
     
     const createdReservations = await Reservation.insertMany(modifiedVenueList);
@@ -292,37 +291,36 @@ export async function POST(req) {
       fileUrl,
     });
 
-    //     if (userType === "staff") {
-    //       const rcvuser = await User.findOne({
-    //         userType: "HOD",
-    //         dept: user_dept,
-    //         college: eventCollege,
-    //       });
+    if (userType === "staff") {
+      const rcvuser = await User.findOne({
+        userType: "HOD",
+        dept: user_dept,
+        college: eventCollege,
+      });
 
-    //       const rcvmail = rcvuser ? rcvuser.email : null;
-    //       sendMail(
-    //   "rashimrb22@gmail.com",
-    //   "create",
-    //   crtuser.name,
-    //   eventData.EventName,
-    //   createdEvent._id
-    // );
-    //     } else if (userType === "HOD") {
-    //       const rcvusers = await User.find({
-    //         userType: "admin",
-    //         college: eventCollege,
-    //       });
-    //       console.log(rcvusers);
-    //       const rcvmail = rcvusers ? rcvusers.map((user) => user.email) : [];
-    //       console.log(rcvmail);
-    //       sendMail(
-    //         ["rashimrb22@gmail.com", "www.rashimrb.2004@gmail.com"],
-    //         "create",
-    //         crtuser.name,
-    //         eventData.EventName,
-    //         createdEvent._id
-    //       );
-    //     }
+      const rcvmail = rcvuser ? rcvuser.email : null;
+      sendMail(
+        rcvmail,
+        "create",
+        crtuser.name,
+        eventData.EventName,
+        createdEvent._id
+      );
+    } else if (userType === "HOD") {
+      const rcvusers = await User.find({
+        userType: "admin",
+        college: eventCollege,
+      });
+
+      const rcvmail = rcvusers ? rcvusers.map((user) => user.email) : [];
+      sendMail(
+        rcvmail,
+        "create", 
+        crtuser.name,
+        eventData.EventName,
+        createdEvent._id
+      );
+    }
     logger(user._id, "Create Event", "Event Created", 201)
     return NextResponse.json({ message: "Event Created." }, { status: 201 });
   } catch (error) {
