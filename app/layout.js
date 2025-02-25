@@ -10,6 +10,7 @@ import Script from 'next/script';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
+  metadataBase: new URL('https://eventify.sairam.edu.in'),
   title: 'Eventify',
   description: 'The official event management platform for organizing and tracking academic events.',
   keywords: 'eventify sairam, sairam events, sairam college events, sri sairam engineering college events, event management system, college event platform',

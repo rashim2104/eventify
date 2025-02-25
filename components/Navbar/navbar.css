@@ -12,10 +12,9 @@ nav{
   padding: 20px 60px;
   width:100%;
   position: fixed;
-  z-index: 1001;
-  box-shadow: 0 0.4em 1em rgba(0, 0, 0, 0.1);
-  /* background: rgba(255, 255, 255, 0.1); */
-  background-color: #fff;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
   backdrop-filter: blur(4px);
 }
 

@@ -765,14 +765,14 @@ function ViewEvent(props) {
                 </div>
                 <div className="input-container">
                   <label htmlFor="CoordinatorRole" className="label">
-                    Coordinator Role
+                    Designation
                   </label>
                   <input
                     type="text"
                     id="CoordinatorRole"
                     name="CoordinatorRole"
                     disabled={!isEdit}
-                    placeholder="Enter The Role Of The Coordinator"
+                    placeholder="Enter The Designation Of The Coordinator"
                     {...register(`eventCoordinators.${index}.coordinatorRole`, {
                       required: true,
                     })}

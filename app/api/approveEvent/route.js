@@ -73,6 +73,8 @@ export async function POST(req) {
             );
         }
 
+        // Get coordinator email from event document
+        const coordinatorEmail = eventDetails.eventData.eventCoordinators[0].coordinatorMail;
         let userEvents;
 
         if (email === "principal@sairam.edu.in" || email === "principal@sairamit.edu.in") {
@@ -86,11 +88,18 @@ export async function POST(req) {
                     { _id: event_id },
                     { $set: { status: 2, ins_id: eventId } }
                 );
+
+                sendMail(
+                    coordinatorEmail,
+                    "approve",
+                    user.name,
+                    eventDetails.eventData.EventName,
+                    event_id
+                );
             }
         } else if (userType === "admin") {
             switch (action) {
                 case "Approve":
-                    // Use the customEventId directly if provided
                     const eventId = customEventId || await IdGen(
                         eventDetails.user_id,
                         eventDetails.dept,
@@ -102,9 +111,16 @@ export async function POST(req) {
                             $set: { 
                                 status: 2, 
                                 iqac_id: user_id, 
-                                ins_id: customEventId // Use customEventId directly here
+                                ins_id: customEventId
                             } 
                         }
+                    );
+                    sendMail(
+                        coordinatorEmail,
+                        "approve",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id
                     );
                     break;
                 case "Reject":
@@ -112,11 +128,26 @@ export async function POST(req) {
                         { _id: event_id },
                         { $set: { status: -2, iqac_id: user_id } }
                     );
+                    sendMail(
+                        coordinatorEmail,
+                        "reject",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id
+                    );
                     break;
                 case "Comment":
                     userEvents = await Events.updateOne(
                         { _id: event_id },
                         { $set: { status: 4, iqac_id: user_id, comment: comment } }
+                    );
+                    sendMail(
+                        coordinatorEmail,
+                        "comment",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id,
+                        comment
                     );
                     break;
                 case "ApprovePrinc":
@@ -133,17 +164,39 @@ export async function POST(req) {
                         { _id: event_id },
                         { $set: { status: 1 } }
                     );
+                    sendMail(
+                        coordinatorEmail,
+                        "approve",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id
+                    );
                     break;
                 case "Reject":
                     userEvents = await Events.updateOne(
                         { _id: event_id },
                         { $set: { status: -1 } }
                     );
+                    sendMail(
+                        coordinatorEmail,
+                        "reject",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id
+                    );
                     break;
                 case "Comment":
                     userEvents = await Events.updateOne(
                         { _id: event_id },
                         { $set: { status: 3, comment: comment } }
+                    );
+                    sendMail(
+                        coordinatorEmail,
+                        "comment",
+                        user.name,
+                        eventDetails.eventData.EventName,
+                        event_id,
+                        comment
                     );
                     break;
             }
