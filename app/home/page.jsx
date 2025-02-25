@@ -34,7 +34,7 @@ export default function HomePage() {
             />
             {session ? (
               <Link
-                href="/dashboard"
+                href="/"
                 className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition duration-300 hover:-translate-y-0.5"
               >
                 Dashboard

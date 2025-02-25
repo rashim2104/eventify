@@ -569,6 +569,7 @@ function ViewEvent(props) {
             <div>
               <form>
                 <label>Event Poster: </label>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
@@ -764,14 +765,14 @@ function ViewEvent(props) {
                 </div>
                 <div className="input-container">
                   <label htmlFor="CoordinatorRole" className="label">
-                    Coordinator Role
+                    Designation
                   </label>
                   <input
                     type="text"
                     id="CoordinatorRole"
                     name="CoordinatorRole"
                     disabled={!isEdit}
-                    placeholder="Enter The Role Of The Coordinator"
+                    placeholder="Enter The Designation Of The Coordinator"
                     {...register(`eventCoordinators.${index}.coordinatorRole`, {
                       required: true,
                     })}
@@ -1223,6 +1224,7 @@ function ViewEvent(props) {
             <div>
               <form>
                 <label>Sanction Letter: </label>
+                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
                 {session.user._id === props.data.user_id && (
                   <>
                     <input

@@ -29,12 +29,16 @@ export default function EventInfo({ params }) {
   const [formStep, setFormStep] = useState(0);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showEventIdModal, setShowEventIdModal] = useState(false);
+  const [suggestedEventId, setSuggestedEventId] = useState("");
+  const [customEventId, setCustomEventId] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   let email = session?.user?.email;
 
   // console.log("Const");
   const userType = session?.user?.userType;
 
-  const handleChange = async (event_id, action) => {
+  const handleChange = async (event_id, action, customEventId = null) => {
     try {
       const user_id = session?.user?._id;
       const response = await fetch("/api/approveEvent", {
@@ -48,6 +52,7 @@ export default function EventInfo({ params }) {
           userType,
           action,
           comment: comment,
+          customEventId: customEventId, // Make sure we're sending the customEventId
         }),
       });
 
@@ -71,6 +76,39 @@ export default function EventInfo({ params }) {
       console.error("Error:", error);
       setRedirectStatus(false);
     }
+  };
+
+  const generateEventId = async () => {
+    try {
+      const response = await fetch("/api/generateEventId", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: eventDetails[0].user_id,
+          dept: eventDetails[0].dept,
+          college: eventDetails[0].eventCollege,
+        }),
+      });
+      const data = await response.json();
+      setSuggestedEventId(data.eventId);
+      setCustomEventId(data.eventId);
+      setShowEventIdModal(true);
+    } catch (error) {
+      console.error("Error generating event ID:", error);
+      toast.error("Failed to generate event ID");
+    }
+  };
+
+  const handleApproveWithEventId = () => {
+    if (!customEventId.trim()) {
+      toast.error("Event ID cannot be empty");
+      return;
+    }
+    // Pass the customEventId directly
+    handleChange(eventDetails[0]._id, "Approve", customEventId);
+    setShowEventIdModal(false);
   };
 
   const formatDate = (dateString) => {
@@ -185,10 +223,10 @@ export default function EventInfo({ params }) {
                         const approvalNeeded = window.prompt(
                           "Does this event need principal's approval? (yes/no)"
                         );
-                        if (approvalNeeded.toLowerCase() === "yes") {
+                        if (approvalNeeded?.toLowerCase() === "yes") {
                           handleChange(eventDetails[0]._id, "ApprovePrinc");
                         } else {
-                          handleChange(eventDetails[0]._id, "Approve");
+                          generateEventId();
                         }
                       } else {
                         handleChange(eventDetails[0]._id, "Approve");
@@ -257,6 +295,68 @@ export default function EventInfo({ params }) {
         </div>
       ) : (
         <p></p>
+      )}
+      {showEventIdModal && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"></div>
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen p-4">
+              <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md relative">
+                <h3 className="text-lg font-bold mb-4">Event ID Confirmation</h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Suggested Event ID:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={customEventId}
+                        onChange={(e) => setCustomEventId(e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex-1 p-2 bg-gray-50 rounded border">
+                        {customEventId}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="px-3 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                    >
+                      {isEditing ? (
+                        <span>Done</span>
+                      ) : (
+                        <span>Edit</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowEventIdModal(false);
+                      setIsEditing(false);
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleApproveWithEventId();
+                      setIsEditing(false);
+                    }}
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                  >
+                    Confirm & Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </>
   );
