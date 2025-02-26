@@ -15,7 +15,8 @@ const Login = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get("callbackUrl");
+  const callbackURL = searchParams.get("callbackUrl") || "/dashboard";
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -32,22 +33,26 @@ const Login = () => {
       const res = await signIn("credentials", {
         email,
         password,
+        callbackUrl: "/dashboard",
         redirect: false,
       });
 
-      if (res.error) {
+      if (res?.error) {
         setError("Invalid Credentials. Try again!");
         setIsLoading(false);
         return;
       }
-      router.replace(callbackURL || "dashboard");
+
+      if (res?.url) {
+        router.replace(res.url);
+      }
     } catch (error) {
       console.log(error);
-      setIsLoading(false);
-    } finally {
+      setError("An error occurred during login.");
       setIsLoading(false);
     }
   };
+
   return (
     <>
       <MDBContainer className=" s.gradient-form bg-white">
