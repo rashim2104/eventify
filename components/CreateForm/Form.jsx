@@ -125,20 +125,6 @@ function Form() {
     return !hasErrors;
   };
 
-  const validateStep1 = () => {
-    let hasErrors = false;
-    if (isEventVenueOnline === "offline" && isEventVenueOffCampus === "On-Campus") {
-      if (venueList.length === 0) {
-        toast.error("Please select a venue");
-        hasErrors = true;
-      }
-    }
-    if (!watch("eventVenueAddInfo")) {
-      toast.error("Please enter venue details");
-      hasErrors = true;
-    }
-    return !hasErrors;
-  };
 
   const validateStep2 = () => {
     let hasErrors = false;
@@ -248,9 +234,6 @@ function Form() {
     switch (formStep) {
       case 0:
         isValid = validateStep0();
-        break;
-      case 1:
-        isValid = validateStep1();
         break;
       case 2:
         isValid = validateStep2();

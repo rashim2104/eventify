@@ -41,7 +41,10 @@ export async function POST(req) {
       );
     }
 
+    const isLinux = process.platform === "linux";
+
     const browser = await puppeteer.launch({
+      executablePath: isLinux ? "/snap/bin/chromium" : undefined,
       headless: "new",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
