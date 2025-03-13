@@ -355,7 +355,7 @@ export default function EventInfo({ params }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Principal Approval</h2>
-            <p className="mb-6 text-gray-600">Does this event need principal's approval?</p>
+            <p className="mb-6 text-gray-600">Does this event need principal approval?</p>
             <div className="flex justify-end gap-4">
               <button
                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
