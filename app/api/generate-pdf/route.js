@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 export async function POST(req) {
   const ACTION = "Generate PDF";
   let user;
+  let browser = null;
 
   try {
     user = await authenticate(req);
@@ -41,15 +42,26 @@ export async function POST(req) {
       );
     }
 
-    const isLinux = process.platform === "linux";
-
-    const browser = await puppeteer.launch({
-      executablePath: isLinux ? "/snap/bin/chromium" : undefined,
+    // Configure browser options for EC2 environment
+    const browserOptions = {
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--disable-gpu',
+        '--no-zygote',
+        '--disable-accelerated-2d-canvas'
+      ],
+      executablePath: process.platform === 'linux' ? '/usr/bin/google-chrome' : undefined
+    };
 
+    browser = await puppeteer.launch(browserOptions);
+    
+    // Set longer timeout for page operations
     const page = await browser.newPage();
+    await page.setDefaultTimeout(30000); // 30 second timeout
 
     const htmlContent = `
       <html>
@@ -270,7 +282,10 @@ export async function POST(req) {
       </html>
     `;
 
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    await page.setContent(htmlContent, { 
+      waitUntil: ['load', 'networkidle0'],
+      timeout: 30000
+    });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -281,9 +296,11 @@ export async function POST(req) {
         bottom: "0.5in",
         left: "0.5in",
       },
+      timeout: 30000
     });
 
     await browser.close();
+    browser = null;
 
     await logger(
       user._id,
@@ -300,14 +317,28 @@ export async function POST(req) {
     });
 
   } catch (error) {
+    console.error('PDF Generation Error:', error);
     await logger(
       user?._id || "UNKNOWN",
       ACTION,
       "PDF Generation Failed: " + error.message,
       500
     );
+    
+    // Make sure browser is closed in case of error
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('Error closing browser:', closeError);
+      }
+    }
+    
     return new Response(
-      JSON.stringify({ error: "Error generating PDF" }),
+      JSON.stringify({ 
+        error: "Error generating PDF",
+        details: error.message
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" }
