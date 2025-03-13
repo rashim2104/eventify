@@ -385,7 +385,7 @@ function Form() {
       file = e.target.files[0];
       fileType = file.type;
     }
-    const validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+    const validImageTypes = ["image/gif", "image/jpeg", "image/png", "image/jpg"];
     const validFileTypes = [...validImageTypes, "application/pdf"];
     if (file && validFileTypes.includes(fileType) && file.size <= 5000000) {
       setFile(file);
