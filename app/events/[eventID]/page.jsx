@@ -17,26 +17,25 @@ import {
 } from "@/public/data/data";
 
 export default function EventInfo({ params }) {
-  const [eventOrigin, setEventOrigin] = useState("1");
-  const [eventSociety, setEventSociety] = useState("");
-  const [currSoc, setCurrSoc] = useState("");
-  const { data: session, status } = useSession();
-  const [eventDetails, setEventDetails] = useState([{ eventData: {} }]);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [redirectStatus, setRedirectStatus] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [eventDetails, setEventDetails] = useState([]);
   const [comment, setComment] = useState("");
-  const [formStep, setFormStep] = useState(0);
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [showEventIdModal, setShowEventIdModal] = useState(false);
+  const [redirectStatus, setRedirectStatus] = useState(false);
+  const { data: session, status } = useSession();
   const [suggestedEventId, setSuggestedEventId] = useState("");
-  const [customEventId, setCustomEventId] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showEventIdModal, setShowEventIdModal] = useState(false);
+  const [customEventId, setCustomEventId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const router = useRouter();
   let email = session?.user?.email;
-
-  // console.log("Const");
   const userType = session?.user?.userType;
+
+  const handlePrincipalApprovalCheck = () => {
+    setIsDialogOpen(true);
+  };
 
   const handleChange = async (event_id, action, customEventId = null) => {
     try {
@@ -220,14 +219,7 @@ export default function EventInfo({ params }) {
                     className="text-white bg-green-500 font-xl hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800 cursor-pointer"
                     onClick={() => {
                       if (userType === "admin") {
-                        const approvalNeeded = window.prompt(
-                          "Does this event need principal's approval? (yes/no)"
-                        );
-                        if (approvalNeeded?.toLowerCase() === "yes") {
-                          handleChange(eventDetails[0]._id, "ApprovePrinc");
-                        } else {
-                          generateEventId();
-                        }
+                        handlePrincipalApprovalCheck();
                       } else {
                         handleChange(eventDetails[0]._id, "Approve");
                       }
@@ -256,7 +248,6 @@ export default function EventInfo({ params }) {
           )}
         </div>
       </div>
-      {/* Moved closing parenthesis for the div containing the event details map function to the end */}
       {showModal ? (
         <div>
           <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
@@ -264,29 +255,31 @@ export default function EventInfo({ params }) {
               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
                 <div className="relative p-6 flex-auto">
                   <label htmlFor="">Add a Comment</label>
-                  <textarea
-                    className="my-4 text-blueGray-500 text-lg leading-relaxed w-full h-40 outline rounded"
-                    onChange={(e) => setComment(e.target.value)}
-                  ></textarea>
-                </div>
-                <div className="flex items-center justify-end p-6  rounded-b">
-                  <button
-                    className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Close
-                  </button>
-                  <button
-                    className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      handleChange(eventDetails[0]._id, "Comment");
-                    }}
-                  >
-                    Send
-                  </button>
+                  <div className="flex items-center flex-col w-full">
+                    <textarea
+                      className="my-4 text-blueGray-500 text-lg leading-relaxed w-full h-40 outline rounded"
+                      onChange={(e) => setComment(e.target.value)}
+                    ></textarea>
+                    <div className="flex mt-4 space-x-4">
+                      <button
+                        className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                        type="button"
+                        onClick={() => setShowModal(false)}
+                      >
+                        Close
+                      </button>
+                      <button
+                        className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                        type="button"
+                        onClick={() => {
+                          setShowModal(false);
+                          handleChange(eventDetails[0]._id, "Comment");
+                        }}
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -357,6 +350,34 @@ export default function EventInfo({ params }) {
             </div>
           </div>
         </>
+      )}
+      {isDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Principal Approval</h2>
+            <p className="mb-6 text-gray-600">Does this event need principal's approval?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  handleChange(eventDetails[0]._id, "ApprovePrinc");
+                }}
+              >
+                Yes
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  generateEventId();
+                }}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
