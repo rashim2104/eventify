@@ -97,7 +97,9 @@ export async function POST(req) {
                     event_id
                 );
             }
-        } else if (userType === "admin") {
+        }
+        
+        else if (userType === "admin") {
             switch (action) {
                 case "Approve":
                     const eventId = customEventId || await IdGen(
@@ -157,7 +159,9 @@ export async function POST(req) {
                     );
                     break;
             }
-        } else if (userType === "HOD") {
+        }
+        
+        else if (userType === "HOD") {
             switch (action) {
                 case "Approve":
                     userEvents = await Events.updateOne(

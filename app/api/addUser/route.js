@@ -76,7 +76,7 @@ export async function POST(req) {
   return handleUserCreation(user, valueToJson, ACTION);
 }
 
-async function handleUserCreation(user, valueToJson, ACTION) {
+async function    handleUserCreation(user, valueToJson, ACTION) {
   const { name, dept, mail, password, userType, isSuperAdmin, college, role, phone, id } = valueToJson;
 
   try {
