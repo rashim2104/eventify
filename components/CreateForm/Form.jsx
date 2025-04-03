@@ -524,7 +524,7 @@ function Form() {
     }
 
     const userType = session?.user?.userType;
-    const status = await fetch("/api/createEvent", {
+    const status = await fetch("/api/v2/createEvent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
