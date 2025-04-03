@@ -4,303 +4,381 @@ import Events from "@/models/events";
 import { authenticate } from "@/lib/authenticate";
 import { logger } from "@/lib/logger";
 
-export async function POST(req) {
-  const ACTION = "Generate PDF";
-  let user;
-  let browser = null;
-
+async function waitForNetworkIdle(page, timeout = 30000) {
   try {
-    user = await authenticate(req);
+    await page.waitForNetworkIdle({ idleTime: 500, timeout });
   } catch (error) {
-    await logger(
-      "UNKNOWN",
-      ACTION,
-      "Authentication Failed: " + error.message,
-      401
-    );
-    return new Response(
-      JSON.stringify({ message: "Authentication failed" }),
-      { status: 401 }
-    );
+    console.warn('Network idle timeout:', error);
+    // Continue execution even if network idle times out
   }
+}
+
+export async function POST(req) {
+  let browser = null;
+  let page = null;
+  const ACTION = "Generate PDF";
 
   try {
-    await connectMongoDB();
     const { eventId } = await req.json();
-    const eventData = await Events.findOne({ _id: eventId });
-
-    if (!eventData) {
-      await logger(
-        user._id,
-        ACTION,
-        `Event Not Found: ${eventId}`,
-        404
-      );
-      return new Response(
-        JSON.stringify({ error: "Event not found" }),
-        { status: 404 }
-      );
+    const user = await authenticate(req);
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
     }
 
-    // Configure browser options for EC2 environment
-    const browserOptions = {
-      headless: "new",
+    await connectMongoDB();
+    const eventData = await Events.findById(eventId);
+    if (!eventData) {
+      return new Response(JSON.stringify({ error: "Event not found" }), {
+        status: 404,
+      });
+    }
+
+    // Launch browser with specific configuration
+    browser = await puppeteer.launch({
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--single-process',
-        '--disable-gpu',
-        '--no-zygote',
-        '--disable-accelerated-2d-canvas'
+        '--disable-gpu'
       ],
-      executablePath: process.platform === 'linux' ? '/usr/bin/google-chrome' : undefined
-    };
+      ignoreHTTPSErrors: true,
+      timeout: 60000
+    });
 
-    browser = await puppeteer.launch(browserOptions);
-    
-    // Set longer timeout for page operations
-    const page = await browser.newPage();
-    await page.setDefaultTimeout(30000); // 30 second timeout
+    // Create new page with error handling
+    page = await browser.newPage();
+    await page.setViewport({ width: 1200, height: 800 });
 
+    // Set longer timeouts for navigation
+    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultTimeout(60000);
+
+    // Your HTML content generation
     const htmlContent = `
       <html>
         <head>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
             
             body {
               font-family: 'Roboto', Arial, sans-serif;
-              margin: 5%;
-              font-size: 24px;
+              margin: 20px;
+              font-size: 11pt;
               color: #2c3e50;
+              line-height: 1.4;
             }
 
             h1, h2, h3 {
-              font-family: 'Merriweather', serif;
               color: #2c3e50;
-              margin-bottom: 20px;
+              margin: 12px 0 8px 0;
             }
 
             h1 {
-              font-size: 32px;
+              font-size: 16pt;
               text-align: center;
+              margin-top: 20px;
             }
 
             h2 {
-              font-size: 28px;
-              margin-top: 30px;
+              font-size: 13pt;
+              color: #34495e;
+              border-bottom: 1px solid #bdc3c7;
+              padding-bottom: 4px;
+              margin-top: 16px;
             }
 
-            p, li {
-              line-height: 1.6;
+            h3 {
+              font-size: 12pt;
+              margin: 8px 0 4px 0;
+            }
+
+            p {
+              margin: 4px 0;
             }
 
             ul {
+              margin: 4px 0;
               padding-left: 20px;
             }
 
-            .section-title {
-              font-weight: bold;
+            li {
+              margin: 2px 0;
             }
 
-            .footer {
-              padding: 20px;
-              position: fixed;
-              bottom: 0;
-              right: 0;
-              width: 100%;
-              text-align: right;
-              font-size: 18px;
-              color: #aaa;
-            }
-
-            .event-info, .stakeholder-info, .budget-info, .image-container, .post-event-info {
-              margin-bottom: 30px;
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
             }
 
             .header img {
-              max-width: 100%;
+              max-width: 300px;
               height: auto;
-              margin-bottom: 30px;
+            }
+
+            .section-title {
+              font-weight: 500;
+              color: #2c3e50;
+            }
+
+            .event-info {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 8px;
+              margin-bottom: 12px;
+            }
+
+            .event-info p {
+              margin: 4px 0;
+            }
+
+            .coordinator-grid, .resource-person-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 8px;
+              margin: 8px 0;
+            }
+
+            .coordinator-item, .resource-person-item {
+              border: 1px solid #eee;
+              padding: 8px;
+              border-radius: 4px;
+              margin-bottom: 8px;
+            }
+
+            .image-container {
+              text-align: center;
+              margin: 12px 0;
             }
 
             .image-container img {
-              max-width: 100%;
-              height: auto;
-              margin: 10px 0;
-              border: 1px solid #ccc;
-              border-radius: 5px;
+              max-width: 400px;
+              max-height: 200px;
+              object-fit: contain;
+              border: 1px solid #eee;
+              border-radius: 4px;
+            }
+
+            .footer {
+              margin-top: 20px;
+              padding: 8px;
+              text-align: right;
+              font-size: 9pt;
+              color: #95a5a6;
+              border-top: 1px solid #eee;
+            }
+
+            .info-row {
+              margin: 4px 0;
             }
 
             .divider {
-              border-top: 2px solid #ccc;
-              margin: 20px 0;
+              margin: 12px 0;
+              border-top: 1px solid #eee;
             }
           </style>
         </head>
         <body>
-          <!-- Header Image -->
           <div class="header">
             <img 
               src="${eventData.college === "SIT"
-        ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png"
-        : eventData.college === "SEC"
-          ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png"
-          : "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png"
-      }" 
-              alt="Header Image" 
+                ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png"
+                : eventData.college === "SEC"
+                  ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png"
+                  : "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png"}"
+              alt="Header Logo"
             />
           </div>
 
-          <h1>Event Report</h1>
-          <h2>${eventData.eventData.EventName}</h2>
+          <h1>Event Report: ${eventData.eventData.EventName}</h1>
 
-          <!-- Event Information -->
           <div class="event-info">
-            <h2>Event Details</h2>
-            <p><span class="section-title">Objective:</span> ${eventData.eventData.EventObjective
-      }</p>
-            <p><span class="section-title">Venue:</span> ${eventData.eventData.EventVenue
-      }</p>
-            <p><span class="section-title">Start Time:</span> ${new Date(
-        eventData.eventData.StartTime
-      ).toLocaleString()}</p>
-            <p><span class="section-title">End Time:</span> ${new Date(
-        eventData.eventData.EndTime
-      ).toLocaleString()}</p>
-            <p><span class="section-title">Duration:</span> ${eventData.eventData.EventDuration
-      } hours</p>
+            <div class="info-row">
+              <span class="section-title">Event ID:</span> ${eventData.ins_id || 'N/A'}
+            </div>
+            <div class="info-row">
+              <span class="section-title">Department:</span> ${eventData.dept}
+            </div>
+            <div class="info-row">
+              <span class="section-title">Venue:</span> ${eventData.eventData.EventVenue}
+            </div>
+            <div class="info-row">
+              <span class="section-title">Duration:</span> ${eventData.eventData.EventDuration} hours
+            </div>
+            <div class="info-row">
+              <span class="section-title">Start:</span> ${new Date(eventData.eventData.StartTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+            </div>
+            <div class="info-row">
+              <span class="section-title">End:</span> ${new Date(eventData.eventData.EndTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+            </div>
           </div>
-          <hr class="divider">
 
-          <!-- Stakeholders -->
-          <div class="stakeholder-info">
-            <h2>Stakeholders</h2>
-            <ul>
-              ${eventData.eventData.eventStakeholders
-        ? eventData.eventData.eventStakeholders
-          .map((stakeholder) => `<li>${stakeholder}</li>`)
-          .join("")
-        : "<p>N/A</p>"
-      }
-            </ul>
-          </div>
-          <hr class="divider">
+          <h2>Event Objective</h2>
+          <p>${eventData.eventData.EventObjective}</p>
 
-          <!-- Event Coordinators -->
-          <div class="event-coordinators">
-            <h2>Event Coordinators</h2>
+          <h2>Stakeholders</h2>
+          <ul>
+            ${eventData.eventData.eventStakeholders
+              ? eventData.eventData.eventStakeholders
+                .map((stakeholder) => `<li>${stakeholder}</li>`)
+                .join("")
+              : "<li>N/A</li>"
+            }
+          </ul>
+
+          <h2>Event Coordinators</h2>
+          <div class="coordinator-grid">
             ${eventData.eventData.eventCoordinators
-        ? eventData.eventData.eventCoordinators
-          .map(
-            (coordinator) => `
-                <p><strong>Name:</strong> ${coordinator.coordinatorName}</p>
-                <p><strong>Email:</strong> ${coordinator.coordinatorMail}</p>
-                <p><strong>Phone:</strong> ${coordinator.coordinatorPhone}</p>
-                <p><strong>Role:</strong> ${coordinator.coordinatorRole}</p>
-                <hr />
-              `
-          )
-          .join("")
-        : "<p>N/A</p>"
-      }
+              ? eventData.eventData.eventCoordinators
+                .map(
+                  (coordinator) => `
+                    <div class="coordinator-item">
+                      <p><strong>${coordinator.coordinatorName}</strong> (${coordinator.coordinatorRole})</p>
+                      <p>${coordinator.coordinatorMail}</p>
+                      <p>${coordinator.coordinatorPhone}</p>
+                    </div>
+                  `
+                )
+                .join("")
+              : "<p>N/A</p>"
+            }
           </div>
-          <hr class="divider">
 
-          <!-- Resource Persons -->
-          <div class="event-resource-persons">
-            <h2>Resource Persons</h2>
-            ${eventData.eventData.eventResourcePerson
-        ? eventData.eventData.eventResourcePerson
-          .map(
-            (person) => `
-                <p><strong>Name:</strong> ${person.ResourcePersonName}</p>
-                <p><strong>Email:</strong> ${person.ResourcePersonMail}</p>
-                <p><strong>Phone:</strong> ${person.ResourcePersonPhone}</p>
-                <p><strong>Designation:</strong> ${person.ResourcePersonDesgn}</p>
-                <p><strong>Address:</strong> ${person.ResourcePersonAddr}</p>
-                <hr />
-              `
-          )
-          .join("")
-        : "<p>N/A</p>"
-      }
-          </div>
-          <hr class="divider">
+          ${eventData.eventData.eventResourcePerson && eventData.eventData.eventResourcePerson.length > 0 
+            ? `
+              <h2>Resource Persons</h2>
+              <div class="resource-person-grid">
+                ${eventData.eventData.eventResourcePerson
+                  .map(
+                    (person) => `
+                      <div class="resource-person-item">
+                        <p><strong>${person.ResourcePersonName}</strong> (${person.ResourcePersonDesgn})</p>
+                        <p>${person.ResourcePersonMail}</p>
+                        <p>${person.ResourcePersonPhone}</p>
+                        <p>${person.ResourcePersonAddr}</p>
+                      </div>
+                    `
+                  )
+                  .join("")
+                }
+              </div>
+            `
+            : ''
+          }
 
-          <!-- Budget Info -->
-          <div class="budget-info">
-            <h2>Budget Information</h2>
-            <p><span class="section-title">Budget:</span> ₹${eventData.eventData.Budget || "N/A"
-      }</p>
-          </div>
-          <hr class="divider">
+          ${eventData.eventData.Budget 
+            ? `
+              <h2>Budget Information</h2>
+              <p><span class="section-title">Budget:</span> ₹${eventData.eventData.Budget}</p>
+            `
+            : ''
+          }
 
-          <!-- Image Links -->
-          <div class="image-container">
-            <h2>Event Poster</h2>
-            ${eventData.eventData.fileUrl.poster &&
-        /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
-        ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
-        : eventData.eventData.fileUrl.poster
-          ? `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
-          : "<p>No poster available</p>"
-      }
-          </div>
-          <hr class="divider">
+          ${eventData.eventData.fileUrl.poster 
+            ? `
+              <h2>Event Poster</h2>
+              <div class="image-container">
+                ${/\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
+                  ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
+                  : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
+                }
+              </div>
+            `
+            : ''
+          }
 
-          <!-- Post Event Links -->
-          <div class="post-event-info">
-            <h2>Post Event Details</h2>
-            ${eventData.postEventData?.fileUrl?.geoPhotos
-        ? `
-              <h3>Geo Photos</h3>
-              ${eventData.postEventData.fileUrl.geoPhotos
-          .map((photoUrl) => `<img src="${photoUrl}" alt="Geo Photo"/>`)
-          .join("")}
-              `
-        : "<p>No geo photos available</p>"
-      }
-            ${eventData.postEventData?.fileUrl?.report
-        ? `<h3>Report:</h3><a href="${eventData.postEventData.fileUrl.report}" target="_blank">Download Report</a>`
-        : "<h3>Report:</h3><p>No report available</p>"
-      }
-            ${eventData.postEventData?.fileUrl?.financialCommitments
-        ? `<h3>Financial Commitments:</h3><a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">Download Financial Commitments</a>`
-        : "<h3>Financial Commitments:</h3><p>No financial commitments available</p>"
-      }
-          </div>
+          ${eventData.postEventData
+            ? `
+              <h2>Post Event Documentation</h2>
+              ${eventData.postEventData.fileUrl?.geoPhotos && eventData.postEventData.fileUrl.geoPhotos.length > 0
+                ? `
+                  <h3>Event Photos</h3>
+                  <div class="image-container">
+                    ${eventData.postEventData.fileUrl.geoPhotos
+                      .map(photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`)
+                      .join("")
+                    }
+                  </div>
+                `
+                : ''
+              }
+              ${eventData.postEventData.fileUrl?.report
+                ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
+                : ''
+              }
+              ${eventData.postEventData.fileUrl?.financialCommitments
+                ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
+                : ''
+              }
+            `
+            : ''
+          }
 
           <div class="footer">
-            Generated with Eventify - ${new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-      })}
+            Generated by Eventify • ${new Date().toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+            })}
           </div>
         </body>
       </html>
     `;
 
-    await page.setContent(htmlContent, { 
-      waitUntil: ['load', 'networkidle0'],
-      timeout: 30000
+    await page.setContent(htmlContent, {
+      waitUntil: ['networkidle0', 'domcontentloaded', 'load']
     });
 
+    // Wait for network to be idle
+    await waitForNetworkIdle(page);
+
+    // Ensure all images are loaded
+    await page.evaluate(() => {
+      return Promise.all(
+        Array.from(document.images)
+          .filter(img => !img.complete)
+          .map(img => new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          }))
+      );
+    });
+
+    // Generate PDF with explicit configuration
     const pdfBuffer = await page.pdf({
-      format: "A4",
+      format: 'A4',
       printBackground: true,
       margin: {
-        top: "0.5in",
-        right: "0.5in",
-        bottom: "0.5in",
-        left: "0.5in",
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
       },
-      timeout: 30000
+      displayHeaderFooter: true,
+      footerTemplate: `
+        <div style="width: 100%; font-size: 8px; padding: 0 20px; color: #666; display: flex; justify-content: flex-end;">
+          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        </div>
+      `,
+      timeout: 120000 // Increased timeout for PDF generation
     });
 
-    await browser.close();
-    browser = null;
+    // Close browser resources properly
+    if (page) {
+      try {
+        await page.close();
+      } catch (err) {
+        console.warn('Error closing page:', err);
+      }
+    }
+    
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (err) {
+        console.warn('Error closing browser:', err);
+      }
+    }
 
     await logger(
       user._id,
@@ -318,31 +396,34 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('PDF Generation Error:', error);
+    
+    // Cleanup resources in case of error
+    if (page) {
+      try {
+        await page.close();
+      } catch (err) {
+        console.warn('Error closing page during cleanup:', err);
+      }
+    }
+    
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (err) {
+        console.warn('Error closing browser during cleanup:', err);
+      }
+    }
+
     await logger(
       user?._id || "UNKNOWN",
       ACTION,
       "PDF Generation Failed: " + error.message,
       500
     );
-    
-    // Make sure browser is closed in case of error
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (closeError) {
-        console.error('Error closing browser:', closeError);
-      }
-    }
-    
+
     return new Response(
-      JSON.stringify({ 
-        error: "Error generating PDF",
-        details: error.message
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
+      JSON.stringify({ error: "Failed to generate PDF" }),
+      { status: 500 }
     );
   }
 }

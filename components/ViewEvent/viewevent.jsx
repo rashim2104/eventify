@@ -5,15 +5,27 @@ import { useState, useEffect, useRef } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { jsPDF } from "jspdf";
-import Viewer from 'react-viewer';
-import { Worker, Viewer as PDFViewer } from '@react-pdf-viewer/core';
+import dynamic from 'next/dynamic';
+import { Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { zoomPlugin } from '@react-pdf-viewer/zoom';
 import * as pdfjs from 'pdfjs-dist';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import "@/components/CreateForm/Form.css";
+
+// Initialize PDF.js worker after importing
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+// Dynamically import components that require browser APIs
+const Viewer = dynamic(() => import('react-viewer'), {
+  ssr: false
+});
+
+const PDFViewer = dynamic(
+  () => import('@react-pdf-viewer/core').then(module => module.Viewer),
+  { ssr: false }
+);
 
 // Initialize PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -74,35 +86,41 @@ function ViewEvent(props) {
         : "",
     },
   });
+
+  // Add check for client-side execution
+  const [isClient, setIsClient] = useState(false);
+  
   useEffect(() => {
-    if (ieeeSocietiesShort.includes(props.data.dept)) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (props.data?.dept && ieeeSocietiesShort?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
       setValue("EventOrganizer", 2, true);
       setEventOrigin(2);
       setEventSociety("IEEE");
     }
-    if (clubsShort.includes(props.data.dept)) {
+    if (props.data?.dept && clubsShort?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
       setValue("EventOrganizer", 3, true);
       setEventOrigin(3);
       setEventSociety(props.data.dept);
     }
-    if (societies.includes(props.data.dept)) {
+    if (props.data?.dept && societies?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
       setValue("EventOrganizer", 2, true);
       setEventOrigin(2);
       setEventSociety(props.data.dept);
     }
-    if (props.eventData.EventOrganizer == 4) {
-      setCurrSoc(props.data.dept);
+    if (props.eventData?.EventOrganizer === "4") {
+      setCurrSoc(props.data?.dept || "");
     }
     SetVenueSpecs({
-      isEventOnCampus:
-        props.eventData.eventLocation === "On-Campus" ? true : false,
-      isEventOnline: props.eventData.EventVenue === "online" ? true : false,
+      isEventOnCampus: props.eventData?.eventLocation === "On-Campus",
+      isEventOnline: props.eventData?.EventVenue === "online",
     });
-    // console.log(eventData);
-  }, [isValid, errors, props, setValue]);
+  }, [props.data, props.eventData, setValue]);
 
   useEffect(() => {
     if (props.eventData) {
@@ -111,15 +129,24 @@ function ViewEvent(props) {
     }
   }, [isValid, errors, props, setValue]);
 
+  // Modify the useEffect that accesses document
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const navbar = document.querySelector('nav');
-      const spacer = document.querySelector('.spacer');
-      if (navbar && spacer) {
-        spacer.style.height = navbar.offsetHeight + 'px';
-      }
+    if (isClient) {
+      const updateNavbarHeight = () => {
+        const navbar = document.querySelector('nav');
+        const spacer = document.querySelector('.spacer');
+        if (navbar && spacer) {
+          const totalHeight = navbar.offsetHeight;
+          setNavbarHeight(totalHeight);
+          spacer.style.height = `${totalHeight}px`;
+        }
+      };
+
+      updateNavbarHeight();
+      window.addEventListener('resize', updateNavbarHeight);
+      return () => window.removeEventListener('resize', updateNavbarHeight);
     }
-  }, []);
+  }, [isClient]);
 
   const downloadPDF = (blob, filename) => {
     if (typeof window === 'undefined') return;
@@ -131,12 +158,12 @@ function ViewEvent(props) {
 
   const checkImageDimensions = (file) => {
     return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined') {
-        // Skip validation during server-side rendering
+      if (!isClient) {
         resolve(true);
         return;
       }
-      const tempImg = document.createElement('img');
+
+      const tempImg = new Image();
       tempImg.onload = () => {
         const { width, height } = tempImg;
         resolve(width >= 800 && height >= 400);
@@ -527,31 +554,16 @@ function ViewEvent(props) {
   const [navbarHeight, setNavbarHeight] = useState(0);
   const navRef = useRef(null);
 
-  useEffect(() => {
-    const updateNavbarHeight = () => {
-      const navbar = document.querySelector('nav');
-      const spacer = document.querySelector('.spacer');
-      if (navbar && spacer) {
-        const totalHeight = navbar.offsetHeight + spacer.offsetHeight;
-        setNavbarHeight(totalHeight);
-      }
-    };
-
-    updateNavbarHeight();
-    window.addEventListener('resize', updateNavbarHeight);
-    return () => window.removeEventListener('resize', updateNavbarHeight);
-  }, []);
-
   const handleImageView = (imageUrl) => {
-    // Create a temporary HTML image element
-    const tempImg = document.createElement('img');
+    if (!isClient) return;
+
+    const tempImg = new Image();
     tempImg.src = imageUrl;
     
     tempImg.onload = () => {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = (window.innerHeight - navbarHeight) * 0.9;
       
-      // Calculate dimensions maintaining aspect ratio
       let width = tempImg.naturalWidth;
       let height = tempImg.naturalHeight;
       
@@ -1837,21 +1849,24 @@ function ViewEvent(props) {
         )}
         {/* {true && <button onClick={() => generatePDF()}>Download</button>} */}
       </form>
-      <Viewer
-        visible={viewerState.visible}
-        onClose={() => setViewerState({ visible: false, activeImage: null })}
-        images={[{ src: viewerState.activeImage }]}
-        zoomable
-        scalable
-        rotatable
-        downloadable
-        noNavbar
-        className="custom-viewer"
-        drag={false}
-        noImgDetails
-        changeable={false}
-        zIndex={1001}
-      />
+
+      {isClient && (
+        <Viewer
+          visible={viewerState.visible}
+          onClose={() => setViewerState({ visible: false, activeImage: null })}
+          images={[{ src: viewerState.activeImage }]}
+          zoomable
+          scalable
+          rotatable
+          downloadable
+          noNavbar
+          className="custom-viewer"
+          drag={false}
+          noImgDetails
+          changeable={false}
+          zIndex={1001}
+        />
+      )}
     </>
   );
 }
