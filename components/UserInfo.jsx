@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
@@ -13,7 +13,11 @@ export default function Status() {
   }, []);
 
   if (status === 'loading') {
-    return <div className="grid place-items-center h-screen text-xl font-extrabold">Loading...</div>;
+    return (
+      <div className='grid place-items-center h-screen text-xl font-extrabold'>
+        Loading...
+      </div>
+    );
   }
 
   async function getEvents() {
@@ -21,26 +25,33 @@ export default function Status() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     })
       .then(response => response.json())
       .then(data => {
         if (data.message && data.message.length > 0) {
           setEvents(data.message);
           // console.log(data.message);
-          setMessage("");
+          setMessage('');
         } else {
-          setMessage("No Events.");
+          setMessage('No Events.');
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        setMessage("Error fetching events.");
+        setMessage('Error fetching events.');
       });
   }
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+  const formatDate = dateString => {
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
@@ -50,17 +61,34 @@ export default function Status() {
         <div>
           <h2>Events:</h2>
           {events.map((event, index) => (
-            <div key={index} style={{maxWidth: "50vw", wordWrap: "break-word", margin: "10px", border: "1px solid #ccc", padding: "10px", borderRadius: "5px" }}>
-              <h3>{event.eventData.EventName}</h3>            
-              <p><strong>Venue:</strong> {event.eventData.EventVenue}</p>
-              <p><strong>Start Time:</strong> {formatDate(event.eventData.StartTime)}</p>
-              <p><strong>End Time:</strong> {formatDate(event.eventData.EndTime)}</p>
+            <div
+              key={index}
+              style={{
+                maxWidth: '50vw',
+                wordWrap: 'break-word',
+                margin: '10px',
+                border: '1px solid #ccc',
+                padding: '10px',
+                borderRadius: '5px',
+              }}
+            >
+              <h3>{event.eventData.EventName}</h3>
+              <p>
+                <strong>Venue:</strong> {event.eventData.EventVenue}
+              </p>
+              <p>
+                <strong>Start Time:</strong>{' '}
+                {formatDate(event.eventData.StartTime)}
+              </p>
+              <p>
+                <strong>End Time:</strong> {formatDate(event.eventData.EndTime)}
+              </p>
             </div>
           ))}
         </div>
       )}
       {message && (
-        <div style={{ maxWidth: "50vw", wordWrap: "break-word" }}>
+        <div style={{ maxWidth: '50vw', wordWrap: 'break-word' }}>
           {message}
         </div>
       )}

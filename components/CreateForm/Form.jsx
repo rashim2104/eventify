@@ -1,19 +1,19 @@
 'use client';
-import { useState, useEffect } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import Image from "next/image";
-import "./Form.css";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import Image from 'next/image';
+import './Form.css';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   societies,
   ieeeSocieties,
   ieeeSocietiesShort,
   clubs,
   clubsShort,
-} from "@/public/data/data";
-import Calven from "../Calendar/calven";
+} from '@/public/data/data';
+import Calven from '../Calendar/calven';
 import dynamic from 'next/dynamic';
 
 // Dynamically import Viewer with SSR disabled
@@ -22,17 +22,17 @@ const Viewer = dynamic(() => import('react-viewer'), {
 });
 
 function Form() {
-  const [eventOrigin, setEventOrigin] = useState("1");
-  const [eventSociety, setEventSociety] = useState("");
-  const [currSoc, setCurrSoc] = useState("");
+  const [eventOrigin, setEventOrigin] = useState('1');
+  const [eventSociety, setEventSociety] = useState('');
+  const [currSoc, setCurrSoc] = useState('');
   const router = useRouter();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [fileUrl, setFileUrl] = useState({ poster: "", sanctionLetter: "" });
+  const [fileUrl, setFileUrl] = useState({ poster: '', sanctionLetter: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: session } = useSession();
   const [venueList, setVenueList] = useState([]);
-  const [userVenue, setUserVenue] = useState("");
+  const [userVenue, setUserVenue] = useState('');
   const {
     watch,
     handleSubmit,
@@ -43,31 +43,31 @@ function Form() {
     setValue,
     reset,
   } = useForm({
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
       eventSponsors: [
         {
-          name: "",
-          address: "",
+          name: '',
+          address: '',
         },
       ],
       eventCoordinators: [
         {
-          coordinatorName: "",
-          coordinatorMail: "",
-          coordinatorPhone: "",
-          coordinatorRole: "",
-          staffId: "",
+          coordinatorName: '',
+          coordinatorMail: '',
+          coordinatorPhone: '',
+          coordinatorRole: '',
+          staffId: '',
           fetched: false, // Add fetched state
         },
       ],
       eventResourcePerson: [
         {
-          ResourcePersonName: "",
-          ResourcePersonMail: "",
-          ResourcePersonPhone: "",
-          ResourcePersonDesgn: "",
-          ResourcePersonAddr: "",
+          ResourcePersonName: '',
+          ResourcePersonMail: '',
+          ResourcePersonPhone: '',
+          ResourcePersonDesgn: '',
+          ResourcePersonAddr: '',
         },
       ],
     },
@@ -81,16 +81,16 @@ function Form() {
   const validateStep0 = () => {
     let hasErrors = false;
     const fields = {
-      EventOrganizer: "Event Organizer",
-      EventName: "Event Name",
-      "EventType.eventType": "Event Type",
-      EventObjective: "Event Objective",
-      EventParticipants: "Expected Participants",
-      EventVenue: "Event Venue",
-      eventLocation: "Event Location",
-      StartTime: "Start Date & Time",
-      EndTime: "End Date & Time",
-      EventDuration: "Event Duration"
+      EventOrganizer: 'Event Organizer',
+      EventName: 'Event Name',
+      'EventType.eventType': 'Event Type',
+      EventObjective: 'Event Objective',
+      EventParticipants: 'Expected Participants',
+      EventVenue: 'Event Venue',
+      eventLocation: 'Event Location',
+      StartTime: 'Start Date & Time',
+      EndTime: 'End Date & Time',
+      EventDuration: 'Event Duration',
     };
 
     Object.entries(fields).forEach(([field, label]) => {
@@ -101,37 +101,39 @@ function Form() {
     });
 
     // Special validations
-    if (eventOrigin === "2" && !eventSociety) {
-      toast.error("Professional Society is required");
+    if (eventOrigin === '2' && !eventSociety) {
+      toast.error('Professional Society is required');
       hasErrors = true;
     }
-    if (eventOrigin === "3" && !eventSociety) {
-      toast.error("Club/Cell is required");
+    if (eventOrigin === '3' && !eventSociety) {
+      toast.error('Club/Cell is required');
       hasErrors = true;
     }
-    if (eventOrigin === "4" && !currSoc) {
-      toast.error("Other Organization is required");
+    if (eventOrigin === '4' && !currSoc) {
+      toast.error('Other Organization is required');
       hasErrors = true;
     }
-    if (watch("EventType.eventType") === "other" && !watch("EventType.eventTypeOtherOption")) {
-      toast.error("Event Type Details is required");
+    if (
+      watch('EventType.eventType') === 'other' &&
+      !watch('EventType.eventTypeOtherOption')
+    ) {
+      toast.error('Event Type Details is required');
       hasErrors = true;
     }
-    if (fileUrl.poster === "") {
-      toast.error("Permission Letter is required");
+    if (fileUrl.poster === '') {
+      toast.error('Permission Letter is required');
       hasErrors = true;
     }
 
     return !hasErrors;
   };
 
-
   const validateStep2 = () => {
     let hasErrors = false;
     coordinatorfields.forEach((_, index) => {
       const coordinator = watch(`eventCoordinators.${index}`);
       const fieldPrefix = `Coordinator ${index + 1}:`;
-      
+
       if (!coordinator.coordinatorName) {
         toast.error(`${fieldPrefix} Name is required`);
         hasErrors = true;
@@ -154,9 +156,9 @@ function Form() {
 
   const validateStep3 = () => {
     let hasErrors = false;
-    
+
     if (hasResourcePersons === null) {
-      toast.error("Please select whether there are resource persons");
+      toast.error('Please select whether there are resource persons');
       return false;
     }
 
@@ -192,28 +194,31 @@ function Form() {
 
   const validateStep4 = () => {
     let hasErrors = false;
-    
-    if (!watch("eventStakeholders") || watch("eventStakeholders").length === 0) {
-      toast.error("Please select at least one stakeholder");
-      hasErrors = true;
-    }
-    
-    if (!watch("isSponsored")) {
-      toast.error("Please specify if the event is sponsored");
+
+    if (
+      !watch('eventStakeholders') ||
+      watch('eventStakeholders').length === 0
+    ) {
+      toast.error('Please select at least one stakeholder');
       hasErrors = true;
     }
 
-    if (watch("isSponsored") === "true") {
-      if (!watch("Budget")) {
-        toast.error("Budget amount is required");
+    if (!watch('isSponsored')) {
+      toast.error('Please specify if the event is sponsored');
+      hasErrors = true;
+    }
+
+    if (watch('isSponsored') === 'true') {
+      if (!watch('Budget')) {
+        toast.error('Budget amount is required');
         hasErrors = true;
       }
-      if (fileUrl.sanctionLetter === "") {
-        toast.error("Sanction Letter is required");
+      if (fileUrl.sanctionLetter === '') {
+        toast.error('Sanction Letter is required');
         hasErrors = true;
       }
-      
-      const sponsors = watch("eventSponsors");
+
+      const sponsors = watch('eventSponsors');
       sponsors?.forEach((sponsor, index) => {
         const fieldPrefix = `Sponsor ${index + 1}:`;
         if (!sponsor.name) {
@@ -249,8 +254,8 @@ function Form() {
     }
 
     if (isValid) {
-      setFormStep((curr) => curr + 1);
-      toast.success("Proceeding to next step");
+      setFormStep(curr => curr + 1);
+      toast.success('Proceeding to next step');
     }
   };
 
@@ -258,18 +263,18 @@ function Form() {
   const options = [
     {
       index: 0,
-      value: "Internal Stakeholders",
-      label: "Internal Stakeholders",
+      value: 'Internal Stakeholders',
+      label: 'Internal Stakeholders',
     },
     {
       index: 1,
-      value: "External Stakeholders",
-      label: "External Stakeholders",
+      value: 'External Stakeholders',
+      label: 'External Stakeholders',
     },
     {
       index: 2,
-      value: "International Stakeholders",
-      label: "International Stakeholders",
+      value: 'International Stakeholders',
+      label: 'International Stakeholders',
     },
   ];
 
@@ -279,7 +284,7 @@ function Form() {
     append: coordinatorappend,
     remove: coordinatorremove,
   } = useFieldArray({
-    name: "eventCoordinators",
+    name: 'eventCoordinators',
     control,
   });
 
@@ -288,7 +293,7 @@ function Form() {
     append: resourcepersonappend,
     remove: resourcepersonremove,
   } = useFieldArray({
-    name: "eventResourcePerson",
+    name: 'eventResourcePerson',
     control,
   });
 
@@ -297,23 +302,23 @@ function Form() {
     append: sponsorappend,
     remove: sponsorremove,
   } = useFieldArray({
-    name: "eventSponsors",
+    name: 'eventSponsors',
     control,
   });
 
   // Watch specific form fields
-  const isEventVenueOnline = watch("EventVenue");
-  const isEventVenueOffCampus = watch("eventLocation");
-  const isSponsored = watch("isSponsored");
+  const isEventVenueOnline = watch('EventVenue');
+  const isEventVenueOffCampus = watch('eventLocation');
+  const isSponsored = watch('isSponsored');
 
   // Function to fetch staff details based on staff ID
-  const fetchStaffDetails = async (index) => {
+  const fetchStaffDetails = async index => {
     const staffId = getValues(`eventCoordinators.${index}.staffId`);
     try {
-      const response = await fetch("api/fetchStaff", {
-        method: "POST",
+      const response = await fetch('api/fetchStaff', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ staffId }),
       });
@@ -348,7 +353,7 @@ function Form() {
         setValue(`eventCoordinators.${index}.fetched`, true, {
           shouldValidate: true,
         }); // Set fetched to true
-        setFetchedCoordinators((prev) => [...prev, index]); // Update fetched state
+        setFetchedCoordinators(prev => [...prev, index]); // Update fetched state
 
         // Trigger validation for the updated fields
         trigger(`eventCoordinators.${index}.coordinatorName`);
@@ -356,17 +361,17 @@ function Form() {
         trigger(`eventCoordinators.${index}.coordinatorPhone`);
         trigger(`eventCoordinators.${index}.coordinatorRole`);
       } else {
-        toast.error("Invalid Staff ID. Please enter a valid ID.");
+        toast.error('Invalid Staff ID. Please enter a valid ID.');
       }
     } catch (error) {
-      console.error("Error fetching staff details:", error);
+      console.error('Error fetching staff details:', error);
     }
   };
 
   // Function to reset coordinator fields
   const resetCoordinatorFields = () => {
     coordinatorfields.forEach((_, index) => {
-      setValue(`eventCoordinators.${index}.staffId`, "");
+      setValue(`eventCoordinators.${index}.staffId`, '');
       setValue(`eventCoordinators.${index}.fetched`, false);
     });
   };
@@ -376,21 +381,26 @@ function Form() {
     reset();
     resetCoordinatorFields(); // Reset coordinator fields when form is reset
   };
-  const handleFileChange = (e) => {
+  const handleFileChange = e => {
     e.preventDefault();
     setFile(null);
-    let fileType = "";
+    let fileType = '';
     let file;
     if (e.target.files[0]) {
       file = e.target.files[0];
       fileType = file.type;
     }
-    const validImageTypes = ["image/gif", "image/jpeg", "image/png", "image/jpg"];
-    const validFileTypes = [...validImageTypes, "application/pdf"];
+    const validImageTypes = [
+      'image/gif',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+    ];
+    const validFileTypes = [...validImageTypes, 'application/pdf'];
     if (file && validFileTypes.includes(fileType) && file.size <= 5000000) {
       setFile(file);
     } else {
-      toast.error("Please select an image or PDF file under 5MB.");
+      toast.error('Please select an image or PDF file under 5MB.');
     }
   };
   const handleUpload = async (e, action) => {
@@ -398,18 +408,18 @@ function Form() {
     if (!file) return;
     setUploading(true);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
     try {
-      const response = await fetch("/api/s3-upload", {
-        method: "POST",
+      const response = await fetch('/api/s3-upload', {
+        method: 'POST',
         body: formData,
       });
       if (response.ok) {
         const data = await response.json();
-        if (action === "poster") {
-          setFileUrl((prevState) => ({ ...prevState, poster: data.message }));
-        } else if (action === "sanctionLetter") {
-          setFileUrl((prevState) => ({
+        if (action === 'poster') {
+          setFileUrl(prevState => ({ ...prevState, poster: data.message }));
+        } else if (action === 'sanctionLetter') {
+          setFileUrl(prevState => ({
             ...prevState,
             sanctionLetter: data.message,
           }));
@@ -428,30 +438,30 @@ function Form() {
   const handleDelete = async (e, action) => {
     e.preventDefault();
     const formData = new FormData();
-    let fileName = "";
-    if (action === "poster") {
+    let fileName = '';
+    if (action === 'poster') {
       fileName = fileUrl.poster.replace(
-        "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-        ""
+        'https://eventifys3.s3.ap-south-1.amazonaws.com/',
+        ''
       );
-    } else if (action === "sanctionLetter") {
+    } else if (action === 'sanctionLetter') {
       fileName = fileUrl.sanctionLetter.replace(
-        "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-        ""
+        'https://eventifys3.s3.ap-south-1.amazonaws.com/',
+        ''
       );
     }
-    formData.append("fileName", fileName);
+    formData.append('fileName', fileName);
     try {
-      const response = await fetch("/api/s3-delete", {
-        method: "POST",
+      const response = await fetch('/api/s3-delete', {
+        method: 'POST',
         body: formData,
       });
       if (response.ok) {
         const data = await response.json();
-        if (action === "poster") {
-          setFileUrl((prevState) => ({ ...prevState, poster: "" }));
-        } else if (action === "sanctionLetter") {
-          setFileUrl((prevState) => ({ ...prevState, sanctionLetter: "" }));
+        if (action === 'poster') {
+          setFileUrl(prevState => ({ ...prevState, poster: '' }));
+        } else if (action === 'sanctionLetter') {
+          setFileUrl(prevState => ({ ...prevState, sanctionLetter: '' }));
         }
       }
     } catch (error) {
@@ -463,11 +473,11 @@ function Form() {
   };
 
   const handleVenueChange = (venue, userVenueValue) => {
-    if (venue.length === 0 && userVenueValue === "") {
-      toast.error("Please select venue");
+    if (venue.length === 0 && userVenueValue === '') {
+      toast.error('Please select venue');
       return;
     }
-    const transformedData = venue.map((item) => ({
+    const transformedData = venue.map(item => ({
       venueId: item.venueId,
       venueName: item.venueName,
       reservationDate: item.date,
@@ -479,7 +489,7 @@ function Form() {
     completeFormStep();
   };
 
-  const submitForm = async (eventData) => {
+  const submitForm = async eventData => {
     setIsSubmitting(true);
 
     // Remove unwanted fields from eventCoordinators
@@ -493,41 +503,41 @@ function Form() {
       eventCoordinators: filteredEventCoordinators,
       fileUrl,
       venueList,
-      eventVenueAddInfo: getValues("eventVenueAddInfo"),
+      eventVenueAddInfo: getValues('eventVenueAddInfo'),
       isResourcePerson: hasResourcePersons,
     };
 
     const user_id = session?.user?._id;
-    let dept = "";
+    let dept = '';
     let college = session?.user?.college;
 
     // Existing logic for dept and college determination
-    if (eventData.dept === "SBIT") {
-      dept = college === "SIT" ? "SBIT" : "SBEC";
+    if (eventData.dept === 'SBIT') {
+      dept = college === 'SIT' ? 'SBIT' : 'SBEC';
     }
     if (eventOrigin == 1 || eventOrigin == 5) {
       dept = session?.user?.dept;
     } else if (eventOrigin == 2) {
-      if (eventSociety === "IEEE" || EventOrganizer === "4") {
+      if (eventSociety === 'IEEE' || EventOrganizer === '4') {
         dept = currSoc;
-        college = "common";
+        college = 'common';
       } else {
         dept = eventSociety;
-        college = "common";
+        college = 'common';
       }
     } else if (eventOrigin == 3) {
       dept = eventSociety;
-      college = "common";
+      college = 'common';
     } else if (eventOrigin == 4) {
       dept = currSoc;
-      college = "common";
+      college = 'common';
     }
 
     const userType = session?.user?.userType;
-    const status = await fetch("/api/v2/createEvent", {
-      method: "POST",
+    const status = await fetch('/api/v2/createEvent', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         user_id,
@@ -540,35 +550,35 @@ function Form() {
 
     if (status.ok) {
       completeFormStep();
-      toast.success("Event Created Successfully!");
-      router.replace("/create");
+      toast.success('Event Created Successfully!');
+      router.replace('/create');
     } else {
       const data = await status.json();
-      if (data.message.startsWith("Invalid data")) {
+      if (data.message.startsWith('Invalid data')) {
         toast.error(
-          String(data.message).replace("Invalid data:", "").replace(/\"/g, "")
+          String(data.message).replace('Invalid data:', '').replace(/\"/g, '')
         );
       } else {
-        toast.error("Error in creating event");
+        toast.error('Error in creating event');
       }
     }
     setIsSubmitting(false);
   };
 
   const prevForm = () => {
-    setFormStep((curr) => curr - 1);
+    setFormStep(curr => curr - 1);
   };
-  const eventVenueAddInfo = watch("eventVenueAddInfo");
+  const eventVenueAddInfo = watch('eventVenueAddInfo');
 
   useEffect(() => {
-    if (watch("eventVenueAddInfo")) {
-      getValues("eventVenueAddInfo");
+    if (watch('eventVenueAddInfo')) {
+      getValues('eventVenueAddInfo');
     }
-  }, [watch("eventVenueAddInfo"), getValues]);
+  }, [watch('eventVenueAddInfo'), getValues]);
 
   useEffect(() => {
     const subscription = watch((value, { name }) => {
-      if (name === "EventOrganizer" && value.EventOrganizer) {
+      if (name === 'EventOrganizer' && value.EventOrganizer) {
         setEventOrigin(value.EventOrganizer);
       }
     });
@@ -578,8 +588,8 @@ function Form() {
   const [hasResourcePersons, setHasResourcePersons] = useState(null);
 
   // Function to handle the yes/no question
-  const handleResourcePersonQuestion = (e) => {
-    const value = e.target.value === "yes";
+  const handleResourcePersonQuestion = e => {
+    const value = e.target.value === 'yes';
     setHasResourcePersons(value);
   };
 
@@ -587,29 +597,29 @@ function Form() {
     visible: false,
     activeImage: null,
     width: 0,
-    height: 0
+    height: 0,
   });
 
-  const handleImageView = (imageUrl) => {
+  const handleImageView = imageUrl => {
     if (typeof window === 'undefined') return;
-    
+
     const img = new Image();
     img.src = imageUrl;
-    
+
     img.onload = () => {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.9;
-      
+
       // Calculate dimensions maintaining aspect ratio
       let width = img.naturalWidth;
       let height = img.naturalHeight;
-      
+
       if (width > maxWidth) {
         const ratio = maxWidth / width;
         width = maxWidth;
         height = height * ratio;
       }
-      
+
       if (height > maxHeight) {
         const ratio = maxHeight / height;
         height = maxHeight;
@@ -620,7 +630,7 @@ function Form() {
         visible: true,
         activeImage: imageUrl,
         width,
-        height
+        height,
       });
     };
   };
@@ -629,18 +639,16 @@ function Form() {
     if (!url) return null;
 
     if (url.endsWith('.pdf')) {
-      return (
-        <iframe src={url} width={450} height={500} />
-      );
+      return <iframe src={url} width={450} height={500} />;
     }
 
     return (
       <div>
-        <div className="image-container">
+        <div className='image-container'>
           <Image
             height={400}
             width={600}
-            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            className='rounded-md cursor-pointer hover:opacity-90 transition-opacity'
             src={url}
             alt={`${type} preview`}
             onClick={() => handleImageView(url)}
@@ -650,7 +658,7 @@ function Form() {
     );
   };
 
-  const checkImageDimensions = (file) => {
+  const checkImageDimensions = file => {
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined') {
         // Skip validation during server-side rendering
@@ -663,7 +671,7 @@ function Form() {
         resolve(width >= 800 && height >= 400);
       };
       tempImg.onerror = () => {
-        reject(new Error("Failed to load image"));
+        reject(new Error('Failed to load image'));
       };
       tempImg.src = URL.createObjectURL(file);
     });
@@ -671,57 +679,57 @@ function Form() {
 
   return (
     <>
-      <form onSubmit={handleSubmit(submitForm)} className="form">
+      <form onSubmit={handleSubmit(submitForm)} className='form'>
         {formStep < 5 && (
-          <div className="status-panel">
+          <div className='status-panel'>
             {formStep >= 1 && (
               <button
-                className="prevButton btn-style"
-                id="preBtn"
-                type="button"
+                className='prevButton btn-style'
+                id='preBtn'
+                type='button'
                 onClick={prevForm}
               >
                 <Image
-                  src="/assets/icons/back.svg"
+                  src='/assets/icons/back.svg'
                   width={15}
                   height={15}
-                  alt="back"
+                  alt='back'
                 />
               </button>
             )}
-            <div className="progress-box">
+            <div className='progress-box'>
               Step {formStep + 1} of 5
               <progress
-                id="step"
+                id='step'
                 value={(formStep + 1) * 20}
-                max="100"
+                max='100'
               ></progress>
             </div>
           </div>
         )}
         {formStep === 0 && (
-          <section className="first">
-            <h1 className="form-section-title">Basic Details</h1>
-            <div className="input-container">
+          <section className='first'>
+            <h1 className='form-section-title'>Basic Details</h1>
+            <div className='input-container'>
               <Controller
-                name="EventOrganizer"
+                name='EventOrganizer'
                 control={control}
                 defaultValue={1}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <div className="space-box">
-                    <label htmlFor="eventOrganizer">Event Organizer </label>
-                    <select {...field} className="round" defaultValue="">
-                      <option value="" disabled>
+                  <div className='space-box'>
+                    <label htmlFor='eventOrganizer'>Event Organizer </label>
+                    <select {...field} className='round' defaultValue=''>
+                      <option value='' disabled>
                         Select an option
                       </option>
-                      <option value="1">Department</option>
-                      <option value="5">AICTE Idea Lab</option>
-                      <option value="2">
+                      <option value='1'>Department</option>
+                      <option value='5'>AICTE Idea Lab</option>
+                      <option value='2'>
                         Professional Societies (IEEE,ISTE,EDS)
                       </option>
-                      <option value="3">Clubs and Cells</option>
-                      <option value="4">Other</option>
+                      <option value='3'>Clubs and Cells</option>
+                      <option value='4'>Other</option>
                     </select>
 
                     {field.value == 2 && (
@@ -730,13 +738,13 @@ function Form() {
                           <select
                             {...field}
                             value={eventSociety}
-                            defaultValue=""
-                            onChange={(e) => {
+                            defaultValue=''
+                            onChange={e => {
                               setEventSociety(e.target.value);
                             }}
-                            className="round"
+                            className='round'
                           >
-                            <option value="" disabled>
+                            <option value='' disabled>
                               Select an Option
                             </option>
                             {societies.map((option, index) => (
@@ -749,15 +757,15 @@ function Form() {
                       </div>
                     )}
                     {eventOrigin == 2 &&
-                      (eventSociety === "IEEE" ||
+                      (eventSociety === 'IEEE' ||
                         ieeeSocieties.includes(eventSociety)) && (
                         <div>
                           <select
                             value={currSoc}
-                            onChange={(e) => setCurrSoc(e.target.value)}
-                            className="round"
+                            onChange={e => setCurrSoc(e.target.value)}
+                            className='round'
                           >
-                            <option value="" disabled>
+                            <option value='' disabled>
                               Select an Option
                             </option>
                             {ieeeSocieties.map((option, index) => (
@@ -776,13 +784,13 @@ function Form() {
                         <select
                           {...field}
                           value={eventSociety}
-                          defaultValue=""
-                          onChange={(e) => {
+                          defaultValue=''
+                          onChange={e => {
                             setEventSociety(e.target.value);
                           }}
-                          className="round"
+                          className='round'
                         >
-                          <option value="" disabled>
+                          <option value='' disabled>
                             Select an Option
                           </option>
                           {clubs.map((option, index) => (
@@ -795,12 +803,12 @@ function Form() {
                     )}
                     {field.value == 4 && (
                       <div>
-                        <label className="w-full">
+                        <label className='w-full'>
                           <input
-                            className="other-input mt-6 border-0.5 border-black"
-                            placeholder="Please specify"
+                            className='other-input mt-6 border-0.5 border-black'
+                            placeholder='Please specify'
                             required
-                            onChange={(e) => setCurrSoc(e.target.value)}
+                            onChange={e => setCurrSoc(e.target.value)}
                           />
                         </label>
                       </div>
@@ -809,54 +817,54 @@ function Form() {
                 )}
               />
             </div>
-            <div className="input-container">
-              <label htmlFor="EventName" className="label">
+            <div className='input-container'>
+              <label htmlFor='EventName' className='label'>
                 Event Name
               </label>
               <input
-                type="text"
-                id="EventName"
-                placeholder="Enter The Name Of The Event"
-                name="EventName"
-                {...register("EventName", { required: true })}
+                type='text'
+                id='EventName'
+                placeholder='Enter The Name Of The Event'
+                name='EventName'
+                {...register('EventName', { required: true })}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventName && <span>*This field is required</span>}
               </p>
             </div>
 
             <div>
               <Controller
-                name="EventType.eventType"
+                name='EventType.eventType'
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <div className="space-box">
-                    <label htmlFor="eventType">Event Type </label>
-                    <select {...field} className="round" defaultValue="">
-                      <option disabled value="">
+                  <div className='space-box'>
+                    <label htmlFor='eventType'>Event Type </label>
+                    <select {...field} className='round' defaultValue=''>
+                      <option disabled value=''>
                         Select an option
                       </option>
-                      <option value="Workshop">Workshop</option>
-                      <option value="FDP">FDP</option>
-                      <option value="Bootcamp">BootCamp</option>
-                      <option value="Conference">Conference</option>
-                      <option value="other">Other</option>
+                      <option value='Workshop'>Workshop</option>
+                      <option value='FDP'>FDP</option>
+                      <option value='Bootcamp'>BootCamp</option>
+                      <option value='Conference'>Conference</option>
+                      <option value='other'>Other</option>
                     </select>
-                    {field.value === "other" && (
-                      <div className="input-container">
+                    {field.value === 'other' && (
+                      <div className='input-container'>
                         <br />
                         <label>
                           <input
-                            type="text"
-                            className="other-input"
-                            placeholder="Please specify"
-                            {...register("EventType.eventTypeOtherOption", {
+                            type='text'
+                            className='other-input'
+                            placeholder='Please specify'
+                            {...register('EventType.eventTypeOtherOption', {
                               required: true,
                             })}
                           />
                         </label>
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.EventType &&
                             errors.EventType.eventTypeOtherOption && (
                               <span>*This field is required</span>
@@ -869,58 +877,60 @@ function Form() {
               />
             </div>
 
-            <div className="text-area">
-              <label htmlFor="EventObj">Objective of the Event</label>
+            <div className='text-area'>
+              <label htmlFor='EventObj'>Objective of the Event</label>
               <textarea
-                {...register("EventObjective", { required: true })}
-                placeholder="Enter the objective"
+                {...register('EventObjective', { required: true })}
+                placeholder='Enter the objective'
               ></textarea>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventObjective && <span>*This field is required</span>}
               </p>
             </div>
 
-            <div className="input-container">
-              <label htmlFor="EventName" className="label">
+            <div className='input-container'>
+              <label htmlFor='EventName' className='label'>
                 Expected Number of Participants
               </label>
               <input
-                type="number"
-                id="EventParticipants"
-                placeholder="Enter expected number of participants"
-                name="EventParticipants"
-                {...register("EventParticipants", { required: true, min: 0 })}
+                type='number'
+                id='EventParticipants'
+                placeholder='Enter expected number of participants'
+                name='EventParticipants'
+                {...register('EventParticipants', { required: true, min: 0 })}
               />
-              <p className="error-msg">
-                {errors.EventParticipants && <span>*This field is required</span>}
+              <p className='error-msg'>
+                {errors.EventParticipants && (
+                  <span>*This field is required</span>
+                )}
               </p>
             </div>
 
-            <div className="input-container">
-              <label className="label">Event Venue</label>
-              <div className="mt-4 flex flex-col gap-3 items-start">
-                <label htmlFor="EventVenueOnline" className="flex gap-3">
+            <div className='input-container'>
+              <label className='label'>Event Venue</label>
+              <div className='mt-4 flex flex-col gap-3 items-start'>
+                <label htmlFor='EventVenueOnline' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventVenueOnline"
-                    value="online"
-                    name="EventVenue"
-                    {...register("EventVenue", { required: true })}
+                    type='radio'
+                    id='EventVenueOnline'
+                    value='online'
+                    name='EventVenue'
+                    {...register('EventVenue', { required: true })}
                   />
                   Online
                 </label>
-                <label htmlFor="EventVenueOffline" className="flex gap-3">
+                <label htmlFor='EventVenueOffline' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventVenueOffline"
-                    value="offline"
-                    name="EventVenue"
-                    {...register("EventVenue", { required: true })}
+                    type='radio'
+                    id='EventVenueOffline'
+                    value='offline'
+                    name='EventVenue'
+                    {...register('EventVenue', { required: true })}
                   />
                   Offline
                 </label>
               </div>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventVenue && <span>*This field is required</span>}
               </p>
             </div>
@@ -959,128 +969,130 @@ function Form() {
                 />
             </div> */}
 
-            <div className="input-container">
-              <label className="label">Is Event On-campus?</label>
-              <div className="flex flex-col mt-4 gap-3 items-start ">
-                <label htmlFor="EventLocationOnCampus" className="flex gap-3">
+            <div className='input-container'>
+              <label className='label'>Is Event On-campus?</label>
+              <div className='flex flex-col mt-4 gap-3 items-start '>
+                <label htmlFor='EventLocationOnCampus' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventLocationOnCampus"
-                    value="On-Campus"
-                    name="eventLocation"
-                    {...register("eventLocation", { required: true })}
+                    type='radio'
+                    id='EventLocationOnCampus'
+                    value='On-Campus'
+                    name='eventLocation'
+                    {...register('eventLocation', { required: true })}
                   />
                   Yes
                 </label>
-                <label htmlFor="EventLocationOffCampus" className="flex gap-3">
+                <label htmlFor='EventLocationOffCampus' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventLocationOffCampus"
-                    value="Off-Campus"
-                    name="eventLocation"
-                    {...register("eventLocation", { required: true })}
+                    type='radio'
+                    id='EventLocationOffCampus'
+                    value='Off-Campus'
+                    name='eventLocation'
+                    {...register('eventLocation', { required: true })}
                   />
                   No
                 </label>
               </div>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.eventLocation && <span>*This field is required</span>}
               </p>
             </div>
 
             <label>Permission Letter: </label>
-            {fileUrl.poster === "" && (
+            {fileUrl.poster === '' && (
               <div>
-                <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                <p className='text-sm text-gray-600'>
+                  Accepted formats: Images or PDF • Max size: 5MB
+                </p>
                 <input
-                  type="file"
-                  accept="image/*, application/pdf"
+                  type='file'
+                  accept='image/*, application/pdf'
                   onChange={handleFileChange}
                 />
                 <button
-                  className="btn-style"
-                  type="button"
+                  className='btn-style'
+                  type='button'
                   disabled={!file || uploading || fileUrl.poster}
-                  onClick={(e) => handleUpload(e, "poster")}
+                  onClick={e => handleUpload(e, 'poster')}
                 >
-                  {uploading ? "Uploading..." : "Upload"}
+                  {uploading ? 'Uploading...' : 'Upload'}
                 </button>
               </div>
             )}
 
-            {fileUrl.poster !== "" && (
+            {fileUrl.poster !== '' && (
               <div>
                 <label>File Uploaded Successfully!</label>
                 <br />
-                {renderMedia(fileUrl.poster, "Permission Letter")}
+                {renderMedia(fileUrl.poster, 'Permission Letter')}
                 <button
-                  className="mt-2 mb-2 btn-style"
-                  onClick={(e) => handleDelete(e, "poster")}
+                  className='mt-2 mb-2 btn-style'
+                  onClick={e => handleDelete(e, 'poster')}
                 >
                   Delete File
                 </button>
               </div>
             )}
-            <div className="space-box">
+            <div className='space-box'>
               <label>Start Date & Time:</label>
               <input
-                name="eventStartDateTime"
-                type="datetime-local"
-                className="calander"
-                {...register("StartTime", { required: true })}
+                name='eventStartDateTime'
+                type='datetime-local'
+                className='calander'
+                {...register('StartTime', { required: true })}
                 min={new Date().toISOString().substring(0, 16)}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.StartTime && <span>*This field is required</span>}
               </p>
             </div>
 
-            <div className="space-box">
+            <div className='space-box'>
               <label>End Date & Time:</label>
               <input
-                name="eventEndDateTime"
-                type="datetime-local"
-                className="calander"
-                {...register("EndTime", {
+                name='eventEndDateTime'
+                type='datetime-local'
+                className='calander'
+                {...register('EndTime', {
                   required: true,
                   validate: {
-                    isAfterStartTime: (value) =>
-                      new Date(value) > new Date(getValues("StartTime")) ||
-                      "End time must be after start time",
+                    isAfterStartTime: value =>
+                      new Date(value) > new Date(getValues('StartTime')) ||
+                      'End time must be after start time',
                   },
                 })}
                 min={new Date().toISOString().substring(0, 16)}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EndTime && <span>{errors.EndTime.message}</span>}
               </p>
             </div>
 
             <div
-              className="input-container"
-              style={{ display: "flex", flexDirection: "column" }}
+              className='input-container'
+              style={{ display: 'flex', flexDirection: 'column' }}
             >
-              <label htmlFor="EventDuration" className="label">
+              <label htmlFor='EventDuration' className='label'>
                 Event Duration (in hours)
               </label>
               <input
-                type="number"
-                id="EventDuration"
-                name="EventDuration"
-                placeholder="Enter The Duration Of The Event"
-                className="input"
-                {...register("EventDuration", { required: true, min: 1 })}
+                type='number'
+                id='EventDuration'
+                name='EventDuration'
+                placeholder='Enter The Duration Of The Event'
+                className='input'
+                {...register('EventDuration', { required: true, min: 1 })}
                 min={0}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventDuration && <span>*Invalid Event Duration</span>}
               </p>
             </div>
 
             <button
               onClick={completeFormStep}
-              type="button"
-              className="btn btn-style"
+              type='button'
+              className='btn btn-style'
             >
               Next
             </button>
@@ -1089,27 +1101,27 @@ function Form() {
         {formStep === 1 && (
           <section>
             <div>
-              {isEventVenueOnline === "offline" &&
-              isEventVenueOffCampus === "On-Campus" ? (
+              {isEventVenueOnline === 'offline' &&
+              isEventVenueOffCampus === 'On-Campus' ? (
                 <Calven
                   handleVenueChange={handleVenueChange}
-                  startDate={getValues("StartTime")}
-                  endDate={getValues("EndTime")}
+                  startDate={getValues('StartTime')}
+                  endDate={getValues('EndTime')}
                 />
               ) : (
                 <>
-                  <div className="input-container mb-3">
-                    <label htmlFor="eventVenueAddInfo" className="label">
+                  <div className='input-container mb-3'>
+                    <label htmlFor='eventVenueAddInfo' className='label'>
                       Event Venue
                     </label>
                     <input
-                      type="text"
-                      id="eventVenueAddInfo"
-                      placeholder="Enter The Event Venue"
-                      name="eventVenueAddInfo"
-                      {...register("eventVenueAddInfo", { required: true })}
+                      type='text'
+                      id='eventVenueAddInfo'
+                      placeholder='Enter The Event Venue'
+                      name='eventVenueAddInfo'
+                      {...register('eventVenueAddInfo', { required: true })}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventVenueAddInfo && (
                         <span>*This field is required</span>
                       )}
@@ -1117,8 +1129,8 @@ function Form() {
                   </div>
                   <button
                     onClick={completeFormStep}
-                    type="button"
-                    className="btn btn-style"
+                    type='button'
+                    className='btn btn-style'
                   >
                     Next
                   </button>
@@ -1129,46 +1141,49 @@ function Form() {
         )}
         {formStep === 2 && (
           <section>
-            <h1 className="form-section-title">Coordinator Details</h1>
+            <h1 className='form-section-title'>Coordinator Details</h1>
 
             {coordinatorfields.map((field, index) => {
               const isFetched = watch(`eventCoordinators.${index}.fetched`);
 
               return (
-                <div className="card" key={field.id}>
-                  <h4 style={{ color: "#bbb" }}>Coordinator {index + 1}</h4>
+                <div className='card' key={field.id}>
+                  <h4 style={{ color: '#bbb' }}>Coordinator {index + 1}</h4>
 
                   {/* Conditionally render the Staff ID field and fetch button */}
                   {!isFetched && (
                     <>
-                      <div className="input-container">
-                        <label htmlFor={`StaffId-${index}`} className="label">
+                      <div className='input-container'>
+                        <label htmlFor={`StaffId-${index}`} className='label'>
                           Staff ID Number
                         </label>
                         <input
-                          type="text"
+                          type='text'
                           id={`StaffId-${index}`}
                           name={`StaffId-${index}`}
-                          placeholder="Enter the Staff ID Number"
+                          placeholder='Enter the Staff ID Number'
                           {...register(`eventCoordinators.${index}.staffId`, {
                             pattern: {
                               message:
-                                "Invalid Staff ID. Please enter a valid number.",
+                                'Invalid Staff ID. Please enter a valid number.',
                             },
                           })}
                         />
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventCoordinators &&
                             errors.eventCoordinators[index] &&
                             errors.eventCoordinators[index].staffId && (
                               <span>
-                                {errors.eventCoordinators[index].staffId.message}
+                                {
+                                  errors.eventCoordinators[index].staffId
+                                    .message
+                                }
                               </span>
                             )}
                         </p>
                         <button
-                          type="button"
-                          className="btn-style"
+                          type='button'
+                          className='btn-style'
                           onClick={() => fetchStaffDetails(index)}
                         >
                           Get Staff Details
@@ -1178,25 +1193,31 @@ function Form() {
                   )}
 
                   {/* Coordinator Name Field */}
-                  <div className="input-container">
-                    <label htmlFor={`CoordinatorName-${index}`} className="label">
+                  <div className='input-container'>
+                    <label
+                      htmlFor={`CoordinatorName-${index}`}
+                      className='label'
+                    >
                       Coordinator Name
                     </label>
                     <input
-                      type="text"
+                      type='text'
                       id={`CoordinatorName-${index}`}
                       name={`CoordinatorName-${index}`}
-                      placeholder="Enter The Name Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorName`, {
-                        required: "Coordinator Name is required",
-                        pattern: {
-                          value: /^[A-Za-z\s.]+$/,
-                          message:
-                            "Invalid name. Please enter a valid name without any special characters or numbers.",
-                        },
-                      })}
+                      placeholder='Enter The Name Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorName`,
+                        {
+                          required: 'Coordinator Name is required',
+                          pattern: {
+                            value: /^[A-Za-z\s.]+$/,
+                            message:
+                              'Invalid name. Please enter a valid name without any special characters or numbers.',
+                          },
+                        }
+                      )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorName && (
@@ -1211,21 +1232,27 @@ function Form() {
                   </div>
 
                   {/* Coordinator E-mail Field */}
-                  <div className="input-container">
-                    <label htmlFor={`CoordinatorMail-${index}`} className="label">
+                  <div className='input-container'>
+                    <label
+                      htmlFor={`CoordinatorMail-${index}`}
+                      className='label'
+                    >
                       Coordinator E-mail
                     </label>
                     <input
-                      type="email"
+                      type='email'
                       id={`CoordinatorMail-${index}`}
                       name={`CoordinatorMail-${index}`}
-                      placeholder="Enter The Mail Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorMail`, {
-                        required: "Coordinator Mail is required",
-                        pattern: /^\S+@\S+$/i,
-                      })}
+                      placeholder='Enter The Mail Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorMail`,
+                        {
+                          required: 'Coordinator Mail is required',
+                          pattern: /^\S+@\S+$/i,
+                        }
+                      )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorMail && (
@@ -1240,30 +1267,30 @@ function Form() {
                   </div>
 
                   {/* Coordinator Phone Field */}
-                  <div className="input-container">
+                  <div className='input-container'>
                     <label
                       htmlFor={`CoordinatorPhone-${index}`}
-                      className="label"
+                      className='label'
                     >
                       Coordinator Phone
                     </label>
                     <input
-                      type="tel"
+                      type='tel'
                       id={`CoordinatorPhone-${index}`}
                       name={`CoordinatorPhone-${index}`}
-                      placeholder="Enter The No. Of The Coordinator"
+                      placeholder='Enter The No. Of The Coordinator'
                       {...register(
                         `eventCoordinators.${index}.coordinatorPhone`,
                         {
-                          required: "Phone number is required",
+                          required: 'Phone number is required',
                           pattern: {
                             value: /^[6-9]\d{9}$/,
-                            message: "Invalid phone number",
+                            message: 'Invalid phone number',
                           },
                         }
                       )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorPhone && (
@@ -1278,20 +1305,26 @@ function Form() {
                   </div>
 
                   {/* Coordinator Role Field */}
-                  <div className="input-container">
-                    <label htmlFor={`CoordinatorRole-${index}`} className="label">
+                  <div className='input-container'>
+                    <label
+                      htmlFor={`CoordinatorRole-${index}`}
+                      className='label'
+                    >
                       Designation
                     </label>
                     <input
-                      type="text"
+                      type='text'
                       id={`CoordinatorRole-${index}`}
                       name={`CoordinatorRole-${index}`}
-                      placeholder="Enter The Designation Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorRole`, {
-                        required: true,
-                      })}
+                      placeholder='Enter The Designation Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorRole`,
+                        {
+                          required: true,
+                        }
+                      )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorRole && (
@@ -1303,12 +1336,12 @@ function Form() {
                   {/* Remove Coordinator Button */}
                   {index > 0 && (
                     <button
-                      type="button"
-                      className="btn-style"
+                      type='button'
+                      className='btn-style'
                       onClick={() => {
                         coordinatorremove(index);
-                        setFetchedCoordinators((prev) =>
-                          prev.filter((id) => id !== index)
+                        setFetchedCoordinators(prev =>
+                          prev.filter(id => id !== index)
                         );
                       }}
                     >
@@ -1320,21 +1353,20 @@ function Form() {
             })}
 
             {/* Buttons Section */}
-            <div className="buttons">
+            <div className='buttons'>
               <button
-                type="button"
-                className="btn-style"
-                onClick={() => coordinatorappend({ staffId: "", fetched: false })}
+                type='button'
+                className='btn-style'
+                onClick={() =>
+                  coordinatorappend({ staffId: '', fetched: false })
+                }
               >
                 Add Coordinator
               </button>
-              <button type="button" className="btn-style" onClick={resetForm}>
+              <button type='button' className='btn-style' onClick={resetForm}>
                 Reset
               </button>
-              <button
-                onClick={completeFormStep}
-                className="btn-style"
-              >
+              <button onClick={completeFormStep} className='btn-style'>
                 Continue
               </button>
             </div>
@@ -1343,24 +1375,24 @@ function Form() {
 
         {formStep === 3 && (
           <section>
-            <h1 className="form-section-title">Resource Person Details</h1>
+            <h1 className='form-section-title'>Resource Person Details</h1>
 
             {/* Question on whether there are resource persons */}
-            <div className="input-container">
-              <label htmlFor="hasResourcePersons" className="label">
+            <div className='input-container'>
+              <label htmlFor='hasResourcePersons' className='label'>
                 Are there any resource persons for the event?
               </label>
               <select
-                id="hasResourcePersons"
-                name="hasResourcePersons"
+                id='hasResourcePersons'
+                name='hasResourcePersons'
                 onChange={handleResourcePersonQuestion}
-                defaultValue=""
+                defaultValue=''
               >
-                <option value="" disabled>
+                <option value='' disabled>
                   Select an option
                 </option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value='yes'>Yes</option>
+                <option value='no'>No</option>
               </select>
             </div>
 
@@ -1368,35 +1400,37 @@ function Form() {
             {hasResourcePersons && (
               <>
                 {resourcepersonfields.map((field, index) => (
-                  <div className="card" key={index}>
-                    <h4 style={{ color: "#bbb" }}>Resource Person {index + 1}</h4>
+                  <div className='card' key={index}>
+                    <h4 style={{ color: '#bbb' }}>
+                      Resource Person {index + 1}
+                    </h4>
 
                     {/* Name Field */}
-                    <div className="input-container">
+                    <div className='input-container'>
                       <label
                         htmlFor={`ResourcePersonName-${index}`}
-                        className="label"
+                        className='label'
                       >
                         Name
                       </label>
                       <input
-                        type="text"
+                        type='text'
                         id={`ResourcePersonName-${index}`}
                         name={`ResourcePersonName-${index}`}
-                        placeholder="Enter The Name Of The ResourcePerson"
+                        placeholder='Enter The Name Of The ResourcePerson'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonName`,
                           {
-                            required: "Resource Person name is required",
+                            required: 'Resource Person name is required',
                             pattern: {
                               value: /^[A-Za-z\s]+$/,
                               message:
-                                "Invalid name. Please enter a valid name without any special characters or numbers.",
+                                'Invalid name. Please enter a valid name without any special characters or numbers.',
                             },
                           }
                         )}
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventResourcePerson &&
                           errors.eventResourcePerson[index] &&
                           errors.eventResourcePerson[index]
@@ -1412,30 +1446,30 @@ function Form() {
                     </div>
 
                     {/* E-mail Field */}
-                    <div className="input-container">
+                    <div className='input-container'>
                       <label
                         htmlFor={`ResourcePersonMail-${index}`}
-                        className="label"
+                        className='label'
                       >
                         E-mail
                       </label>
                       <input
-                        type="email"
+                        type='email'
                         id={`ResourcePersonMail-${index}`}
                         name={`ResourcePersonMail-${index}`}
-                        placeholder="Enter The Mail Of The ResourcePerson"
+                        placeholder='Enter The Mail Of The ResourcePerson'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonMail`,
                           {
-                            required: "Resource Person Mail is required",
+                            required: 'Resource Person Mail is required',
                             pattern: {
                               value: /^\S+@\S+$/i,
-                              message: "Invalid email address",
+                              message: 'Invalid email address',
                             },
                           }
                         )}
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventResourcePerson &&
                           errors.eventResourcePerson[index] &&
                           errors.eventResourcePerson[index]
@@ -1451,30 +1485,31 @@ function Form() {
                     </div>
 
                     {/* Phone Field */}
-                    <div className="input-container">
+                    <div className='input-container'>
                       <label
                         htmlFor={`ResourcePersonPhone-${index}`}
-                        className="label"
+                        className='label'
                       >
                         Phone
                       </label>
                       <input
-                        type="number"
+                        type='number'
                         id={`ResourcePersonPhone-${index}`}
                         name={`ResourcePersonPhone-${index}`}
-                        placeholder="Enter The No. Of The ResourcePerson"
+                        placeholder='Enter The No. Of The ResourcePerson'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonPhone`,
                           {
-                            required: "Resource Person phone number is required",
+                            required:
+                              'Resource Person phone number is required',
                             pattern: {
                               value: /^[6-9]\d{9}$/,
-                              message: "Invalid phone number",
+                              message: 'Invalid phone number',
                             },
                           }
                         )}
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventResourcePerson &&
                           errors.eventResourcePerson[index] &&
                           errors.eventResourcePerson[index]
@@ -1490,26 +1525,26 @@ function Form() {
                     </div>
 
                     {/* Designation Field */}
-                    <div className="input-container">
+                    <div className='input-container'>
                       <label
                         htmlFor={`ResourcePersonDesgn-${index}`}
-                        className="label"
+                        className='label'
                       >
                         Designation
                       </label>
                       <input
-                        type="text"
+                        type='text'
                         id={`ResourcePersonDesgn-${index}`}
                         name={`ResourcePersonDesgn-${index}`}
-                        placeholder="Enter The Designation Of The ResourcePerson"
+                        placeholder='Enter The Designation Of The ResourcePerson'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonDesgn`,
                           {
-                            required: "Designation is Required",
+                            required: 'Designation is Required',
                           }
                         )}
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventResourcePerson &&
                           errors.eventResourcePerson[index] &&
                           errors.eventResourcePerson[index]
@@ -1525,22 +1560,22 @@ function Form() {
                     </div>
 
                     {/* Official Address Field */}
-                    <div className="text-area">
+                    <div className='text-area'>
                       <label htmlFor={`ResourcePersonAddr-${index}`}>
                         Official Address
                       </label>
                       <textarea
                         id={`ResourcePersonAddr-${index}`}
                         name={`ResourcePersonAddr-${index}`}
-                        placeholder="Enter The Official Address Of The ResourcePerson"
+                        placeholder='Enter The Official Address Of The ResourcePerson'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonAddr`,
                           {
-                            required: "Address is Required",
+                            required: 'Address is Required',
                           }
                         )}
                       ></textarea>
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventResourcePerson &&
                           errors.eventResourcePerson[index] &&
                           errors.eventResourcePerson[index]
@@ -1558,9 +1593,9 @@ function Form() {
                     {/* Remove button */}
                     {index > 0 && (
                       <button
-                        type="button"
-                        id="minus2"
-                        className="btn-style"
+                        type='button'
+                        id='minus2'
+                        className='btn-style'
                         onClick={() => resourcepersonremove(index)}
                       >
                         X
@@ -1570,10 +1605,10 @@ function Form() {
                 ))}
 
                 {/* Add Resource Person button */}
-                <div className="buttons">
+                <div className='buttons'>
                   <button
-                    className="btn-style"
-                    type="button"
+                    className='btn-style'
+                    type='button'
                     onClick={() => {
                       resourcepersonappend({});
                     }}
@@ -1582,8 +1617,8 @@ function Form() {
                   </button>
                   <button
                     onClick={completeFormStep}
-                    type="button"
-                    className="btn btn-style"
+                    type='button'
+                    className='btn btn-style'
                   >
                     Next
                   </button>
@@ -1595,8 +1630,8 @@ function Form() {
             {hasResourcePersons === false && (
               <button
                 onClick={completeFormStep}
-                type="button"
-                className="btn btn-style"
+                type='button'
+                className='btn btn-style'
               >
                 Next
               </button>
@@ -1606,29 +1641,31 @@ function Form() {
 
         {formStep === 4 && (
           <section>
-            <h1 className="form-section-title">Budget Details</h1>
+            <h1 className='form-section-title'>Budget Details</h1>
             <div>
               <Controller
-                name="eventStakeholders"
+                name='eventStakeholders'
                 control={control}
                 defaultValue={[]}
                 rules={{ required: true }}
                 render={({ field }) => (
                   <div>
-                    <label className="checkbox-box">Event Stakeholders : </label>
-                    {options.map((option) => (
-                      <div key={option.index} className="check-box">
-                        <label key={option.value} className="checkbox-label">
+                    <label className='checkbox-box'>
+                      Event Stakeholders :{' '}
+                    </label>
+                    {options.map(option => (
+                      <div key={option.index} className='check-box'>
+                        <label key={option.value} className='checkbox-label'>
                           <input
-                            type="checkbox"
+                            type='checkbox'
                             value={option.value}
-                            onChange={(e) => {
+                            onChange={e => {
                               const { checked, value } = e.target;
                               if (checked) {
                                 field.onChange([...field.value, value]);
                               } else {
                                 field.onChange(
-                                  field.value.filter((val) => val !== value)
+                                  field.value.filter(val => val !== value)
                                 );
                               }
                             }}
@@ -1648,42 +1685,42 @@ function Form() {
               <div>
                 <label>
                   <input
-                    type="radio"
-                    {...register("isSponsored", { required: true })}
+                    type='radio'
+                    {...register('isSponsored', { required: true })}
                     value={true}
                   />
                   Yes
                 </label>
                 <label>
                   <input
-                    type="radio"
-                    {...register("isSponsored", { required: true })}
+                    type='radio'
+                    {...register('isSponsored', { required: true })}
                     value={false}
                   />
                   No
                 </label>
-                <p className="error-msg">
+                <p className='error-msg'>
                   {errors.isSponsored && <span>*This field is required</span>}
                 </p>
               </div>
             </div>
 
-            {isSponsored === "true" && (
+            {isSponsored === 'true' && (
               <div>
-                <div className="input-container">
-                  <label htmlFor="Budget" className="label">
+                <div className='input-container'>
+                  <label htmlFor='Budget' className='label'>
                     Budget Rs.
                   </label>
                   <input
-                    type="number"
-                    id="Budget"
-                    name="Budget"
-                    placeholder="Enter The Budget"
-                    className="input"
-                    {...register("Budget", { required: true, min: 0 })}
+                    type='number'
+                    id='Budget'
+                    name='Budget'
+                    placeholder='Enter The Budget'
+                    className='input'
+                    {...register('Budget', { required: true, min: 0 })}
                     min={0}
                   />
-                  <p className="error-msg">
+                  <p className='error-msg'>
                     {errors.Budget && <span>*Invalid Budget</span>}
                   </p>
                 </div>
@@ -1691,22 +1728,22 @@ function Form() {
                 <br />
                 <br></br>
                 {sponsorfield.map((sponsor, index) => (
-                  <div key={index} className="card">
-                    <div className="space-box">
-                      <h4 style={{ color: "#bbb" }}>Sponsor {index + 1}</h4>
+                  <div key={index} className='card'>
+                    <div className='space-box'>
+                      <h4 style={{ color: '#bbb' }}>Sponsor {index + 1}</h4>
                     </div>
-                    <div className="input-container">
-                      <label htmlFor="eventSponsor" className="label">
+                    <div className='input-container'>
+                      <label htmlFor='eventSponsor' className='label'>
                         Sponsor name
                       </label>
                       <input
-                        type="text"
-                        placeholder="Enter The Name Of The Sponsor"
+                        type='text'
+                        placeholder='Enter The Name Of The Sponsor'
                         {...register(`eventSponsors.${index}.name`, {
-                          required: "Sponsor name is Required",
+                          required: 'Sponsor name is Required',
                         })}
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventSponsors &&
                           errors.eventSponsors[index] &&
                           errors.eventSponsors[index].name && (
@@ -1718,14 +1755,14 @@ function Form() {
                     </div>
                     <br />
 
-                    <div className="text-area">
-                      <label htmlFor="SponsorAddr">Sponsor Address</label>
+                    <div className='text-area'>
+                      <label htmlFor='SponsorAddr'>Sponsor Address</label>
                       <textarea
                         {...register(`eventSponsors.${index}.address`, {
-                          required: "Sponsor Address is Required",
+                          required: 'Sponsor Address is Required',
                         })}
                       ></textarea>
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventSponsors &&
                           errors.eventSponsors[index] &&
                           errors.eventSponsors[index].address && (
@@ -1738,9 +1775,9 @@ function Form() {
                     <br />
                     {index >= 0 && (
                       <button
-                        type="button"
-                        id="minus3"
-                        className="btn-style"
+                        type='button'
+                        id='minus3'
+                        className='btn-style'
                         onClick={() => sponsorremove(index)}
                       >
                         X
@@ -1750,45 +1787,47 @@ function Form() {
                 ))}
                 <br />
                 <button
-                  className="btn-style"
-                  type="button"
+                  className='btn-style'
+                  type='button'
                   onClick={() => sponsorappend({})}
                 >
                   Add Sponsor
                 </button>
               </div>
             )}
-            {isSponsored === "true" && (
+            {isSponsored === 'true' && (
               <div>
                 <label>Sanction Letter: </label>
-                {fileUrl.sanctionLetter === "" && (
+                {fileUrl.sanctionLetter === '' && (
                   <>
-                    <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                    <p className='text-sm text-gray-600'>
+                      Accepted formats: Images or PDF • Max size: 5MB
+                    </p>
                     <input
-                      type="file"
-                      accept="image/*, application/pdf"
+                      type='file'
+                      accept='image/*, application/pdf'
                       onChange={handleFileChange}
                     />
                     <button
-                      type="button"
-                      className="btn-style"
+                      type='button'
+                      className='btn-style'
                       disabled={!file || uploading || fileUrl.sanctionLetter}
-                      onClick={(e) => handleUpload(e, "sanctionLetter")}
+                      onClick={e => handleUpload(e, 'sanctionLetter')}
                     >
-                      {uploading ? "Uploading..." : "Upload"}
+                      {uploading ? 'Uploading...' : 'Upload'}
                     </button>
                   </>
                 )}
               </div>
             )}
-            {isSponsored && fileUrl.sanctionLetter !== "" && (
+            {isSponsored && fileUrl.sanctionLetter !== '' && (
               <div>
                 <label>Sanction Letter Uploaded Successfully!</label>
                 <br />
-                {renderMedia(fileUrl.sanctionLetter, "Sanction Letter")}
+                {renderMedia(fileUrl.sanctionLetter, 'Sanction Letter')}
                 <button
-                  className="mt-2 mb-2 btn-style"
-                  onClick={(e) => handleDelete(e, "sanctionLetter")}
+                  className='mt-2 mb-2 btn-style'
+                  onClick={e => handleDelete(e, 'sanctionLetter')}
                 >
                   Delete Letter
                 </button>
@@ -1796,7 +1835,7 @@ function Form() {
             )}
 
             <button
-              className="btn-style"
+              className='btn-style'
               onClick={() => {
                 if (!validateStep4()) {
                   return;
@@ -1805,13 +1844,13 @@ function Form() {
               }}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </section>
         )}
         {formStep === 5 && (
           <section>
-            <h1 className="form-section-title">Congratulations!</h1>
+            <h1 className='form-section-title'>Congratulations!</h1>
             <h3>Event Created</h3>
           </section>
         )}
@@ -1825,7 +1864,7 @@ function Form() {
         rotatable
         downloadable
         noNavbar
-        className="custom-viewer"
+        className='custom-viewer'
         drag={false}
         noImgDetails
         changeable={false}

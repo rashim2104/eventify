@@ -1,4 +1,4 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, models } from 'mongoose';
 
 const reservationSchema = new Schema(
   {
@@ -11,7 +11,7 @@ const reservationSchema = new Schema(
       required: true,
     },
     reservationDate: {
-      type: String,  // Changed from Date to String
+      type: String, // Changed from Date to String
       required: true,
     },
     venueName: {
@@ -21,10 +21,11 @@ const reservationSchema = new Schema(
     reservationSession: {
       type: String,
       required: true,
-    }
+    },
   },
   { timestamps: true }
 );
 
-const Reservation = models.Reservation || mongoose.model("Reservation", reservationSchema);
+const Reservation =
+  models.Reservation || mongoose.model('Reservation', reservationSchema);
 export default Reservation;
