@@ -1,5 +1,5 @@
-import React from "react";
-import Image from "next/image";
+import React from 'react';
+import Image from 'next/image';
 
 class EventForm extends React.Component {
   constructor(props) {
@@ -13,7 +13,7 @@ class EventForm extends React.Component {
       startTime: startTime.toLocaleString(),
       endTime: endTime.toLocaleString(),
       eventPoster: this.props.eventData.fileUrl.poster,
-      eventPhotos: "",
+      eventPhotos: '',
       eventObjective: this.props.eventData.EventObjective,
       eventLocation: this.props.eventData.eventLocation,
       budget: this.props.eventData.Budget,
@@ -24,213 +24,213 @@ class EventForm extends React.Component {
 
   render() {
     return (
-      <div className="flex justify-center">
-        <div className="bg-white px-2 py-8 rounded-lg border-2 border-black w-2/3 justify-center">
+      <div className='flex justify-center'>
+        <div className='bg-white px-2 py-8 rounded-lg border-2 border-black w-2/3 justify-center'>
           <form
             style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "20px",
-              maxWidth: "700px",
-              margin: "0 auto",
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              maxWidth: '700px',
+              margin: '0 auto',
             }}
           >
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Event Title:</span>
+              <span style={{ fontWeight: 'bold' }}>Event Title:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.eventName}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Event Organized by:</span>
+              <span style={{ fontWeight: 'bold' }}>Event Organized by:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.eventOrganizer}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Venue:</span>
+              <span style={{ fontWeight: 'bold' }}>Venue:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.venue}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Start Time:</span>
+              <span style={{ fontWeight: 'bold' }}>Start Time:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.startTime}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>End Time:</span>
+              <span style={{ fontWeight: 'bold' }}>End Time:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.endTime}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Event Objective:</span>
+              <span style={{ fontWeight: 'bold' }}>Event Objective:</span>
               <textarea
                 value={this.state.eventObjective}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Event Location:</span>
+              <span style={{ fontWeight: 'bold' }}>Event Location:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.eventLocation}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Budget:</span>
+              <span style={{ fontWeight: 'bold' }}>Budget:</span>
               <input
-                type="text"
+                type='text'
                 value={this.state.budget}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Coordinator:</span>
+              <span style={{ fontWeight: 'bold' }}>Coordinator:</span>
               <input
-                type="text"
+                type='text'
                 value={`${this.state.coordinator.coordinatorName}, ${this.state.coordinator.coordinatorRole}`}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Resource Person:</span>
+              <span style={{ fontWeight: 'bold' }}>Resource Person:</span>
               <input
-                type="text"
+                type='text'
                 value={`${this.state.resourcePerson.ResourcePersonName}, ${this.state.resourcePerson.ResourcePersonDesgn}`}
                 readOnly
                 style={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  outline: "1px solid black",
+                  padding: '10px',
+                  borderRadius: '5px',
+                  outline: '1px solid black',
                 }}
               />
             </label>
 
             <label
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <span style={{ fontWeight: "bold" }}>Event Poster:</span>
+              <span style={{ fontWeight: 'bold' }}>Event Poster:</span>
               {this.state.eventPoster && (
-                <div className="flex justify-center mb-4">
+                <div className='flex justify-center mb-4'>
                   {this.state.eventPoster.endsWith('.pdf') ? (
                     <iframe
                       src={this.state.eventPoster}
                       width={450}
                       height={500}
-                      title="Event Poster PDF"
+                      title='Event Poster PDF'
                     />
                   ) : (
                     <Image
                       src={this.state.eventPoster}
-                      alt="Event Poster"
+                      alt='Event Poster'
                       width={300}
                       height={300}
-                      className="rounded-md"
+                      className='rounded-md'
                     />
                   )}
                 </div>
               )}
             </label>
 
-            {this.state.eventPhotos !== "" && (
+            {this.state.eventPhotos !== '' && (
               <label
-                style={{ display: "flex", flexDirection: "column", gap: "5px" }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
               >
-                <span style={{ fontWeight: "bold" }}>Event Photos:</span>
-                <div className="flex justify-center mb-4">
+                <span style={{ fontWeight: 'bold' }}>Event Photos:</span>
+                <div className='flex justify-center mb-4'>
                   <Image
                     src={this.state.eventPhotos}
-                    alt="Event Photos"
+                    alt='Event Photos'
                     width={300}
                     height={300}
-                    className="rounded-md"
+                    className='rounded-md'
                   />
                 </div>
               </label>

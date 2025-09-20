@@ -1,14 +1,14 @@
-import puppeteer from "puppeteer";
-import { connectMongoDB } from "@/lib/mongodb";
-import Events from "@/models/events";
-import { authenticate } from "@/lib/authenticate";
-import { logger } from "@/lib/logger";
+import puppeteer from 'puppeteer';
+import { connectMongoDB } from '@/lib/mongodb';
+import Events from '@/models/events';
+import { authenticate } from '@/lib/authenticate';
+import { logger } from '@/lib/logger';
 
 async function waitForNetworkIdle(page, timeout = 30000) {
   try {
-    await page.waitForNetworkIdle({ 
+    await page.waitForNetworkIdle({
       idleTime: 500,
-      timeout: timeout 
+      timeout: timeout,
     });
   } catch (err) {
     console.warn('Network idle timeout:', err);
@@ -17,7 +17,7 @@ async function waitForNetworkIdle(page, timeout = 30000) {
 }
 
 export async function POST(req) {
-  const ACTION = "Generate PDF";
+  const ACTION = 'Generate PDF';
   let user;
   let browser = null;
   let page = null;
@@ -26,15 +26,14 @@ export async function POST(req) {
     user = await authenticate(req);
   } catch (error) {
     await logger(
-      "UNKNOWN",
+      'UNKNOWN',
       ACTION,
-      "Authentication Failed: " + error.message,
+      'Authentication Failed: ' + error.message,
       401
     );
-    return new Response(
-      JSON.stringify({ message: "Authentication failed" }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ message: 'Authentication failed' }), {
+      status: 401,
+    });
   }
 
   try {
@@ -43,22 +42,16 @@ export async function POST(req) {
     const eventData = await Events.findOne({ _id: eventId });
 
     if (!eventData) {
-      await logger(
-        user._id,
-        ACTION,
-        `Event Not Found: ${eventId}`,
-        404
-      );
-      return new Response(
-        JSON.stringify({ error: "Event not found" }),
-        { status: 404 }
-      );
+      await logger(user._id, ACTION, `Event Not Found: ${eventId}`, 404);
+      return new Response(JSON.stringify({ error: 'Event not found' }), {
+        status: 404,
+      });
     }
 
     // Platform-specific browser configuration
     const isLinux = process.platform === 'linux';
     const browserOptions = {
-      headless: "new",
+      headless: 'new',
       pipe: true, // Use pipe instead of WebSocket
       args: [
         '--no-sandbox',
@@ -69,8 +62,8 @@ export async function POST(req) {
         '--disable-features=IsolateOrigins,site-per-process',
         '--no-zygote',
         '--single-process',
-        '--disable-accelerated-2d-canvas'
-      ]
+        '--disable-accelerated-2d-canvas',
+      ],
     };
 
     if (isLinux) {
@@ -79,11 +72,11 @@ export async function POST(req) {
 
     // Launch browser with connection retry
     browser = await puppeteer.launch(browserOptions);
-    
+
     // Create new page with explicit wait
     page = await browser.newPage();
     await page.setDefaultNavigationTimeout(30000);
-    
+
     // Set content with retry mechanism
     const htmlContent = `
       <html>
@@ -211,11 +204,13 @@ export async function POST(req) {
         <body>
           <div class="header">
             <img 
-              src="${eventData.college === "SIT"
-                ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png"
-                : eventData.college === "SEC"
-                  ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png"
-                  : "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png"}"
+              src="${
+                eventData.college === 'SIT'
+                  ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png'
+                  : eventData.college === 'SEC'
+                    ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png'
+                    : 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png'
+              }"
               alt="Header Logo"
             />
           </div>
@@ -248,39 +243,43 @@ export async function POST(req) {
 
           <h2>Stakeholders</h2>
           <ul>
-            ${eventData.eventData.eventStakeholders
-              ? eventData.eventData.eventStakeholders
-                .map((stakeholder) => `<li>${stakeholder}</li>`)
-                .join("")
-              : "<li>N/A</li>"
+            ${
+              eventData.eventData.eventStakeholders
+                ? eventData.eventData.eventStakeholders
+                    .map(stakeholder => `<li>${stakeholder}</li>`)
+                    .join('')
+                : '<li>N/A</li>'
             }
           </ul>
 
           <h2>Event Coordinators</h2>
           <div class="coordinator-grid">
-            ${eventData.eventData.eventCoordinators
-              ? eventData.eventData.eventCoordinators
-                .map(
-                  (coordinator) => `
+            ${
+              eventData.eventData.eventCoordinators
+                ? eventData.eventData.eventCoordinators
+                    .map(
+                      coordinator => `
                     <div class="coordinator-item">
                       <p><strong>${coordinator.coordinatorName}</strong> (${coordinator.coordinatorRole})</p>
                       <p>${coordinator.coordinatorMail}</p>
                       <p>${coordinator.coordinatorPhone}</p>
                     </div>
                   `
-                )
-                .join("")
-              : "<p>N/A</p>"
+                    )
+                    .join('')
+                : '<p>N/A</p>'
             }
           </div>
 
-          ${eventData.eventData.eventResourcePerson && eventData.eventData.eventResourcePerson.length > 0 
-            ? `
+          ${
+            eventData.eventData.eventResourcePerson &&
+            eventData.eventData.eventResourcePerson.length > 0
+              ? `
               <h2>Resource Persons</h2>
               <div class="resource-person-grid">
                 ${eventData.eventData.eventResourcePerson
                   .map(
-                    (person) => `
+                    person => `
                       <div class="resource-person-item">
                         <p><strong>${person.ResourcePersonName}</strong> (${person.ResourcePersonDesgn})</p>
                         <p>${person.ResourcePersonMail}</p>
@@ -289,64 +288,72 @@ export async function POST(req) {
                       </div>
                     `
                   )
-                  .join("")
-                }
+                  .join('')}
               </div>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.eventData.Budget 
-            ? `
+          ${
+            eventData.eventData.Budget
+              ? `
               <h2>Budget Information</h2>
               <p><span class="section-title">Budget:</span> ₹${eventData.eventData.Budget}</p>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.eventData.fileUrl.poster 
-            ? `
+          ${
+            eventData.eventData.fileUrl.poster
+              ? `
               <h2>Event Poster</h2>
               <div class="image-container">
-                ${/\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
-                  ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
-                  : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
+                ${
+                  /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
+                    ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
+                    : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
                 }
               </div>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.postEventData
-            ? `
+          ${
+            eventData.postEventData
+              ? `
               <h2>Post Event Documentation</h2>
-              ${eventData.postEventData.fileUrl?.geoPhotos && eventData.postEventData.fileUrl.geoPhotos.length > 0
-                ? `
+              ${
+                eventData.postEventData.fileUrl?.geoPhotos &&
+                eventData.postEventData.fileUrl.geoPhotos.length > 0
+                  ? `
                   <h3>Event Photos</h3>
                   <div class="image-container">
                     ${eventData.postEventData.fileUrl.geoPhotos
-                      .map(photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`)
-                      .join("")
-                    }
+                      .map(
+                        photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`
+                      )
+                      .join('')}
                   </div>
                 `
-                : ''
+                  : ''
               }
-              ${eventData.postEventData.fileUrl?.report
-                ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
-                : ''
+              ${
+                eventData.postEventData.fileUrl?.report
+                  ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
+                  : ''
               }
-              ${eventData.postEventData.fileUrl?.financialCommitments
-                ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
-                : ''
+              ${
+                eventData.postEventData.fileUrl?.financialCommitments
+                  ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
+                  : ''
               }
             `
-            : ''
+              : ''
           }
 
           <div class="footer">
-            Generated by Eventify • ${new Date().toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
+            Generated by Eventify • ${new Date().toLocaleString('en-IN', {
+              timeZone: 'Asia/Kolkata',
             })}
           </div>
         </body>
@@ -361,22 +368,24 @@ export async function POST(req) {
       try {
         await page.setContent(htmlContent, {
           waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
-          timeout: 30000
+          timeout: 30000,
         });
-        
+
         // Wait for any remaining network activity to settle
         await waitForNetworkIdle(page);
-        
+
         // Ensure all images are loaded
         await page.evaluate(async () => {
           const selectors = Array.from(document.getElementsByTagName('img'));
-          await Promise.all(selectors.map(img => {
-            if (img.complete) return;
-            return new Promise((resolve, reject) => {
-              img.addEventListener('load', resolve);
-              img.addEventListener('error', resolve); // Don't reject on error
-            });
-          }));
+          await Promise.all(
+            selectors.map(img => {
+              if (img.complete) return;
+              return new Promise((resolve, reject) => {
+                img.addEventListener('load', resolve);
+                img.addEventListener('error', resolve); // Don't reject on error
+              });
+            })
+          );
         });
 
         loaded = true;
@@ -396,7 +405,7 @@ export async function POST(req) {
         top: '0.5in',
         right: '0.5in',
         bottom: '0.5in',
-        left: '0.5in'
+        left: '0.5in',
       },
       displayHeaderFooter: true,
       footerTemplate: `
@@ -404,7 +413,7 @@ export async function POST(req) {
           <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
-      timeout: 60000 // Increase timeout for PDF generation
+      timeout: 60000, // Increase timeout for PDF generation
     });
 
     // Close browser after successful PDF generation
@@ -420,20 +429,19 @@ export async function POST(req) {
 
     return new Response(pdfBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${eventData.eventData.EventName}.pdf"`,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${eventData.eventData.EventName}.pdf"`,
       },
     });
-
   } catch (error) {
     console.error('PDF Generation Error:', error);
     await logger(
-      user?._id || "UNKNOWN",
+      user?._id || 'UNKNOWN',
       ACTION,
-      "PDF Generation Failed: " + error.message,
+      'PDF Generation Failed: ' + error.message,
       500
     );
-    
+
     // Cleanup resources in case of error
     try {
       if (page) await page.close();
@@ -441,15 +449,15 @@ export async function POST(req) {
     } catch (closeError) {
       console.error('Error during cleanup:', closeError);
     }
-    
+
     return new Response(
-      JSON.stringify({ 
-        error: "Error generating PDF",
-        details: error.message
+      JSON.stringify({
+        error: 'Error generating PDF',
+        details: error.message,
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" }
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }

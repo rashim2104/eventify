@@ -6,10 +6,10 @@
   @apply w-[400px] border border-gray-200 py-2 px-6 bg-zinc-100/40;
 } */
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
 
 * {
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -41,7 +41,7 @@ body {
 }
 
 * {
-  -ms-overflow-style: none;  
+  -ms-overflow-style: none;
   scrollbar-width: none;
 }
 

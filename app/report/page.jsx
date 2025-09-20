@@ -1,8 +1,8 @@
-import ReportMain from "@/components/Report/report"
+import ReportMain from '@/components/Report/report';
 export default function Report() {
   return (
     <>
-    <ReportMain />
+      <ReportMain />
     </>
-  )
+  );
 }
