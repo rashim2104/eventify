@@ -42,6 +42,9 @@ export async function POST(req) {
     const { startDate, endDate, filters } = await req.json();
     let query = {};
 
+    // Only fetch approved events
+    query.status = 2;
+
     // Add date range filter if provided
     if (startDate && endDate) {
       // Convert dates to match Compass format
@@ -77,21 +80,6 @@ export async function POST(req) {
       query.user_id = user._id;
     }
 
-    // Add debug prints
-    console.log(
-      'Raw request body:',
-      JSON.stringify({ startDate, endDate, filters })
-    );
-    console.log('Final query:', JSON.stringify(query, null, 2));
-
-    // First try to count the documents
-    const count = await Events.countDocuments(query);
-    console.log('Document count before fetch:', count);
-
-    // Check what dates are actually in the database
-    const sampleDates = await Events.distinct('eventData.StartTime');
-    console.log('Sample dates in DB:', sampleDates.slice(0, 5));
-
     const events = await Events.find(query)
       .sort({ 'eventData.StartTime': -1 })
       .collation({ locale: 'en' });
@@ -103,14 +91,12 @@ export async function POST(req) {
       200
     );
 
-    // Return debug info with the response
     return NextResponse.json(
       {
         events,
         debug: {
           query,
           resultCount: events.length,
-          sampleDates: sampleDates.slice(0, 5),
           requestDates: {
             start: startDate + 'T00:00:00.000Z',
             end: endDate + 'T23:59:59.999Z',

@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
 import { useSession } from 'next-auth/react';
-import Form from './Form';
+import { EventForm } from '@/components/EventForm';
+import './Form.css';
 
 export default function CreateForm() {
   const { data: session, status } = useSession();
@@ -20,5 +21,5 @@ export default function CreateForm() {
       </h1>
     );
   }
-  return <Form />;
+  return <EventForm />;
 }

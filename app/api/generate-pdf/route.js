@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import { chromium } from 'playwright';
 import { connectMongoDB } from '@/lib/mongodb';
 import Events from '@/models/events';
 import { authenticate } from '@/lib/authenticate';
@@ -6,21 +6,21 @@ import { logger } from '@/lib/logger';
 
 async function waitForNetworkIdle(page, timeout = 30000) {
   try {
-    await page.waitForNetworkIdle({ idleTime: 500, timeout });
+    await page.waitForLoadState('networkidle', { timeout });
   } catch (error) {
     console.warn('Network idle timeout:', error);
-    // Continue execution even if network idle times out
   }
 }
 
 export async function POST(req) {
   let browser = null;
   let page = null;
+  let user = null;
   const ACTION = 'Generate PDF';
 
   try {
     const { eventId } = await req.json();
-    const user = await authenticate(req);
+    user = await authenticate(req);
     if (!user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -35,22 +35,19 @@ export async function POST(req) {
       });
     }
 
-    // Launch browser with specific configuration
-    browser = await puppeteer.launch({
-      headless: 'new',
+    browser = await chromium.launch({
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
       ],
-      ignoreHTTPSErrors: true,
-      timeout: 60000,
     });
 
     // Create new page with error handling
     page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
+    await page.setViewportSize({ width: 1200, height: 800 });
 
     // Set longer timeouts for navigation
     page.setDefaultNavigationTimeout(60000);
@@ -339,9 +336,7 @@ export async function POST(req) {
       </html>
     `;
 
-    await page.setContent(htmlContent, {
-      waitUntil: ['networkidle0', 'domcontentloaded', 'load'],
-    });
+    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
 
     // Wait for network to be idle
     await waitForNetworkIdle(page);
@@ -371,13 +366,11 @@ export async function POST(req) {
         bottom: '0.5in',
         left: '0.5in',
       },
-      displayHeaderFooter: true,
       footerTemplate: `
         <div style="width: 100%; font-size: 8px; padding: 0 20px; color: #666; display: flex; justify-content: flex-end;">
           <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
-      timeout: 120000, // Increased timeout for PDF generation
     });
 
     // Close browser resources properly

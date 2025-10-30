@@ -150,24 +150,52 @@
    ======================================== */
 
 /* Text utilities */
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-muted { color: var(--color-text-muted); }
-.text-subtle { color: var(--color-text-subtle); }
+.text-primary {
+  color: var(--color-text-primary);
+}
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+.text-muted {
+  color: var(--color-text-muted);
+}
+.text-subtle {
+  color: var(--color-text-subtle);
+}
 
 /* Background utilities */
-.bg-primary { background-color: var(--color-bg-primary); }
-.bg-secondary { background-color: var(--color-bg-secondary); }
-.bg-tertiary { background-color: var(--color-bg-tertiary); }
-.bg-muted { background-color: var(--color-bg-muted); }
-.bg-surface { background-color: var(--color-surface); }
-.bg-surface-secondary { background-color: var(--color-surface-secondary); }
-.bg-surface-tertiary { background-color: var(--color-surface-tertiary); }
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+.bg-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+.bg-muted {
+  background-color: var(--color-bg-muted);
+}
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-surface-secondary {
+  background-color: var(--color-surface-secondary);
+}
+.bg-surface-tertiary {
+  background-color: var(--color-surface-tertiary);
+}
 
 /* Border utilities */
-.border { border-color: var(--color-border); }
-.border-secondary { border-color: var(--color-border-secondary); }
-.border-strong { border-color: var(--color-border-strong); }
+.border {
+  border-color: var(--color-border);
+}
+.border-secondary {
+  border-color: var(--color-border-secondary);
+}
+.border-strong {
+  border-color: var(--color-border-strong);
+}
 
 /* ========================================
    Component-specific styles

@@ -2,6 +2,46 @@
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Alert,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Avatar,
+  Stack,
+} from '@mui/material';
+// Using Phosphor icons instead of Material UI icons
+import {
+  User,
+  CheckCircle,
+  X,
+  Lock,
+  Eye,
+  EyeSlash,
+} from '@phosphor-icons/react';
+// Temporary hardcoded colors for debugging
+const colors = {
+  light: {
+    primaryHex: '#0f172a',
+    primaryForegroundHex: '#ffffff',
+    backgroundHex: '#ffffff',
+    cardHex: '#ffffff',
+    secondaryHex: '#f8fafc',
+    mutedHex: '#f8fafc',
+    mutedForegroundHex: '#64748b',
+    destructiveHex: '#ef4444',
+  },
+};
 
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
@@ -17,6 +57,9 @@ export default function Profile() {
     number: false,
     special: false,
   });
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validatePassword = password => {
     const passwordRegex =
@@ -117,190 +160,641 @@ export default function Profile() {
 
   if (status === 'loading') {
     return (
-      <div className='grid place-items-center h-screen text-xl font-extrabold'>
-        Loading...
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '50vh',
+        }}
+      >
+        <Typography variant='h6' sx={{ color: colors.light.primaryHex }}>
+          Loading...
+        </Typography>
+      </Box>
     );
   }
 
+  const getPasswordStrengthColor = strength => {
+    if (strength === 5) return '#4caf50';
+    if (strength >= 3) return '#ff9800';
+    return colors.light.destructiveHex || '#f44336';
+  };
+
+  const getPasswordStrengthWidth = strength => {
+    if (strength === 5) return '100%';
+    if (strength >= 3) return '60%';
+    return '20%';
+  };
+
   return (
-    <div className='p-6'>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        bgcolor: colors.light.backgroundHex,
+        minHeight: '100vh',
+      }}
+    >
       {session?.user?.hasDefaultPassword && (
-        <div className='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6'>
-          <p className='font-bold'>Warning!</p>
-          <p>
+        <Alert
+          severity='warning'
+          sx={{
+            mb: 4,
+            bgcolor: '#ff9800' + '20',
+            borderColor: '#ff9800',
+            borderRadius: 2,
+            '& .MuiAlert-message': {
+              width: '100%',
+            },
+          }}
+        >
+          <Typography variant='h6' sx={{ fontWeight: 'bold', mb: 1 }}>
+            Warning!
+          </Typography>
+          <Typography>
             You are using the default password. Please change it before
             continuing.
-          </p>
-        </div>
+          </Typography>
+        </Alert>
       )}
-      <p className='text-4xl font-bold'> Hello, {session?.user?.name}</p>
-      <div className='flex flex-col md:flex-row gap-8'>
-        <div className='bg-gray-200 flex flex-col md:w-1/2 mt-5 p-12 rounded-xl'>
-          <p className='font-bold text-3xl mb-4'>Profile</p>
 
-          <label className='text-lg font-bold mb-1'>Name</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.name}
-            readOnly
-          />
-          <br />
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant='h4'
+          component='h1'
+          sx={{
+            fontWeight: 'bold',
+            mb: 1,
+            color: colors.light.primaryHex,
+            fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+          }}
+        >
+          Hello, {session?.user?.name}
+        </Typography>
+        <Typography
+          variant='body1'
+          color='text.secondary'
+          sx={{ fontSize: '1.1rem' }}
+        >
+          Manage your profile information and security settings
+        </Typography>
+      </Box>
 
-          <label className='text-lg font-bold mb-1'>Email</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.email}
-            readOnly
-          />
-          <br />
-
-          <label className='text-lg font-bold mb-1'>College</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.college}
-            readOnly
-          />
-          <br />
-
-          <label className='text-lg font-bold mb-1'>Department</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.dept}
-            readOnly
-          />
-          <br />
-
-          <label className='text-lg font-bold mb-1'>Role</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.role}
-            readOnly
-          />
-          <br />
-
-          <label className='text-lg font-bold mb-1'>Phone Number</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.phone}
-            readOnly
-          />
-          <br />
-
-          <label className='text-lg font-bold mb-1'>Staff ID</label>
-          <input
-            className='p-2 rounded w-full'
-            type='text'
-            value={session.user.id}
-            readOnly
-          />
-        </div>
-        <div className='bg-gray-200 flex flex-col md:w-1/2 mt-5 p-12 rounded-xl'>
-          <p className='text-3xl font-bold mb-4'>Change Password</p>
-          <label className='text-lg font-bold mb-1'>Old Password</label>
-          <input
-            className='p-2 rounded w-full'
-            type='password'
-            placeholder='Enter old password'
-            value={oldPassword}
-            onChange={e => setOldPassword(e.target.value)}
-          />
-          <br />
-          <label className='text-lg font-bold mb-1'>New Password</label>
-          <input
-            className='p-2 rounded w-full'
-            type='password'
-            placeholder='Enter new password'
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-          />
-          <br />
-          {newPassword.length > 0 && (
-            <div className='mb-4'>
-              <div className='flex justify-between mb-1'>
-                <span className='text-sm'>Password Strength:</span>
-                <span className='text-sm'>
-                  {passwordStrength === 5
-                    ? 'Strong'
-                    : passwordStrength >= 3
-                      ? 'Medium'
-                      : 'Weak'}
-                </span>
-              </div>
-              <div className='w-full h-2 bg-gray-300 rounded-full'>
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    passwordStrength === 5
-                      ? 'bg-green-500 w-full'
-                      : passwordStrength >= 3
-                        ? 'bg-yellow-500 w-3/5'
-                        : 'bg-red-500 w-1/5'
-                  }`}
-                ></div>
-              </div>
-              <ul className='mt-2 text-sm space-y-1'>
-                <li
-                  className={
-                    requirements.length ? 'text-green-600' : 'text-gray-600'
-                  }
-                >
-                  ✓ At least 8 characters
-                </li>
-                <li
-                  className={
-                    requirements.lowercase ? 'text-green-600' : 'text-gray-600'
-                  }
-                >
-                  ✓ One lowercase letter
-                </li>
-                <li
-                  className={
-                    requirements.uppercase ? 'text-green-600' : 'text-gray-600'
-                  }
-                >
-                  ✓ One uppercase letter
-                </li>
-                <li
-                  className={
-                    requirements.number ? 'text-green-600' : 'text-gray-600'
-                  }
-                >
-                  ✓ One number
-                </li>
-                <li
-                  className={
-                    requirements.special ? 'text-green-600' : 'text-gray-600'
-                  }
-                >
-                  ✓ One special character
-                </li>
-              </ul>
-            </div>
-          )}
-          <label className='text-lg font-bold mb-1'>Confirm New Password</label>
-          <input
-            className='p-2 rounded w-full'
-            type='password'
-            placeholder='Confirm new password'
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-          />
-          <br />
-          <button
-            className='w-full bg-orange-400 hover:bg-orange-500 text-white font-bold p-2 rounded-3xl mt-3'
-            onClick={handleChangePassword}
-            disabled={submitting}
+      <Grid container spacing={4}>
+        {/* Profile Information Card */}
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              bgcolor: colors.light.cardHex,
+              borderRadius: 3,
+              boxShadow: 3,
+              height: '100%',
+              '&:hover': {
+                boxShadow: 6,
+                transform: 'translateY(-2px)',
+                transition: 'all 0.3s ease-in-out',
+              },
+            }}
           >
-            {submitting ? 'Submitting...' : 'Change Password'}
-          </button>
-        </div>
-      </div>
-    </div>
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 4,
+                  pb: 2,
+                  borderBottom: `2px solid ${colors.light.mutedHex}`,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: colors.light.primaryHex,
+                    width: 56,
+                    height: 56,
+                    mr: 3,
+                    boxShadow: 2,
+                  }}
+                >
+                  <User size={28} weight='fill' />
+                </Avatar>
+                <Box>
+                  <Typography
+                    variant='h5'
+                    sx={{
+                      fontWeight: 'bold',
+                      color: colors.light.primaryHex,
+                      mb: 0.5,
+                    }}
+                  >
+                    Profile Information
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Your personal details and account information
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Stack spacing={3.5}>
+                <TextField
+                  label='Name'
+                  value={session?.user?.name || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='Email'
+                  value={session?.user?.email || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='College'
+                  value={session?.user?.college || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='Department'
+                  value={session?.user?.dept || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='Role'
+                  value={session?.user?.role || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='Phone Number'
+                  value={session?.user?.phone || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+
+                <TextField
+                  label='Staff ID'
+                  value={session?.user?.id || ''}
+                  InputProps={{ readOnly: true }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: colors.light.mutedHex + '15',
+                      borderRadius: 2,
+                      '& fieldset': {
+                        borderColor: colors.light.mutedHex,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontWeight: 600,
+                      color: colors.light.primaryHex,
+                    },
+                  }}
+                />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Change Password Card */}
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              bgcolor: colors.light.cardHex,
+              borderRadius: 3,
+              boxShadow: 3,
+              height: '100%',
+              '&:hover': {
+                boxShadow: 6,
+                transform: 'translateY(-2px)',
+                transition: 'all 0.3s ease-in-out',
+              },
+            }}
+          >
+            <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 4,
+                  pb: 2,
+                  borderBottom: `2px solid ${colors.light.mutedHex}`,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: colors.light.primaryHex,
+                    width: 56,
+                    height: 56,
+                    mr: 3,
+                    boxShadow: 2,
+                  }}
+                >
+                  <Lock
+                    size={28}
+                    weight='fill'
+                    color={colors.light.primaryForegroundHex}
+                  />
+                </Avatar>
+                <Box>
+                  <Typography
+                    variant='h5'
+                    sx={{
+                      fontWeight: 'bold',
+                      color: colors.light.primaryHex,
+                      mb: 0.5,
+                    }}
+                  >
+                    Change Password
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Update your password for better security
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Stack spacing={3.5}>
+                <TextField
+                  label='Old Password'
+                  type={showOldPassword ? 'text' : 'password'}
+                  placeholder='Enter old password'
+                  value={oldPassword}
+                  onChange={e => setOldPassword(e.target.value)}
+                  fullWidth
+                  variant='outlined'
+                  InputProps={{
+                    endAdornment: (
+                      <Button
+                        onClick={() => setShowOldPassword(!showOldPassword)}
+                        sx={{ minWidth: 'auto', p: 1 }}
+                      >
+                        {showOldPassword ? (
+                          <EyeSlash size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </Button>
+                    ),
+                  }}
+                />
+
+                <TextField
+                  label='New Password'
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder='Enter new password'
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  fullWidth
+                  variant='outlined'
+                  InputProps={{
+                    endAdornment: (
+                      <Button
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        sx={{ minWidth: 'auto', p: 1 }}
+                      >
+                        {showNewPassword ? (
+                          <EyeSlash size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </Button>
+                    ),
+                  }}
+                />
+
+                {newPassword.length > 0 && (
+                  <Paper
+                    sx={{
+                      p: 3,
+                      bgcolor: colors.light.mutedHex + '08',
+                      borderRadius: 2,
+                      border: `1px solid ${colors.light.mutedHex}`,
+                    }}
+                  >
+                    <Box sx={{ mb: 3 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          mb: 2,
+                        }}
+                      >
+                        <Typography variant='body1' sx={{ fontWeight: 600 }}>
+                          Password Strength
+                        </Typography>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            fontWeight: 'bold',
+                            color: getPasswordStrengthColor(passwordStrength),
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          {passwordStrength === 5
+                            ? 'Strong'
+                            : passwordStrength >= 3
+                              ? 'Medium'
+                              : 'Weak'}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant='determinate'
+                        value={(passwordStrength / 5) * 100}
+                        sx={{
+                          height: 10,
+                          borderRadius: 5,
+                          bgcolor: colors.light.mutedHex,
+                          '& .MuiLinearProgress-bar': {
+                            bgcolor: getPasswordStrengthColor(passwordStrength),
+                            borderRadius: 5,
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    <List dense sx={{ '& .MuiListItem-root': { px: 0 } }}>
+                      <ListItem sx={{ py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          {requirements.length ? (
+                            <CheckCircle size={16} color='#4caf50' />
+                          ) : (
+                            <X
+                              size={16}
+                              color={colors.light.mutedForegroundHex}
+                            />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary='At least 8 characters'
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.875rem',
+                              color: requirements.length
+                                ? '#4caf50'
+                                : colors.light.mutedForegroundHex,
+                            },
+                          }}
+                        />
+                      </ListItem>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          {requirements.lowercase ? (
+                            <CheckCircle size={16} color='#4caf50' />
+                          ) : (
+                            <X
+                              size={16}
+                              color={colors.light.mutedForegroundHex}
+                            />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary='One lowercase letter'
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.875rem',
+                              color: requirements.lowercase
+                                ? '#4caf50'
+                                : colors.light.mutedForegroundHex,
+                            },
+                          }}
+                        />
+                      </ListItem>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          {requirements.uppercase ? (
+                            <CheckCircle size={16} color='#4caf50' />
+                          ) : (
+                            <X
+                              size={16}
+                              color={colors.light.mutedForegroundHex}
+                            />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary='One uppercase letter'
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.875rem',
+                              color: requirements.uppercase
+                                ? '#4caf50'
+                                : colors.light.mutedForegroundHex,
+                            },
+                          }}
+                        />
+                      </ListItem>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          {requirements.number ? (
+                            <CheckCircle size={16} color='#4caf50' />
+                          ) : (
+                            <X
+                              size={16}
+                              color={colors.light.mutedForegroundHex}
+                            />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary='One number'
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.875rem',
+                              color: requirements.number
+                                ? '#4caf50'
+                                : colors.light.mutedForegroundHex,
+                            },
+                          }}
+                        />
+                      </ListItem>
+                      <ListItem sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          {requirements.special ? (
+                            <CheckCircle size={16} color='#4caf50' />
+                          ) : (
+                            <X
+                              size={16}
+                              color={colors.light.mutedForegroundHex}
+                            />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary='One special character'
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.875rem',
+                              color: requirements.special
+                                ? '#4caf50'
+                                : colors.light.mutedForegroundHex,
+                            },
+                          }}
+                        />
+                      </ListItem>
+                    </List>
+                  </Paper>
+                )}
+
+                <TextField
+                  label='Confirm New Password'
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder='Confirm new password'
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  fullWidth
+                  variant='outlined'
+                  InputProps={{
+                    endAdornment: (
+                      <Button
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        sx={{ minWidth: 'auto', p: 1 }}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeSlash size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </Button>
+                    ),
+                  }}
+                />
+
+                <Button
+                  variant='contained'
+                  fullWidth
+                  size='large'
+                  onClick={handleChangePassword}
+                  disabled={submitting}
+                  sx={{
+                    bgcolor: colors.light.primaryHex,
+                    color: colors.light.primaryForegroundHex,
+                    py: 2,
+                    px: 4,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    boxShadow: 3,
+                    '&:hover': {
+                      bgcolor: colors.light.primaryHex,
+                      opacity: 0.9,
+                      boxShadow: 6,
+                      transform: 'translateY(-1px)',
+                    },
+                    '&:disabled': {
+                      bgcolor: colors.light.mutedHex,
+                      color: colors.light.mutedForegroundHex,
+                      boxShadow: 'none',
+                      transform: 'none',
+                    },
+                    transition: 'all 0.3s ease-in-out',
+                  }}
+                >
+                  {submitting ? 'Submitting...' : 'Change Password'}
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }

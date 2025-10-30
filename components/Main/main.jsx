@@ -1,6 +1,6 @@
 'use client';
 import Calendar from '../Calendar/calendar';
-import EventCard from '../EventCard/eventcard';
+import EventCard from '../EventCard';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 export default function Main() {

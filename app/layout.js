@@ -1,13 +1,12 @@
-import { AuthProvider } from './Providers';
-import 'mdb-react-ui-kit/dist/css/mdb.min.css';
+import { Providers } from './Providers';
 import '@/styles/globals.css';
-import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar/navbar';
 import Sidebar from '@/components/Sidebar/sidebar';
 import { Toaster } from 'sonner';
 import Script from 'next/script';
-
-const inter = Inter({ subsets: ['latin'] });
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import LayoutContent from './LayoutContent';
 
 export const metadata = {
   metadataBase: new URL('https://eventify.sairam.edu.in'),
@@ -59,17 +58,13 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body className={inter.className}>
+      <body
+        className={`${GeistSans.className} ${GeistMono.variable} antialiased`}
+      >
         <Toaster richColors position='top-right' closeButton />
-        <AuthProvider>
-          <Navbar />
-          <div className='flex'>
-            <div>
-              <Sidebar />
-            </div>
-            <div className='m-2 p-3 w-full'>{children}</div>
-          </div>
-        </AuthProvider>
+        <Providers>
+          <LayoutContent>{children}</LayoutContent>
+        </Providers>
       </body>
     </html>
   );
