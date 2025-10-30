@@ -25,7 +25,7 @@ A comprehensive event management system built with Next.js for educational insti
    cd eventify
    ```
 
-2. **Install dependencies**
+2. **Install dependencies **
    ```bash
    npm install
    ```
