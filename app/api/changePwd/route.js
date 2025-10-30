@@ -4,6 +4,7 @@ import User from '@/models/user';
 import bcrypt from 'bcryptjs';
 import { authenticate } from '@/lib/authenticate';
 import { logger } from '@/lib/logger';
+import { validatePasswordStrength } from '@/lib/passwordValidation';
 
 export async function POST(req) {
   const ACTION = 'Change Password';
@@ -80,6 +81,25 @@ export async function POST(req) {
         );
       }
 
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.isValid) {
+        await logger(
+          user._id,
+          ACTION,
+          'Password Strength Validation Failed',
+          400
+        );
+        return NextResponse.json(
+          {
+            message: 'Password does not meet security requirements',
+            errors: passwordValidation.errors,
+            score: passwordValidation.score,
+          },
+          { status: 400 }
+        );
+      }
+
       const salt = await bcrypt.genSalt(10);
       const newPasswordHashed = await bcrypt.hash(newPassword, salt);
       await User.updateOne({ email }, { password: newPasswordHashed });
@@ -122,8 +142,7 @@ export async function POST(req) {
         );
       }
 
-      existingUser.password =
-        '$2a$10$OTAVa.umH/vANyQ53DCpCOM9XrKAguEatocXzWSUQiXFSEIyTYcqG';
+      existingUser.password = process.env.DEFAULT_PASSWORD_HASH;
       await existingUser.save();
 
       await logger(user._id, ACTION, 'Password Reset to Default', 200);

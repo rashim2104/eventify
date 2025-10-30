@@ -54,9 +54,10 @@ export const authOptions = {
         // Store all user fields in token
         token.userType = user.userType;
         token.userId = user._id;
-        token.hasDefaultPassword =
-          user.password ===
-          '$2a$10$OTAVa.umH/vANyQ53DCpCOM9XrKAguEatocXzWSUQiXFSEIyTYcqG';
+        token.hasDefaultPassword = await bcrypt.compare(
+          'Welcome123!',
+          user.password
+        );
         token.name = user.name;
         token.email = user.email;
         token.college = user.college;

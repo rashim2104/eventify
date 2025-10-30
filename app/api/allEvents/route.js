@@ -21,7 +21,7 @@ export async function POST(req) {
     return NextResponse.json({ message: error.message }, { status: 401 });
   }
 
-  // Database connection
+  // Database connection (connection pooling will handle reuse)
   try {
     await connectMongoDB();
   } catch (error) {
@@ -32,7 +32,7 @@ export async function POST(req) {
       500
     );
     return NextResponse.json(
-      { message: 'Database connection failed' },
+      { message: 'Database connection failed', details: error.message },
       { status: 500 }
     );
   }

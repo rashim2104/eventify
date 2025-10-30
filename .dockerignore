@@ -1,0 +1,30 @@
+# Node/Bun artifacts
+node_modules
+bun.lockb
+.bun
+
+# Next.js build output
+.next
+out
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# OS/editor
+.DS_Store
+.vscode
+.idea
+*.swp

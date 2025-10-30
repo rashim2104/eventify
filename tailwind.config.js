@@ -1,4 +1,4 @@
-const { tailwindColors } = require('./lib/colors.config');
+import { colors, colorHexMap } from './lib/colors.config.js';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -15,18 +15,36 @@ module.exports = {
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       colors: {
-        // Eventify Color Palette - shadcn/ui Gray theme
-        ...tailwindColors,
+        // Eventify Color Palette - shadcn/ui theme (using hex values for compatibility)
+        background: colors.light.backgroundHex,
+        foreground: colors.light.foregroundHex,
+        card: colors.light.cardHex,
+        cardForeground: colors.light.cardForegroundHex,
+        primary: colors.light.primaryHex,
+        primaryForeground: colors.light.primaryForegroundHex,
+        secondary: colors.light.secondaryHex,
+        secondaryForeground: colors.light.secondaryForegroundHex,
+        muted: colors.light.mutedHex,
+        mutedForeground: colors.light.mutedForegroundHex,
+        accent: colors.light.accentHex,
+        accentForeground: colors.light.accentForegroundHex,
+        destructive: colors.light.destructiveHex,
+        border: colors.light.borderHex,
+        input: colors.light.inputHex,
+        ring: colors.light.ringHex,
+        sidebar: colors.light.sidebar,
+        sidebarForeground: colors.light.sidebarForeground,
+        sidebarPrimary: colors.light.sidebarPrimary,
+        sidebarPrimaryForeground: colors.light.sidebarPrimaryForeground,
+        sidebarAccent: colors.light.sidebarAccent,
+        sidebarAccentForeground: colors.light.sidebarAccentForeground,
+        sidebarBorder: colors.light.sidebarBorder,
+        sidebarRing: colors.light.sidebarRing,
 
         // Legacy support - keeping old color names for backward compatibility
-        primary: tailwindColors.primary,
-        secondary: tailwindColors.secondary,
-        accent: tailwindColors.accent,
-        neutral: tailwindColors.neutral,
-        success: tailwindColors.success,
-        warning: tailwindColors.warning,
-        error: tailwindColors.error,
-        info: tailwindColors.info,
+        success: '#10b981',
+        warning: '#f59e0b',
+        info: '#3b82f6',
       },
 
       // Custom utility classes for the design system
@@ -48,7 +66,7 @@ module.exports = {
       },
 
       borderColor: {
-        'border': 'var(--color-border)',
+        border: 'var(--color-border)',
         'border-secondary': 'var(--color-border-secondary)',
         'border-strong': 'var(--color-border-strong)',
       },

@@ -1,9 +1,31 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+  Switch,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  IconButton,
+  CircularProgress,
+  Stack,
+  Chip,
+} from '@mui/material';
+import { Pencil, Calendar, CheckCircle, XCircle } from '@phosphor-icons/react';
+import { colors } from '@/lib/colors.config.js';
 
 export default function Venues() {
   const { data: session, status } = useSession();
@@ -35,10 +57,9 @@ export default function Venues() {
     fetchVenues();
   }, [isEdit]);
 
-  const handleInputChange = (e, index, field) => {
+  const handleInputChange = (index, field, value) => {
     const updatedVenues = [...venues];
-    updatedVenues[index][field] =
-      e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    updatedVenues[index][field] = value;
     setVenues(updatedVenues);
   };
 
@@ -66,9 +87,19 @@ export default function Venues() {
 
   if (status === 'loading') {
     return (
-      <div className='grid place-items-center h-screen text-xl font-extrabold'>
-        Loading...
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+        <CircularProgress size={40} />
+        <Typography variant='h6' sx={{ ml: 2 }}>
+          Loading...
+        </Typography>
+      </Box>
     );
   }
 
@@ -79,14 +110,33 @@ export default function Venues() {
   ];
 
   return (
-    <div className='bg-gray-200 flex flex-col mt-5 p-12 rounded-xl'>
-      <div className='flex gap-3 items-center'>
-        <p className='text-3xl font-bold'>Venues</p>
-        <div className='flex gap-2'>
+    <Box
+      sx={{
+        bgcolor: colors.light.secondaryHex,
+        display: 'flex',
+        flexDirection: 'column',
+        mt: 3,
+        p: 6,
+        borderRadius: 3,
+        minHeight: '100vh',
+      }}
+    >
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 4 }}>
+        <Typography variant='h4' component='h1' sx={{ fontWeight: 'bold' }}>
+          Venues
+        </Typography>
+        <Stack direction='row' spacing={1}>
           {venues.length > 0 && (
             <>
-              <div
-                className='cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center'
+              <IconButton
+                sx={{
+                  bgcolor: colors.light.primaryHex,
+                  color: colors.light.primaryForegroundHex,
+                  '&:hover': {
+                    bgcolor: colors.light.primaryHex,
+                    opacity: 0.8,
+                  },
+                }}
                 onClick={() => {
                   setIsEdit(prevIsEdit => !prevIsEdit);
                   toast.info(
@@ -96,142 +146,289 @@ export default function Venues() {
                   );
                 }}
               >
-                <Image
-                  src={'/assets/icons/edit.png'}
-                  width={30}
-                  height={30}
-                  alt='Edit'
-                />
-              </div>
-              <Link href='/venues/reservations'>
-                <div className='cursor-pointer bg-[#FE914E] rounded-full w-12 h-12 flex items-center justify-center'>
-                  <Image
-                    src={'/assets/icons/calendar.png'}
-                    width={30}
-                    height={30}
-                    alt='Reservations'
-                  />
-                </div>
-              </Link>
+                <Pencil size={24} color={colors.light.backgroundHex} />
+              </IconButton>
+              <IconButton
+                component={Link}
+                href='/venues/reservations'
+                sx={{
+                  bgcolor: colors.light.primaryHex,
+                  color: colors.light.primaryForegroundHex,
+                  '&:hover': {
+                    bgcolor: colors.light.primaryHex,
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                <Calendar size={24} color={colors.light.backgroundHex} />
+              </IconButton>
             </>
           )}
-        </div>
-      </div>
+        </Stack>
+      </Box>
+
       {venues.length > 0 ? (
-        <table className='w-full table-auto mt-4'>
-          <thead>
-            <tr>
-              <th className='px-4 py-2'>Venue Name</th>
-              <th className='px-4 py-2'>AC</th>
-              <th className='px-4 py-2'>Projector</th>
-              <th className='px-4 py-2'>Seating Capacity</th>
-              <th className='px-4 py-2'>Parent Block</th>
-              <th className='px-4 py-2'>Availability</th>
-            </tr>
-          </thead>
-          <tbody>
-            {venues.map((venue, index) => (
-              <tr key={venue.venueId}>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <input
-                      type='text'
-                      value={venue.venueName}
-                      onChange={e => handleInputChange(e, index, 'venueName')}
-                      className='p-2 rounded w-full'
-                    />
-                  ) : (
-                    venue.venueName
-                  )}
-                </td>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <input
-                      type='checkbox'
-                      checked={venue.hasAc}
-                      onChange={e => handleInputChange(e, index, 'hasAc')}
-                    />
-                  ) : venue.hasAc ? (
-                    'Yes'
-                  ) : (
-                    'No'
-                  )}
-                </td>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <input
-                      type='checkbox'
-                      checked={venue.hasProjector}
-                      onChange={e =>
-                        handleInputChange(e, index, 'hasProjector')
-                      }
-                    />
-                  ) : venue.hasProjector ? (
-                    'Yes'
-                  ) : (
-                    'No'
-                  )}
-                </td>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <input
-                      type='number'
-                      value={venue.seatingCapacity}
-                      onChange={e =>
-                        handleInputChange(e, index, 'seatingCapacity')
-                      }
-                      className='p-2 rounded w-full'
-                    />
-                  ) : (
-                    venue.seatingCapacity
-                  )}
-                </td>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <select
-                      value={venue.parentBlock}
-                      onChange={e => handleInputChange(e, index, 'parentBlock')}
-                      className='p-2 rounded w-full'
-                    >
-                      {uniqueParentBlocks.map(block => (
-                        <option key={block} value={block}>
-                          {block}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    venue.parentBlock
-                  )}
-                </td>
-                <td className='border px-4 py-2'>
-                  {isEdit ? (
-                    <input
-                      type='checkbox'
-                      checked={venue.isAvailable}
-                      onChange={e => handleInputChange(e, index, 'isAvailable')}
-                    />
-                  ) : venue.isAvailable ? (
-                    'Yes'
-                  ) : (
-                    'No'
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: colors.light.mutedHex }}>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  Venue Name
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  AC
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  Projector
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  Seating Capacity
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  Parent Block
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                  Availability
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {venues.map((venue, index) => (
+                <TableRow
+                  key={venue.venueId}
+                  sx={{
+                    '&:nth-of-type(odd)': {
+                      bgcolor: colors.light.accentHex,
+                    },
+                    '&:hover': {
+                      bgcolor: colors.light.mutedHex,
+                    },
+                  }}
+                >
+                  <TableCell>
+                    {isEdit ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        value={venue.venueName}
+                        onChange={e =>
+                          handleInputChange(index, 'venueName', e.target.value)
+                        }
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'white',
+                          },
+                        }}
+                      />
+                    ) : (
+                      <Typography variant='body1'>{venue.venueName}</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEdit ? (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={venue.hasAc}
+                            onChange={e =>
+                              handleInputChange(
+                                index,
+                                'hasAc',
+                                e.target.checked
+                              )
+                            }
+                            color='primary'
+                          />
+                        }
+                        label=''
+                      />
+                    ) : (
+                      <Chip
+                        icon={
+                          venue.hasAc ? (
+                            <CheckCircle
+                              size={16}
+                              color={venue.hasAc ? '#ffffff' : '#424242'}
+                            />
+                          ) : (
+                            <XCircle size={16} color='#424242' />
+                          )
+                        }
+                        label={venue.hasAc ? 'Yes' : 'No'}
+                        color={venue.hasAc ? 'success' : 'default'}
+                        size='small'
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEdit ? (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={venue.hasProjector}
+                            onChange={e =>
+                              handleInputChange(
+                                index,
+                                'hasProjector',
+                                e.target.checked
+                              )
+                            }
+                            color='primary'
+                          />
+                        }
+                        label=''
+                      />
+                    ) : (
+                      <Chip
+                        icon={
+                          venue.hasProjector ? (
+                            <CheckCircle
+                              size={16}
+                              color={venue.hasProjector ? '#ffffff' : '#424242'}
+                            />
+                          ) : (
+                            <XCircle size={16} color='#424242' />
+                          )
+                        }
+                        label={venue.hasProjector ? 'Yes' : 'No'}
+                        color={venue.hasProjector ? 'success' : 'default'}
+                        size='small'
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEdit ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        type='number'
+                        value={venue.seatingCapacity}
+                        onChange={e =>
+                          handleInputChange(
+                            index,
+                            'seatingCapacity',
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'white',
+                          },
+                        }}
+                      />
+                    ) : (
+                      <Typography variant='body1'>
+                        {venue.seatingCapacity}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEdit ? (
+                      <Select
+                        fullWidth
+                        size='small'
+                        value={venue.parentBlock}
+                        onChange={e =>
+                          handleInputChange(
+                            index,
+                            'parentBlock',
+                            e.target.value
+                          )
+                        }
+                        sx={{
+                          bgcolor: 'white',
+                        }}
+                      >
+                        {uniqueParentBlocks.map(block => (
+                          <MenuItem key={block} value={block}>
+                            {block}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : (
+                      <Typography variant='body1'>
+                        {venue.parentBlock}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEdit ? (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={venue.isAvailable}
+                            onChange={e =>
+                              handleInputChange(
+                                index,
+                                'isAvailable',
+                                e.target.checked
+                              )
+                            }
+                            color='primary'
+                          />
+                        }
+                        label=''
+                      />
+                    ) : (
+                      <Chip
+                        icon={
+                          venue.isAvailable ? (
+                            <CheckCircle size={16} color='#ffffff' />
+                          ) : (
+                            <XCircle size={16} color='#ffffff' />
+                          )
+                        }
+                        label={venue.isAvailable ? 'Available' : 'Unavailable'}
+                        color={venue.isAvailable ? 'success' : 'error'}
+                        size='small'
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
-        <p>No venues available</p>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant='h6' color='text.secondary' gutterBottom>
+            No venues available
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Venues will appear here once they are added to the system.
+          </Typography>
+        </Box>
       )}
+
       {isEdit && (
-        <button
-          className='mt-4 bg-orange-400 hover:bg-orange-500 text-white font-bold py-2 px-4 rounded'
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? 'Submitting...' : 'Submit Changes'}
-        </button>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant='contained'
+            onClick={handleSubmit}
+            disabled={submitting}
+            sx={{
+              bgcolor: colors.light.primaryHex,
+              color: colors.light.primaryForegroundHex,
+              '&:hover': {
+                bgcolor: colors.light.primaryHex,
+                opacity: 0.8,
+              },
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+            }}
+          >
+            {submitting ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                Submitting...
+              </>
+            ) : (
+              'Submit Changes'
+            )}
+          </Button>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

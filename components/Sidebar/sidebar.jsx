@@ -1,14 +1,42 @@
 'use client';
-import './sidebar.css';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Divider,
+  Box,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  HouseIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  NotePencilIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  MapPinIcon,
+  UserIcon,
+  GearIcon,
+  CaretLeftIcon,
+} from '@phosphor-icons/react';
 
-export default function Sidebar() {
+const drawerWidth = 280;
+
+export default function Sidebar({ mobileOpen = false, onMobileClose }) {
   const [print, setPrint] = useState(true);
   const pathname = usePathname();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   useEffect(() => {
     const allowedPaths = [
       '/dashboard',
@@ -32,165 +60,177 @@ export default function Sidebar() {
 
   const { data: session, status } = useSession();
   if (status === 'loading') {
-    // return <div className="grid place-items-center h-screen text-xl font-extrabold">Loading...</div>;
     return null;
   }
+
   const currUser = session?.user?.userType;
+
+  const handleDrawerToggle = () => {
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
+
+  const menuItems = [
+    {
+      text: 'Home',
+      href: '/dashboard',
+      icon: <HouseIcon size={20} weight='regular' />,
+      roles: ['HOD', 'staff', 'admin'],
+    },
+    {
+      text: 'Create',
+      href: '/create',
+      icon: <PlusIcon size={20} weight='regular' />,
+      roles: ['HOD', 'staff'],
+    },
+    {
+      text: 'Status',
+      href: '/status',
+      icon: <MagnifyingGlassIcon size={20} weight='regular' />,
+      roles: ['HOD', 'staff'],
+    },
+    {
+      text: 'Update',
+      href: '/update',
+      icon: <NotePencilIcon size={20} weight='regular' />,
+      roles: ['HOD', 'staff'],
+    },
+    {
+      text: 'Approve',
+      href: '/approve',
+      icon: <CheckCircleIcon size={20} weight='regular' />,
+      roles: ['HOD', 'admin'],
+    },
+    {
+      text: 'Report',
+      href: '/report',
+      icon: <ChartBarIcon size={20} weight='regular' />,
+      roles: ['HOD', 'admin'],
+    },
+    {
+      text: 'Venue',
+      href: '/venues',
+      icon: <MapPinIcon size={20} weight='regular' />,
+      roles: ['admin'],
+    },
+    {
+      text: 'Profile',
+      href: '/profile',
+      icon: <UserIcon size={20} weight='regular' />,
+      roles: ['HOD', 'staff', 'admin'],
+    },
+  ];
+
+  const filteredMenuItems = menuItems.filter(item =>
+    item.roles.includes(currUser)
+  );
+
+  // Add Manage for Super Admin
+  if (session?.user?.isSuperAdmin === 1) {
+    filteredMenuItems.push({
+      text: 'Manage',
+      href: '/manage',
+      icon: <GearIcon size={20} weight='regular' />,
+      roles: ['admin'],
+    });
+  }
+
+  const drawer = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {isMobile && (
+          <IconButton onClick={handleDrawerToggle}>
+            <CaretLeftIcon size={24} weight='regular' />
+          </IconButton>
+        )}
+      </Box>
+      <List sx={{ flexGrow: 1, pt: 1 }}>
+        {filteredMenuItems.map(item => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              component={Link}
+              href={item.href}
+              selected={pathname === item.href}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.contrastText',
+                  },
+                },
+                mx: 1,
+                mb: 0.5,
+                borderRadius: 1,
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+
+  if (!print) {
+    return null;
+  }
+
   return (
-    <div className='sidebar-container bg-white'>
-      {print && (
-        <>
-          <input
-            hidden
-            className='check-icon'
-            id='check-icon'
-            name='check-icon'
-            type='checkbox'
-          />
-          <label className='icon-menu' htmlFor='check-icon'>
-            <div className='bar bar--1'></div>
-            <div className='bar bar--2'></div>
-            <div className='bar bar--3'></div>
-          </label>
-          <div className='overlay'>
-            <ul className='menu-list'>
-              <Link
-                className={`menu-list-item ${pathname === '/dashboard' ? 'opt-active' : ''}`}
-                href='/dashboard'
-              >
-                <Image
-                  src='/assets/icons/home.png'
-                  className='menu-list-icon'
-                  width={25}
-                  height={25}
-                  alt=''
-                />
-                Home
-              </Link>
-              {(currUser === 'HOD' || currUser === 'staff') && (
-                <>
-                  <Link
-                    className={`menu-list-item ${pathname === '/create' ? 'opt-active' : ''}`}
-                    href='/create'
-                  >
-                    <Image
-                      src='/assets/icons/create.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Create
-                  </Link>
-                  <Link
-                    className={`menu-list-item ${pathname === '/status' ? 'opt-active' : ''}`}
-                    href='/status'
-                  >
-                    <Image
-                      src='/assets/icons/status.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Status
-                  </Link>
-                  <Link
-                    className={`menu-list-item ${pathname === '/update' ? 'opt-active' : ''}`}
-                    href='/update'
-                  >
-                    <Image
-                      src='/assets/icons/update.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Update
-                  </Link>
-                </>
-              )}
-              {(currUser === 'HOD' || currUser === 'admin') && (
-                <>
-                  <Link
-                    className={`menu-list-item ${pathname === '/approve' ? 'opt-active' : ''}`}
-                    href='/approve'
-                  >
-                    <Image
-                      src='/assets/icons/approve.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Approve
-                  </Link>
-                  <Link
-                    className={`menu-list-item ${pathname === '/report' ? 'opt-active' : ''}`}
-                    href='/report'
-                  >
-                    <Image
-                      src='/assets/icons/report.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Report
-                  </Link>
-                </>
-              )}
-              {currUser === 'admin' && (
-                <>
-                  <Link
-                    className={`menu-list-item ${pathname === '/venues' ? 'opt-active' : ''}`}
-                    href='/venues'
-                  >
-                    <Image
-                      src='/assets/icons/venue.png'
-                      className='menu-list-icon'
-                      width={25}
-                      height={25}
-                      alt=''
-                    />
-                    Venue
-                  </Link>
-                </>
-              )}
-              <Link
-                className={`menu-list-item ${pathname === '/profile' ? 'opt-active' : ''}`}
-                href='/profile'
-              >
-                <Image
-                  src='/assets/icons/profile.png'
-                  className='menu-list-icon'
-                  width={25}
-                  height={25}
-                  alt=''
-                />
-                Profile
-              </Link>
-              {session?.user?.isSuperAdmin === 1 ? (
-                <Link
-                  className={`menu-list-item ${pathname === '/manage' ? 'opt-active' : ''}`}
-                  href='/manage'
-                >
-                  <Image
-                    src='/assets/icons/manage.png'
-                    className='menu-list-icon'
-                    width={25}
-                    height={25}
-                    alt=''
-                  />
-                  Manage
-                </Link>
-              ) : (
-                <></>
-              )}{' '}
-            </ul>
-          </div>
-        </>
-      )}
-    </div>
+    <Box
+      component='nav'
+      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+      aria-label='navigation menu'
+    >
+      {/* Mobile drawer */}
+      <Drawer
+        variant='temporary'
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            mt: { xs: '64px', sm: '64px' }, // Account for AppBar height
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop drawer */}
+      <Drawer
+        variant='permanent'
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            mt: '64px', // Account for AppBar height
+            border: 'none',
+            backgroundColor: 'background.paper',
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
 }
