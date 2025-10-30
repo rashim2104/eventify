@@ -9,13 +9,11 @@ import dynamic from 'next/dynamic';
 import { Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { zoomPlugin } from '@react-pdf-viewer/zoom';
-import * as pdfjs from 'pdfjs-dist';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import '@/components/CreateForm/Form.css';
 
 // Initialize PDF.js worker after importing
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Dynamically import components that require browser APIs
 const Viewer = dynamic(() => import('react-viewer'), {
@@ -28,7 +26,6 @@ const PDFViewer = dynamic(
 );
 
 // Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 import {
   societies,
