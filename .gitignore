@@ -37,3 +37,17 @@ next.config.js
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.cursor/rules/pacakge-rules.mdc
+.cursor/rules/ui-change-rule.mdc
+.env.prod
+docs/01-codebase-analysis.md
+docs/02-security-audit.md
+docs/03-architecture-improvements.md
+docs/04-deployment-guide.md
+docs/05-testing-strategy.md
+docs/06-action-plan-summary.md
+docs/07-ant-design-migration-guide.md
+docs/08-component-mapping-reference.md
+docs/09-implementation-examples.md
+docs/10-consolidated-todo-list.md
+docs/README.md
