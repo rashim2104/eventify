@@ -28,9 +28,6 @@ yarn-error.log*
 .env*.local
 .env
 
-# next.js config
-next.config.js
-
 # vercel
 .vercel
 
