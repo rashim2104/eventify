@@ -1,0 +1,17 @@
+services:
+  app:
+    image: eventify:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Default PORT for Next.js
+      - PORT=3000
+      # Provide your cloud Mongo connection string in .env as MONGODB_URI
+      # e.g., MONGODB_URI=mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/eventify
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+# No local MongoDB service here; app connects to your cloud Mongo via MONGODB_URI

@@ -1,28 +1,28 @@
-import puppeteer from "puppeteer";
-import { connectMongoDB } from "@/lib/mongodb";
-import Events from "@/models/events";
-import { authenticate } from "@/lib/authenticate";
-import { logger } from "@/lib/logger";
+import { chromium } from 'playwright';
+import { connectMongoDB } from '@/lib/mongodb';
+import Events from '@/models/events';
+import { authenticate } from '@/lib/authenticate';
+import { logger } from '@/lib/logger';
 
 async function waitForNetworkIdle(page, timeout = 30000) {
   try {
-    await page.waitForNetworkIdle({ idleTime: 500, timeout });
+    await page.waitForLoadState('networkidle', { timeout });
   } catch (error) {
     console.warn('Network idle timeout:', error);
-    // Continue execution even if network idle times out
   }
 }
 
 export async function POST(req) {
   let browser = null;
   let page = null;
-  const ACTION = "Generate PDF";
+  let user = null;
+  const ACTION = 'Generate PDF';
 
   try {
     const { eventId } = await req.json();
-    const user = await authenticate(req);
+    user = await authenticate(req);
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
       });
     }
@@ -30,27 +30,24 @@ export async function POST(req) {
     await connectMongoDB();
     const eventData = await Events.findById(eventId);
     if (!eventData) {
-      return new Response(JSON.stringify({ error: "Event not found" }), {
+      return new Response(JSON.stringify({ error: 'Event not found' }), {
         status: 404,
       });
     }
 
-    // Launch browser with specific configuration
-    browser = await puppeteer.launch({
-      headless: 'new',
+    browser = await chromium.launch({
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu'
+        '--disable-gpu',
       ],
-      ignoreHTTPSErrors: true,
-      timeout: 60000
     });
 
     // Create new page with error handling
     page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
+    await page.setViewportSize({ width: 1200, height: 800 });
 
     // Set longer timeouts for navigation
     page.setDefaultNavigationTimeout(60000);
@@ -183,11 +180,13 @@ export async function POST(req) {
         <body>
           <div class="header">
             <img 
-              src="${eventData.college === "SIT"
-                ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png"
-                : eventData.college === "SEC"
-                  ? "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png"
-                  : "https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png"}"
+              src="${
+                eventData.college === 'SIT'
+                  ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png'
+                  : eventData.college === 'SEC'
+                    ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png'
+                    : 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png'
+              }"
               alt="Header Logo"
             />
           </div>
@@ -220,39 +219,43 @@ export async function POST(req) {
 
           <h2>Stakeholders</h2>
           <ul>
-            ${eventData.eventData.eventStakeholders
-              ? eventData.eventData.eventStakeholders
-                .map((stakeholder) => `<li>${stakeholder}</li>`)
-                .join("")
-              : "<li>N/A</li>"
+            ${
+              eventData.eventData.eventStakeholders
+                ? eventData.eventData.eventStakeholders
+                    .map(stakeholder => `<li>${stakeholder}</li>`)
+                    .join('')
+                : '<li>N/A</li>'
             }
           </ul>
 
           <h2>Event Coordinators</h2>
           <div class="coordinator-grid">
-            ${eventData.eventData.eventCoordinators
-              ? eventData.eventData.eventCoordinators
-                .map(
-                  (coordinator) => `
+            ${
+              eventData.eventData.eventCoordinators
+                ? eventData.eventData.eventCoordinators
+                    .map(
+                      coordinator => `
                     <div class="coordinator-item">
                       <p><strong>${coordinator.coordinatorName}</strong> (${coordinator.coordinatorRole})</p>
                       <p>${coordinator.coordinatorMail}</p>
                       <p>${coordinator.coordinatorPhone}</p>
                     </div>
                   `
-                )
-                .join("")
-              : "<p>N/A</p>"
+                    )
+                    .join('')
+                : '<p>N/A</p>'
             }
           </div>
 
-          ${eventData.eventData.eventResourcePerson && eventData.eventData.eventResourcePerson.length > 0 
-            ? `
+          ${
+            eventData.eventData.eventResourcePerson &&
+            eventData.eventData.eventResourcePerson.length > 0
+              ? `
               <h2>Resource Persons</h2>
               <div class="resource-person-grid">
                 ${eventData.eventData.eventResourcePerson
                   .map(
-                    (person) => `
+                    person => `
                       <div class="resource-person-item">
                         <p><strong>${person.ResourcePersonName}</strong> (${person.ResourcePersonDesgn})</p>
                         <p>${person.ResourcePersonMail}</p>
@@ -261,73 +264,79 @@ export async function POST(req) {
                       </div>
                     `
                   )
-                  .join("")
-                }
+                  .join('')}
               </div>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.eventData.Budget 
-            ? `
+          ${
+            eventData.eventData.Budget
+              ? `
               <h2>Budget Information</h2>
               <p><span class="section-title">Budget:</span> ₹${eventData.eventData.Budget}</p>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.eventData.fileUrl.poster 
-            ? `
+          ${
+            eventData.eventData.fileUrl.poster
+              ? `
               <h2>Event Poster</h2>
               <div class="image-container">
-                ${/\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
-                  ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
-                  : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
+                ${
+                  /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
+                    ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
+                    : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
                 }
               </div>
             `
-            : ''
+              : ''
           }
 
-          ${eventData.postEventData
-            ? `
+          ${
+            eventData.postEventData
+              ? `
               <h2>Post Event Documentation</h2>
-              ${eventData.postEventData.fileUrl?.geoPhotos && eventData.postEventData.fileUrl.geoPhotos.length > 0
-                ? `
+              ${
+                eventData.postEventData.fileUrl?.geoPhotos &&
+                eventData.postEventData.fileUrl.geoPhotos.length > 0
+                  ? `
                   <h3>Event Photos</h3>
                   <div class="image-container">
                     ${eventData.postEventData.fileUrl.geoPhotos
-                      .map(photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`)
-                      .join("")
-                    }
+                      .map(
+                        photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`
+                      )
+                      .join('')}
                   </div>
                 `
-                : ''
+                  : ''
               }
-              ${eventData.postEventData.fileUrl?.report
-                ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
-                : ''
+              ${
+                eventData.postEventData.fileUrl?.report
+                  ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
+                  : ''
               }
-              ${eventData.postEventData.fileUrl?.financialCommitments
-                ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
-                : ''
+              ${
+                eventData.postEventData.fileUrl?.financialCommitments
+                  ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
+                  : ''
               }
             `
-            : ''
+              : ''
           }
 
           <div class="footer">
-            Generated by Eventify • ${new Date().toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
+            Generated by Eventify • ${new Date().toLocaleString('en-IN', {
+              timeZone: 'Asia/Kolkata',
             })}
           </div>
         </body>
       </html>
     `;
 
-    await page.setContent(htmlContent, {
-      waitUntil: ['networkidle0', 'domcontentloaded', 'load']
-    });
+    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
 
     // Wait for network to be idle
     await waitForNetworkIdle(page);
@@ -337,10 +346,13 @@ export async function POST(req) {
       return Promise.all(
         Array.from(document.images)
           .filter(img => !img.complete)
-          .map(img => new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve;
-          }))
+          .map(
+            img =>
+              new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
+              })
+          )
       );
     });
 
@@ -352,15 +364,13 @@ export async function POST(req) {
         top: '0.5in',
         right: '0.5in',
         bottom: '0.5in',
-        left: '0.5in'
+        left: '0.5in',
       },
-      displayHeaderFooter: true,
       footerTemplate: `
         <div style="width: 100%; font-size: 8px; padding: 0 20px; color: #666; display: flex; justify-content: flex-end;">
           <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
       `,
-      timeout: 120000 // Increased timeout for PDF generation
     });
 
     // Close browser resources properly
@@ -371,7 +381,7 @@ export async function POST(req) {
         console.warn('Error closing page:', err);
       }
     }
-    
+
     if (browser) {
       try {
         await browser.close();
@@ -389,14 +399,13 @@ export async function POST(req) {
 
     return new Response(pdfBuffer, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${eventData.eventData.EventName}.pdf"`,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${eventData.eventData.EventName}.pdf"`,
       },
     });
-
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    
+
     // Cleanup resources in case of error
     if (page) {
       try {
@@ -405,7 +414,7 @@ export async function POST(req) {
         console.warn('Error closing page during cleanup:', err);
       }
     }
-    
+
     if (browser) {
       try {
         await browser.close();
@@ -415,15 +424,14 @@ export async function POST(req) {
     }
 
     await logger(
-      user?._id || "UNKNOWN",
+      user?._id || 'UNKNOWN',
       ACTION,
-      "PDF Generation Failed: " + error.message,
+      'PDF Generation Failed: ' + error.message,
       500
     );
 
-    return new Response(
-      JSON.stringify({ error: "Failed to generate PDF" }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: 'Failed to generate PDF' }), {
+      status: 500,
+    });
   }
 }

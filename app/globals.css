@@ -5,6 +5,325 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 * {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* ========================================
+   Eventify Color Theme - shadcn/ui Gray
+   Modern, accessible color palette for educational institutions
+   ======================================== */
+
+/* Root color variables */
+:root {
+  /* Main colors */
+  --color-primary: oklch(65% 0.096 247);
+  --color-primary-50: oklch(98.5% 0.004 247);
+  --color-primary-100: oklch(96.5% 0.008 247);
+  --color-primary-200: oklch(92.5% 0.016 247);
+  --color-primary-300: oklch(86.5% 0.032 247);
+  --color-primary-400: oklch(78.5% 0.048 247);
+  --color-primary-500: oklch(65% 0.096 247);
+  --color-primary-600: oklch(55% 0.096 247);
+  --color-primary-700: oklch(45% 0.096 247);
+  --color-primary-800: oklch(35% 0.096 247);
+  --color-primary-900: oklch(25% 0.096 247);
+  --color-primary-950: oklch(15% 0.096 247);
+
+  --color-secondary: oklch(64% 0.128 142);
+  --color-secondary-50: oklch(98.5% 0.008 142);
+  --color-secondary-100: oklch(96% 0.016 142);
+  --color-secondary-200: oklch(91% 0.032 142);
+  --color-secondary-300: oklch(84% 0.064 142);
+  --color-secondary-400: oklch(74% 0.096 142);
+  --color-secondary-500: oklch(64% 0.128 142);
+  --color-secondary-600: oklch(54% 0.128 142);
+  --color-secondary-700: oklch(44% 0.128 142);
+  --color-secondary-800: oklch(34% 0.128 142);
+  --color-secondary-900: oklch(24% 0.128 142);
+  --color-secondary-950: oklch(14% 0.128 142);
+
+  --color-accent: oklch(64% 0.192 85);
+  --color-accent-50: oklch(98.5% 0.012 85);
+  --color-accent-100: oklch(96% 0.024 85);
+  --color-accent-200: oklch(91% 0.048 85);
+  --color-accent-300: oklch(84% 0.096 85);
+  --color-accent-400: oklch(74% 0.144 85);
+  --color-accent-500: oklch(64% 0.192 85);
+  --color-accent-600: oklch(54% 0.192 85);
+  --color-accent-700: oklch(44% 0.192 85);
+  --color-accent-800: oklch(34% 0.192 85);
+  --color-accent-900: oklch(24% 0.192 85);
+  --color-accent-950: oklch(14% 0.192 85);
+
+  /* Semantic colors */
+  --color-success: oklch(52% 0.144 142);
+  --color-success-50: oklch(96% 0.024 142);
+  --color-success-100: oklch(90% 0.048 142);
+  --color-success-200: oklch(82% 0.072 142);
+  --color-success-300: oklch(72% 0.096 142);
+  --color-success-400: oklch(62% 0.12 142);
+  --color-success-500: oklch(52% 0.144 142);
+  --color-success-600: oklch(45% 0.144 142);
+  --color-success-700: oklch(38% 0.144 142);
+  --color-success-800: oklch(32% 0.144 142);
+  --color-success-900: oklch(26% 0.144 142);
+  --color-success-950: oklch(20% 0.144 142);
+
+  --color-warning: oklch(58% 0.16 85);
+  --color-warning-50: oklch(98% 0.016 85);
+  --color-warning-100: oklch(95% 0.032 85);
+  --color-warning-200: oklch(88% 0.064 85);
+  --color-warning-300: oklch(78% 0.096 85);
+  --color-warning-400: oklch(68% 0.128 85);
+  --color-warning-500: oklch(58% 0.16 85);
+  --color-warning-600: oklch(50% 0.16 85);
+  --color-warning-700: oklch(42% 0.16 85);
+  --color-warning-800: oklch(35% 0.16 85);
+  --color-warning-900: oklch(28% 0.16 85);
+  --color-warning-950: oklch(21% 0.16 85);
+
+  --color-error: oklch(62% 0.12 25);
+  --color-error-50: oklch(98% 0.012 25);
+  --color-error-100: oklch(95% 0.024 25);
+  --color-error-200: oklch(90% 0.048 25);
+  --color-error-300: oklch(82% 0.072 25);
+  --color-error-400: oklch(72% 0.096 25);
+  --color-error-500: oklch(62% 0.12 25);
+  --color-error-600: oklch(52% 0.12 25);
+  --color-error-700: oklch(42% 0.12 25);
+  --color-error-800: oklch(35% 0.12 25);
+  --color-error-900: oklch(28% 0.12 25);
+  --color-error-950: oklch(21% 0.12 25);
+
+  --color-info: oklch(62% 0.128 247);
+  --color-info-50: oklch(98% 0.008 247);
+  --color-info-100: oklch(95% 0.016 247);
+  --color-info-200: oklch(90% 0.032 247);
+  --color-info-300: oklch(82% 0.064 247);
+  --color-info-400: oklch(72% 0.096 247);
+  --color-info-500: oklch(62% 0.128 247);
+  --color-info-600: oklch(52% 0.128 247);
+  --color-info-700: oklch(42% 0.128 247);
+  --color-info-800: oklch(32% 0.128 247);
+  --color-info-900: oklch(22% 0.128 247);
+  --color-info-950: oklch(12% 0.128 247);
+
+  /* Background colors */
+  --color-bg-primary: oklch(99% 0.001 247);
+  --color-bg-secondary: oklch(97.5% 0.002 247);
+  --color-bg-tertiary: oklch(95% 0.004 247);
+  --color-bg-muted: oklch(90% 0.006 247);
+
+  /* Text colors */
+  --color-text-primary: oklch(8% 0.01 247);
+  --color-text-secondary: oklch(50% 0.01 247);
+  --color-text-muted: oklch(65% 0.01 247);
+  --color-text-subtle: oklch(80% 0.008 247);
+
+  /* Border colors */
+  --color-border: oklch(95% 0.004 247);
+  --color-border-secondary: oklch(90% 0.006 247);
+  --color-border-strong: oklch(80% 0.008 247);
+
+  /* Surface colors (for cards, modals, etc.) */
+  --color-surface: oklch(99% 0.001 247);
+  --color-surface-secondary: oklch(97.5% 0.002 247);
+  --color-surface-tertiary: oklch(95% 0.004 247);
+
+  /* Legacy support - keeping old neutral naming for backward compatibility */
+  --color-neutral-50: oklch(99% 0.001 247);
+  --color-neutral-100: oklch(97.5% 0.002 247);
+  --color-neutral-200: oklch(95% 0.004 247);
+  --color-neutral-300: oklch(90% 0.006 247);
+  --color-neutral-400: oklch(80% 0.008 247);
+  --color-neutral-500: oklch(65% 0.01 247);
+  --color-neutral-600: oklch(50% 0.01 247);
+  --color-neutral-700: oklch(35% 0.01 247);
+  --color-neutral-800: oklch(25% 0.01 247);
+  --color-neutral-900: oklch(15% 0.01 247);
+  --color-neutral-950: oklch(8% 0.01 247);
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+/* Text utilities */
+.text-primary {
+  color: var(--color-text-primary);
+}
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+.text-muted {
+  color: var(--color-text-muted);
+}
+.text-subtle {
+  color: var(--color-text-subtle);
+}
+
+/* Background utilities */
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+.bg-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+.bg-muted {
+  background-color: var(--color-bg-muted);
+}
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-surface-secondary {
+  background-color: var(--color-surface-secondary);
+}
+.bg-surface-tertiary {
+  background-color: var(--color-surface-tertiary);
+}
+
+/* Border utilities */
+.border {
+  border-color: var(--color-border);
+}
+.border-secondary {
+  border-color: var(--color-border-secondary);
+}
+.border-strong {
+  border-color: var(--color-border-strong);
+}
+
+/* ========================================
+   Component-specific styles
+   ======================================== */
+
+/* Button styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-50);
+  border: 1px solid var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-50);
+  border: 1px solid var(--color-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-600);
+  border-color: var(--color-secondary-600);
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: var(--color-accent-50);
+  border: 1px solid var(--color-accent);
+}
+
+.btn-accent:hover {
+  background-color: var(--color-accent-600);
+  border-color: var(--color-accent-600);
+}
+
+/* Card styles */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  padding: 1rem;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-footer {
+  background-color: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  padding: 1rem;
+}
+
+/* Form styles */
+.form-input {
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.form-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-color: var(--color-primary);
+}
+
+.form-label {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+/* Status indicators */
+.status-success {
+  color: var(--color-success);
+}
+
+.status-warning {
+  color: var(--color-warning);
+}
+
+.status-error {
+  color: var(--color-error);
+}
+
+.status-info {
+  color: var(--color-info);
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+}
+
+.badge-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-50);
+}
+
+.badge-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-50);
+}
+
+.badge-success {
+  background-color: var(--color-success);
+  color: var(--color-success-50);
+}
+
+.badge-warning {
+  background-color: var(--color-warning);
+  color: var(--color-warning-950);
+}
+
+.badge-error {
+  background-color: var(--color-error);
+  color: var(--color-error-50);
 }

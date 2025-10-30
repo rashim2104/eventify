@@ -1,10 +1,10 @@
 'use client';
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
-import { useState, useEffect, useRef } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+import { useState, useEffect, useRef } from 'react';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Worker } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
@@ -12,14 +12,14 @@ import { zoomPlugin } from '@react-pdf-viewer/zoom';
 import * as pdfjs from 'pdfjs-dist';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-import "@/components/CreateForm/Form.css";
+import '@/components/CreateForm/Form.css';
 
 // Initialize PDF.js worker after importing
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Dynamically import components that require browser APIs
 const Viewer = dynamic(() => import('react-viewer'), {
-  ssr: false
+  ssr: false,
 });
 
 const PDFViewer = dynamic(
@@ -36,13 +36,13 @@ import {
   ieeeSocietiesShort,
   clubs,
   clubsShort,
-} from "@/public/data/data";
-import CalvenView from "../Calendar/calvenView";
+} from '@/public/data/data';
+import CalvenView from '../Calendar/calvenView';
 
 function ViewEvent(props) {
   const [eventOrigin, setEventOrigin] = useState();
   const [eventSociety, setEventSociety] = useState(props.dept);
-  const [currSoc, setCurrSoc] = useState("");
+  const [currSoc, setCurrSoc] = useState('');
   const [isEdit, setIsEdit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -50,7 +50,7 @@ function ViewEvent(props) {
   const { data: session, status } = useSession();
   const statusEvent = props.data.status;
   const comment =
-    props.data.comment === "" ? "No Comments" : props.data.comment;
+    props.data.comment === '' ? 'No Comments' : props.data.comment;
   const [fileUrl, setFileUrl] = useState({ ...props.data.eventData.fileUrl });
   const [tempFileUrl, setTempFileUrl] = useState({
     ...props.data.eventData.fileUrl,
@@ -67,29 +67,29 @@ function ViewEvent(props) {
     getValues,
     formState: { errors, isValid },
   } = useForm({
-    mode: "all",
+    mode: 'all',
     defaultValues: {
       ...props.eventData,
       StartTime: props.eventData.StartTime
         ? new Date(
-          new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .substring(0, 16)
-        : "",
+            new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .substring(0, 16)
+        : '',
       EndTime: props.eventData.EndTime
         ? new Date(
-          new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .substring(0, 16)
-        : "",
+            new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .substring(0, 16)
+        : '',
     },
   });
 
   // Add check for client-side execution
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -97,35 +97,35 @@ function ViewEvent(props) {
   useEffect(() => {
     if (props.data?.dept && ieeeSocietiesShort?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 2, true);
+      setValue('EventOrganizer', 2, true);
       setEventOrigin(2);
-      setEventSociety("IEEE");
+      setEventSociety('IEEE');
     }
     if (props.data?.dept && clubsShort?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 3, true);
+      setValue('EventOrganizer', 3, true);
       setEventOrigin(3);
       setEventSociety(props.data.dept);
     }
     if (props.data?.dept && societies?.includes(props.data.dept)) {
       setCurrSoc(props.data.dept);
-      setValue("EventOrganizer", 2, true);
+      setValue('EventOrganizer', 2, true);
       setEventOrigin(2);
       setEventSociety(props.data.dept);
     }
-    if (props.eventData?.EventOrganizer === "4") {
-      setCurrSoc(props.data?.dept || "");
+    if (props.eventData?.EventOrganizer === '4') {
+      setCurrSoc(props.data?.dept || '');
     }
     SetVenueSpecs({
-      isEventOnCampus: props.eventData?.eventLocation === "On-Campus",
-      isEventOnline: props.eventData?.EventVenue === "online",
+      isEventOnCampus: props.eventData?.eventLocation === 'On-Campus',
+      isEventOnline: props.eventData?.EventVenue === 'online',
     });
   }, [props.data, props.eventData, setValue]);
 
   useEffect(() => {
     if (props.eventData) {
-      setValue("videoLinks", props.eventData.videoLinks || "");
-      setValue("amountSpent", props.eventData.amountSpent || "");
+      setValue('videoLinks', props.eventData.videoLinks || '');
+      setValue('amountSpent', props.eventData.amountSpent || '');
     }
   }, [isValid, errors, props, setValue]);
 
@@ -150,13 +150,13 @@ function ViewEvent(props) {
 
   const downloadPDF = (blob, filename) => {
     if (typeof window === 'undefined') return;
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
     link.download = filename;
     link.click();
   };
 
-  const checkImageDimensions = (file) => {
+  const checkImageDimensions = file => {
     return new Promise((resolve, reject) => {
       if (!isClient) {
         resolve(true);
@@ -169,7 +169,7 @@ function ViewEvent(props) {
         resolve(width >= 800 && height >= 400);
       };
       tempImg.onerror = () => {
-        reject(new Error("Failed to load image"));
+        reject(new Error('Failed to load image'));
       };
       tempImg.src = URL.createObjectURL(file);
     });
@@ -177,10 +177,10 @@ function ViewEvent(props) {
 
   const generatePDF = async () => {
     try {
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ eventId: props.data._id }),
       });
@@ -192,7 +192,7 @@ function ViewEvent(props) {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = `Event_Report - ${props.data.ins_id} ${props.data.eventData.EventName}.pdf`;
       link.click();
@@ -205,22 +205,24 @@ function ViewEvent(props) {
   };
 
   const [formStep, setFormStep] = useState(0);
-  const [hasResourcePersons, setHasResourcePersons] = useState(props.data.eventData.isResourcePerson);
+  const [hasResourcePersons, setHasResourcePersons] = useState(
+    props.data.eventData.isResourcePerson
+  );
   const options = [
     {
       index: 0,
-      value: "Internal Stakeholders",
-      label: "Internal Stakeholders",
+      value: 'Internal Stakeholders',
+      label: 'Internal Stakeholders',
     },
     {
       index: 1,
-      value: "External Stakeholders",
-      label: "External Stakeholders",
+      value: 'External Stakeholders',
+      label: 'External Stakeholders',
     },
     {
       index: 2,
-      value: "International Stakeholders",
-      label: "International Stakeholders",
+      value: 'International Stakeholders',
+      label: 'International Stakeholders',
     },
   ];
   const {
@@ -228,7 +230,7 @@ function ViewEvent(props) {
     append: coordinatorappend,
     remove: coordinatorremove,
   } = useFieldArray({
-    name: "eventCoordinators",
+    name: 'eventCoordinators',
     control,
   });
   const {
@@ -236,7 +238,7 @@ function ViewEvent(props) {
     append: resourcepersonappend,
     remove: resourcepersonremove,
   } = useFieldArray({
-    name: "eventResourcePerson",
+    name: 'eventResourcePerson',
     control,
   });
 
@@ -245,7 +247,7 @@ function ViewEvent(props) {
     append: sponsorappend,
     remove: sponsorremove,
   } = useFieldArray({
-    name: "eventSponsors",
+    name: 'eventSponsors',
     control,
   });
 
@@ -253,14 +255,14 @@ function ViewEvent(props) {
     isEventOnline: false,
     isEventOnCampus: false,
   });
-  const isSponsored = watch("isSponsored");
+  const isSponsored = watch('isSponsored');
 
-  const handleVenueChange = (venue) => {
+  const handleVenueChange = venue => {
     if (venue.length === 0) {
-      toast.error("Please select venue");
+      toast.error('Please select venue');
       return;
     }
-    const transformedData = venue.map((item) => ({
+    const transformedData = venue.map(item => ({
       venueId: item.venueId,
       reservationDate: item.date,
       reservationSession: item.session,
@@ -270,31 +272,31 @@ function ViewEvent(props) {
     completeFormStep();
   };
 
-  const submitForm = async (eventData) => {
+  const submitForm = async eventData => {
     setIsSubmitting(true);
     const user_id = session?.user?._id;
-    let dept = "";
+    let dept = '';
     let college = session?.user?.college;
     eventData = {
       ...eventData,
       fileUrl,
       venueList,
       eventVenueAddInfo,
-      EventVenue: venueSpecs.isEventOnline ? "online" : "offline",
-      eventLocation: venueSpecs.isEventOnCampus ? "On-Campus" : "Off-Campus",
+      EventVenue: venueSpecs.isEventOnline ? 'online' : 'offline',
+      eventLocation: venueSpecs.isEventOnCampus ? 'On-Campus' : 'Off-Campus',
     };
     if (eventOrigin == 1 || eventOrigin == 5) {
       dept = session?.user?.dept;
     } else if (eventOrigin == 2) {
-      if (eventSociety === "IEEE") {
+      if (eventSociety === 'IEEE') {
         dept = currSoc;
-        college = "common";
+        college = 'common';
       } else {
         dept = eventSociety;
       }
     } else if (eventOrigin == 3) {
       dept = eventSociety;
-      college = "common";
+      college = 'common';
     } else if (eventOrigin == 4) {
       dept = currSoc;
     }
@@ -302,10 +304,10 @@ function ViewEvent(props) {
     const currStatus = props.data.status;
     const _id = props.data._id;
     const userType = session?.user?.userType;
-    const status = await fetch("/api/editEvent", {
-      method: "POST",
+    const status = await fetch('/api/editEvent', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         _id,
@@ -319,25 +321,25 @@ function ViewEvent(props) {
     });
     if (status.ok) {
       completeFormStep();
-      router.replace("/status");
-      toast.success("Event Updated Successfully");
+      router.replace('/status');
+      toast.success('Event Updated Successfully');
     } else {
-      toast.error("Error Updating Event!");
+      toast.error('Error Updating Event!');
     }
     setIsSubmitting(false);
   };
 
   const prevForm = () => {
-    setFormStep((curr) => curr - 1);
+    setFormStep(curr => curr - 1);
   };
 
   const deleteForm = async () => {
     const _id = props.data._id;
 
-    const response = await fetch("/api/deleteEvent", {
-      method: "POST",
+    const response = await fetch('/api/deleteEvent', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         _id,
@@ -345,13 +347,13 @@ function ViewEvent(props) {
     });
 
     if (response.ok) {
-      toast.success("Event deleted successfully");
-      router.replace("/status");
+      toast.success('Event deleted successfully');
+      router.replace('/status');
     } else {
-      toast.error("Error Deleting Event!");
+      toast.error('Error Deleting Event!');
     }
   };
-  const handleFileChange = (e) => {
+  const handleFileChange = e => {
     e.preventDefault();
     setFile(null);
     let file;
@@ -360,13 +362,13 @@ function ViewEvent(props) {
       file = e.target.files[0];
       fileType = file.type;
     }
-    const validImageTypes = ["image/gif", "image/jpeg", "image/png"];
-    const validFileTypes = [...validImageTypes, "application/pdf"];
+    const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
+    const validFileTypes = [...validImageTypes, 'application/pdf'];
 
     if (file && validFileTypes.includes(fileType) && file.size <= 5000000) {
       setFile(file);
     } else {
-      toast.error("Please select an image or PDF file under 5MB.");
+      toast.error('Please select an image or PDF file under 5MB.');
     }
   };
   const handleDelUpload = async (e, action) => {
@@ -374,32 +376,32 @@ function ViewEvent(props) {
     if (!file) return;
     setUploading(true);
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("oldFileName", tempFileUrl[action]);
-    formData.append("id", props.data._id);
-    formData.append("action", action);
+    formData.append('file', file);
+    formData.append('oldFileName', tempFileUrl[action]);
+    formData.append('id', props.data._id);
+    formData.append('action', action);
     try {
-      const response = await fetch("/api/s3-delupload", {
-        method: "POST",
+      const response = await fetch('/api/s3-delupload', {
+        method: 'POST',
         body: formData,
       });
       if (response.ok) {
         const data = await response.json();
         // location.reload();
-        if (action === "poster") {
-          setFileUrl((prevState) => ({ ...prevState, poster: data.message }));
-          setTempFileUrl((prevState) => ({
+        if (action === 'poster') {
+          setFileUrl(prevState => ({ ...prevState, poster: data.message }));
+          setTempFileUrl(prevState => ({
             ...prevState,
-            poster: "",
+            poster: '',
           }));
         } else {
-          setFileUrl((prevState) => ({
+          setFileUrl(prevState => ({
             ...prevState,
             sanctionLetter: data.message,
           }));
-          setTempFileUrl((prevState) => ({
+          setTempFileUrl(prevState => ({
             ...prevState,
-            sanctionLetter: "",
+            sanctionLetter: '',
           }));
         }
       }
@@ -413,18 +415,18 @@ function ViewEvent(props) {
   const validateStep0 = () => {
     if (!isValid) {
       const errors = [];
-      if (!watch("EventName")) errors.push("Event Name");
-      if (!watch("EventType.eventType")) errors.push("Event Type");
-      if (!watch("EventObjective")) errors.push("Event Objective");
-      if (!watch("EventVenue")) errors.push("Event Venue");
-      if (!watch("eventLocation")) errors.push("Event Location");
-      if (!watch("StartTime")) errors.push("Start Date & Time");
-      if (!watch("EndTime")) errors.push("End Date & Time");
-      if (!watch("EventDuration")) errors.push("Event Duration");
-      if (fileUrl.poster === "") errors.push("Permission Letter");
+      if (!watch('EventName')) errors.push('Event Name');
+      if (!watch('EventType.eventType')) errors.push('Event Type');
+      if (!watch('EventObjective')) errors.push('Event Objective');
+      if (!watch('EventVenue')) errors.push('Event Venue');
+      if (!watch('eventLocation')) errors.push('Event Location');
+      if (!watch('StartTime')) errors.push('Start Date & Time');
+      if (!watch('EndTime')) errors.push('End Date & Time');
+      if (!watch('EventDuration')) errors.push('Event Duration');
+      if (fileUrl.poster === '') errors.push('Permission Letter');
 
       if (errors.length > 0) {
-        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        toast.error(`Please fill in required fields: ${errors.join(', ')}`);
         return false;
       }
     }
@@ -433,13 +435,16 @@ function ViewEvent(props) {
 
   const validateStep1 = () => {
     if (!isValid) {
-      if (isEventVenueOnline === "offline" && isEventVenueOffCampus === "On-Campus") {
+      if (
+        isEventVenueOnline === 'offline' &&
+        isEventVenueOffCampus === 'On-Campus'
+      ) {
         if (venueList.length === 0) {
-          toast.error("Please select at least one venue");
+          toast.error('Please select at least one venue');
           return false;
         }
       } else if (!eventVenueAddInfo) {
-        toast.error("Please provide venue details");
+        toast.error('Please provide venue details');
         return false;
       }
     }
@@ -449,15 +454,19 @@ function ViewEvent(props) {
   const validateStep2 = () => {
     if (!isValid) {
       const errors = [];
-      const coordinators = watch("eventCoordinators");
+      const coordinators = watch('eventCoordinators');
       coordinators.forEach((coord, index) => {
-        if (!coord.coordinatorName) errors.push(`Coordinator ${index + 1} Name`);
-        if (!coord.coordinatorMail) errors.push(`Coordinator ${index + 1} Email`);
-        if (!coord.coordinatorPhone) errors.push(`Coordinator ${index + 1} Phone`);
-        if (!coord.coordinatorRole) errors.push(`Coordinator ${index + 1} Role`);
+        if (!coord.coordinatorName)
+          errors.push(`Coordinator ${index + 1} Name`);
+        if (!coord.coordinatorMail)
+          errors.push(`Coordinator ${index + 1} Email`);
+        if (!coord.coordinatorPhone)
+          errors.push(`Coordinator ${index + 1} Phone`);
+        if (!coord.coordinatorRole)
+          errors.push(`Coordinator ${index + 1} Role`);
       });
       if (errors.length > 0) {
-        toast.error(`Please fill in coordinator details: ${errors.join(", ")}`);
+        toast.error(`Please fill in coordinator details: ${errors.join(', ')}`);
         return false;
       }
     }
@@ -466,21 +475,30 @@ function ViewEvent(props) {
 
   const validateStep3 = () => {
     if (hasResourcePersons === null) {
-      toast.error("Please select whether there are resource persons for the event");
+      toast.error(
+        'Please select whether there are resource persons for the event'
+      );
       return false;
     }
     if (hasResourcePersons && !isValid) {
       const errors = [];
       resourcepersonfields.forEach((_, index) => {
         const person = watch(`eventResourcePerson.${index}`);
-        if (!person.ResourcePersonName) errors.push(`Resource Person ${index + 1} Name`);
-        if (!person.ResourcePersonMail) errors.push(`Resource Person ${index + 1} Email`);
-        if (!person.ResourcePersonPhone) errors.push(`Resource Person ${index + 1} Phone`);
-        if (!person.ResourcePersonDesgn) errors.push(`Resource Person ${index + 1} Designation`);
-        if (!person.ResourcePersonAddr) errors.push(`Resource Person ${index + 1} Address`);
+        if (!person.ResourcePersonName)
+          errors.push(`Resource Person ${index + 1} Name`);
+        if (!person.ResourcePersonMail)
+          errors.push(`Resource Person ${index + 1} Email`);
+        if (!person.ResourcePersonPhone)
+          errors.push(`Resource Person ${index + 1} Phone`);
+        if (!person.ResourcePersonDesgn)
+          errors.push(`Resource Person ${index + 1} Designation`);
+        if (!person.ResourcePersonAddr)
+          errors.push(`Resource Person ${index + 1} Address`);
       });
       if (errors.length > 0) {
-        toast.error(`Please fill in resource person details: ${errors.join(", ")}`);
+        toast.error(
+          `Please fill in resource person details: ${errors.join(', ')}`
+        );
         return false;
       }
     }
@@ -490,23 +508,26 @@ function ViewEvent(props) {
   const validateStep4 = () => {
     if (!isValid) {
       const errors = [];
-      if (!watch("eventStakeholders") || watch("eventStakeholders").length === 0) {
-        errors.push("Event Stakeholders");
+      if (
+        !watch('eventStakeholders') ||
+        watch('eventStakeholders').length === 0
+      ) {
+        errors.push('Event Stakeholders');
       }
-      if (!watch("isSponsored")) {
-        errors.push("Sponsorship Status");
+      if (!watch('isSponsored')) {
+        errors.push('Sponsorship Status');
       }
-      if (watch("isSponsored") === "true") {
-        if (!watch("Budget")) errors.push("Budget");
-        if (fileUrl.sanctionLetter === "") errors.push("Sanction Letter");
-        const sponsors = watch("eventSponsors") || [];
+      if (watch('isSponsored') === 'true') {
+        if (!watch('Budget')) errors.push('Budget');
+        if (fileUrl.sanctionLetter === '') errors.push('Sanction Letter');
+        const sponsors = watch('eventSponsors') || [];
         sponsors.forEach((sponsor, index) => {
           if (!sponsor.name) errors.push(`Sponsor ${index + 1} Name`);
           if (!sponsor.address) errors.push(`Sponsor ${index + 1} Address`);
         });
       }
       if (errors.length > 0) {
-        toast.error(`Please fill in required fields: ${errors.join(", ")}`);
+        toast.error(`Please fill in required fields: ${errors.join(', ')}`);
         return false;
       }
     }
@@ -536,8 +557,8 @@ function ViewEvent(props) {
     }
 
     if (isValid) {
-      setFormStep((curr) => curr + 1);
-      toast.success("Proceeding to next step");
+      setFormStep(curr => curr + 1);
+      toast.success('Proceeding to next step');
     }
   };
 
@@ -548,31 +569,31 @@ function ViewEvent(props) {
     visible: false,
     activeImage: null,
     width: 0,
-    height: 0
+    height: 0,
   });
 
   const [navbarHeight, setNavbarHeight] = useState(0);
   const navRef = useRef(null);
 
-  const handleImageView = (imageUrl) => {
+  const handleImageView = imageUrl => {
     if (!isClient) return;
 
     const tempImg = new Image();
     tempImg.src = imageUrl;
-    
+
     tempImg.onload = () => {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = (window.innerHeight - navbarHeight) * 0.9;
-      
+
       let width = tempImg.naturalWidth;
       let height = tempImg.naturalHeight;
-      
+
       if (width > maxWidth) {
         const ratio = maxWidth / width;
         width = maxWidth;
         height = height * ratio;
       }
-      
+
       if (height > maxHeight) {
         const ratio = maxHeight / height;
         height = maxHeight;
@@ -583,7 +604,7 @@ function ViewEvent(props) {
         visible: true,
         activeImage: imageUrl,
         width,
-        height
+        height,
       });
     };
   };
@@ -594,13 +615,13 @@ function ViewEvent(props) {
     if (url.endsWith('.pdf')) {
       const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
       return (
-        <div className="media-container">
-          <div className="pdf-container">
+        <div className='media-container'>
+          <div className='pdf-container'>
             <iframe
               src={googleDocsUrl}
-              width="100%"
-              height="600"
-              frameBorder="0"
+              width='100%'
+              height='600'
+              frameBorder='0'
               allowFullScreen
             />
           </div>
@@ -610,11 +631,11 @@ function ViewEvent(props) {
 
     return (
       <div>
-        <div className="image-container">
+        <div className='image-container'>
           <Image
             height={400}
             width={600}
-            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+            className='rounded-md cursor-pointer hover:opacity-90 transition-opacity'
             src={url}
             alt={`${type} preview`}
             onClick={() => handleImageView(url)}
@@ -626,156 +647,158 @@ function ViewEvent(props) {
 
   return (
     <>
-      <form onSubmit={handleSubmit(submitForm)} className="form relative">
-        <div className="flex absolute top-16 right-10 gap-3">
+      <form onSubmit={handleSubmit(submitForm)} className='form relative'>
+        <div className='flex absolute top-16 right-10 gap-3'>
           {session?.user?._id === props.data.user_id &&
-            ((session?.user?.userType === "staff" &&
+            ((session?.user?.userType === 'staff' &&
               (statusEvent === 0 || statusEvent === 3 || statusEvent === 4)) ||
-              (session?.user?.userType === "HOD" &&
+              (session?.user?.userType === 'HOD' &&
                 (statusEvent === 1 || statusEvent === 4)) ||
-              (session?.user?.userType === "admin" && statusEvent === 2)) &&
+              (session?.user?.userType === 'admin' && statusEvent === 2)) &&
             formStep !== 5 &&
             new Date(props.data.eventData.EndTime) > new Date() && (
               <div
-                className="cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center"
+                className='cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center'
                 onClick={() => {
-                  setIsEdit((prevIsEdit) => !prevIsEdit);
+                  setIsEdit(prevIsEdit => !prevIsEdit);
                   toast.info(
                     !isEdit
-                      ? "You can edit the details now!"
-                      : "Editing is disabled."
+                      ? 'You can edit the details now!'
+                      : 'Editing is disabled.'
                   );
                 }}
               >
                 <Image
-                  src={"/assets/icons/edit.png"}
+                  src={'/assets/icons/edit.png'}
                   width={40}
                   height={40}
-                  alt="logo"
+                  alt='logo'
                 />
               </div>
             )}
           <div
-            className="cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center"
+            className='cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center'
             onClick={generatePDF}
           >
             <Image
-              src={"/assets/images/download.png"}
+              src={'/assets/images/download.png'}
               width={40}
               height={40}
-              alt="logo"
+              alt='logo'
             />
           </div>
           {session?.user?._id === props.data.user_id &&
-            ((session?.user?.userType === "staff" && statusEvent === 0) ||
-              (session?.user?.userType === "HOD" && statusEvent === 1) ||
-              (session?.user?.userType === "admin" && statusEvent === 2)) &&
+            ((session?.user?.userType === 'staff' && statusEvent === 0) ||
+              (session?.user?.userType === 'HOD' && statusEvent === 1) ||
+              (session?.user?.userType === 'admin' && statusEvent === 2)) &&
             formStep != 5 && (
               <div
-                className="cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center"
+                className='cursor-pointer bg-[#FE914E] rounded-full w-16 h-16 flex items-center justify-center'
                 onClick={() => {
                   if (
-                    window.confirm("Are you sure you want to delete this event?")
+                    window.confirm(
+                      'Are you sure you want to delete this event?'
+                    )
                   ) {
                     deleteForm();
                   }
                 }}
               >
                 <Image
-                  src={"/assets/icons/delete.png"}
+                  src={'/assets/icons/delete.png'}
                   width={40}
                   height={40}
-                  alt="logo"
+                  alt='logo'
                 />
               </div>
             )}
         </div>
         {formStep < 5 && (
-          <div className="status-panel">
+          <div className='status-panel'>
             {formStep >= 1 && (
               <button
-                className="prevButton btn-style"
-                id="preBtn"
-                type="button"
+                className='prevButton btn-style'
+                id='preBtn'
+                type='button'
                 onClick={prevForm}
               >
                 <Image
-                  src="/assets/icons/back.svg"
+                  src='/assets/icons/back.svg'
                   width={15}
                   height={15}
-                  alt="back"
+                  alt='back'
                 />
               </button>
             )}
-            <div className="progress-box">
+            <div className='progress-box'>
               Step {formStep + 1} of 5
               <progress
-                id="step"
+                id='step'
                 value={(formStep + 1) * 20}
-                max="100"
+                max='100'
               ></progress>
             </div>
           </div>
         )}
-        {props.data.status !== "" && (
-          <div className="status-panel">
-            <div className="status-box bg-orange-200 p-2 rounded">
-              <h2 className="font-bold">
+        {props.data.status !== '' && (
+          <div className='status-panel'>
+            <div className='status-box bg-orange-200 p-2 rounded'>
+              <h2 className='font-bold'>
                 {props.data.status == 0
-                  ? "Pending"
+                  ? 'Pending'
                   : props.data.status == 1
-                    ? "Approved by HOD/Society Incharge/Club Incharge"
+                    ? 'Approved by HOD/Society Incharge/Club Incharge'
                     : props.data.status == 2
                       ? `${props.data.ins_id}`
                       : props.data.status == 3
-                        ? "Marked for Change by by HOD/Society Incharge/Club Incharge"
+                        ? 'Marked for Change by by HOD/Society Incharge/Club Incharge'
                         : props.data.status == 4
-                          ? "Marked for Change by IQAC Member"
+                          ? 'Marked for Change by IQAC Member'
                           : props.data.status == 5
-                            ? "Principal Approval Pending"
-                            : "Rejected"}
+                            ? 'Principal Approval Pending'
+                            : 'Rejected'}
               </h2>
             </div>
           </div>
         )}
         {formStep === 0 && (
-          <section className="first">
-            <h1 className="form-section-title">Basic Details</h1>
-            <div className="input-container">
-              <label htmlFor="comments">
+          <section className='first'>
+            <h1 className='form-section-title'>Basic Details</h1>
+            <div className='input-container'>
+              <label htmlFor='comments'>
                 {statusEvent === 3
-                  ? "Comment by HOD/Society Incharge/Club Incharge"
+                  ? 'Comment by HOD/Society Incharge/Club Incharge'
                   : statusEvent === 4
-                    ? "Commented by IQAC Member"
-                    : "Comment"}
+                    ? 'Commented by IQAC Member'
+                    : 'Comment'}
               </label>
               <input
                 disabled
                 value={comment}
-                className="other-input mt-6 mb-4 border-0.5 border-black"
-                type="text"
-                id="comments"
+                className='other-input mt-6 mb-4 border-0.5 border-black'
+                type='text'
+                id='comments'
               />
               <Controller
-                name="EventOrganizer"
+                name='EventOrganizer'
                 control={control}
                 defaultValue={1}
                 disabled={!isEdit}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <div className="space-box">
-                    <label htmlFor="eventOrganizer">Event Organizer </label>
-                    <select {...field} className="round">
-                      <option value="" disabled selected>
+                  <div className='space-box'>
+                    <label htmlFor='eventOrganizer'>Event Organizer </label>
+                    <select {...field} className='round'>
+                      <option value='' disabled selected>
                         Select an option
                       </option>
-                      <option value="1">Department</option>
-                      <option value="5">AICTE Idea Lab</option>
-                      <option value="2">
+                      <option value='1'>Department</option>
+                      <option value='5'>AICTE Idea Lab</option>
+                      <option value='2'>
                         Professional Societies (IEEE,ISTE,EDS)
                       </option>
-                      <option value="3">Clubs and Cells</option>
-                      <option value="4">Other</option>
+                      <option value='3'>Clubs and Cells</option>
+                      <option value='4'>Other</option>
                     </select>
 
                     {setEventOrigin(field.value)}
@@ -787,12 +810,12 @@ function ViewEvent(props) {
                             {...field}
                             value={eventSociety}
                             disabled={!isEdit}
-                            onChange={(e) => {
+                            onChange={e => {
                               setEventSociety(e.target.value);
                             }}
-                            className="round"
+                            className='round'
                           >
-                            <option value="" disabled selected>
+                            <option value='' disabled selected>
                               Select an Option
                             </option>
                             {societies.map((option, index) => (
@@ -805,16 +828,16 @@ function ViewEvent(props) {
                       </div>
                     )}
                     {eventOrigin == 2 &&
-                      (eventSociety === "IEEE" ||
+                      (eventSociety === 'IEEE' ||
                         ieeeSocieties.includes(eventSociety)) && (
                         <div>
                           <select
                             disabled={!isEdit}
                             value={currSoc}
-                            onChange={(e) => setCurrSoc(e.target.value)}
-                            className="round"
+                            onChange={e => setCurrSoc(e.target.value)}
+                            className='round'
                           >
-                            <option value="" disabled>
+                            <option value='' disabled>
                               Select an Option
                             </option>
                             {ieeeSocieties.map((option, index) => (
@@ -834,12 +857,12 @@ function ViewEvent(props) {
                           disabled={!isEdit}
                           {...field}
                           value={eventSociety}
-                          onChange={(e) => {
+                          onChange={e => {
                             setEventSociety(e.target.value);
                           }}
-                          className="round"
+                          className='round'
                         >
-                          <option value="" disabled selected>
+                          <option value='' disabled selected>
                             Select an Option
                           </option>
                           {clubs.map((option, index) => (
@@ -852,14 +875,14 @@ function ViewEvent(props) {
                     )}
                     {field.value == 4 && (
                       <div>
-                        <label className="w-full">
+                        <label className='w-full'>
                           <input
                             value={currSoc}
                             disabled={!isEdit}
-                            className="other-input mt-6 border-0.5 border-black"
-                            placeholder="Please specify"
+                            className='other-input mt-6 border-0.5 border-black'
+                            placeholder='Please specify'
                             required
-                            onChange={(e) => setCurrSoc(e.target.value)}
+                            onChange={e => setCurrSoc(e.target.value)}
                           />
                         </label>
                       </div>
@@ -868,57 +891,57 @@ function ViewEvent(props) {
                 )}
               />
             </div>
-            <div className="input-container">
-              <label htmlFor="EventName" className="label">
+            <div className='input-container'>
+              <label htmlFor='EventName' className='label'>
                 Event Name
               </label>
               <input
-                type="text"
-                id="EventName"
+                type='text'
+                id='EventName'
                 disabled={!isEdit}
-                placeholder="Enter The Name Of The Event"
-                name="EventName"
-                {...register("EventName", { required: true })}
+                placeholder='Enter The Name Of The Event'
+                name='EventName'
+                {...register('EventName', { required: true })}
                 required
-              // onChange={(e) => alert(e.target.value)}
+                // onChange={(e) => alert(e.target.value)}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventName && <span>*This field is required</span>}
               </p>
             </div>
 
             <div>
               <Controller
-                name="EventType.eventType"
+                name='EventType.eventType'
                 disabled={!isEdit}
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <div className="space-box">
-                    <label htmlFor="eventType">Event Type </label>
-                    <select {...field} className="round">
-                      <option value="">Select an option</option>
-                      <option value="Workshop">Workshop</option>
-                      <option value="FDP">FDP</option>
-                      <option value="Bootcamp">BootCamp</option>
-                      <option value="Conference">Conference</option>
-                      <option value="other">Other</option>
+                  <div className='space-box'>
+                    <label htmlFor='eventType'>Event Type </label>
+                    <select {...field} className='round'>
+                      <option value=''>Select an option</option>
+                      <option value='Workshop'>Workshop</option>
+                      <option value='FDP'>FDP</option>
+                      <option value='Bootcamp'>BootCamp</option>
+                      <option value='Conference'>Conference</option>
+                      <option value='other'>Other</option>
                     </select>
-                    {field.value === "other" && (
-                      <div className="input-container">
+                    {field.value === 'other' && (
+                      <div className='input-container'>
                         <br />
                         <label>
                           <input
-                            type="text"
+                            type='text'
                             disabled={!isEdit}
-                            className="other-input"
-                            placeholder="Please specify"
-                            {...register("EventType.eventTypeOtherOption", {
+                            className='other-input'
+                            placeholder='Please specify'
+                            {...register('EventType.eventTypeOtherOption', {
                               required: true,
                             })}
                           />
                         </label>
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.EventType &&
                             errors.EventType.eventTypeOtherOption && (
                               <span>*This field is required</span>
@@ -931,49 +954,51 @@ function ViewEvent(props) {
               />
             </div>
 
-            <div className="text-area">
-              <label htmlFor="EventObj">Objective of the Event</label>
+            <div className='text-area'>
+              <label htmlFor='EventObj'>Objective of the Event</label>
               <textarea
-                {...register("EventObjective", { required: true })}
-                placeholder="Enter the objective"
+                {...register('EventObjective', { required: true })}
+                placeholder='Enter the objective'
                 disabled={!isEdit}
               ></textarea>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventObjective && <span>*This field is required</span>}
               </p>
             </div>
 
-            <div className="input-container">
-              <label htmlFor="EventName" className="label">
+            <div className='input-container'>
+              <label htmlFor='EventName' className='label'>
                 Expected Number of Participants
               </label>
               <input
                 disabled={!isEdit}
                 min={0}
-                type="number"
-                id="EventParticipants"
-                placeholder="Enter expected number of participants"
-                name="EventParticipants"
-                {...register("EventParticipants", { required: true, min: 0 })}
+                type='number'
+                id='EventParticipants'
+                placeholder='Enter expected number of participants'
+                name='EventParticipants'
+                {...register('EventParticipants', { required: true, min: 0 })}
               />
-              <p className="error-msg">
-                {errors.EventParticipants && <span>*This field is required</span>}
+              <p className='error-msg'>
+                {errors.EventParticipants && (
+                  <span>*This field is required</span>
+                )}
               </p>
             </div>
 
-            <div className="input-container">
-              <label className="label">Event Venue</label>
-              <div className="mt-4 flex flex-col gap-3 items-start">
-                <label htmlFor="EventVenueOnline" className="flex gap-3">
+            <div className='input-container'>
+              <label className='label'>Event Venue</label>
+              <div className='mt-4 flex flex-col gap-3 items-start'>
+                <label htmlFor='EventVenueOnline' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventVenueOnline"
-                    value="online"
+                    type='radio'
+                    id='EventVenueOnline'
+                    value='online'
                     disabled={!isEdit}
-                    name="EventVenue"
+                    name='EventVenue'
                     checked={venueSpecs.isEventOnline}
                     onChange={() =>
-                      SetVenueSpecs((prev) => ({
+                      SetVenueSpecs(prev => ({
                         ...prev,
                         isEventOnline: true,
                       }))
@@ -981,16 +1006,16 @@ function ViewEvent(props) {
                   />
                   Online
                 </label>
-                <label htmlFor="EventVenueOffline" className="flex gap-3">
+                <label htmlFor='EventVenueOffline' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventVenueOffline"
-                    value="offline"
-                    name="EventVenue"
+                    type='radio'
+                    id='EventVenueOffline'
+                    value='offline'
+                    name='EventVenue'
                     disabled={!isEdit}
                     checked={!venueSpecs.isEventOnline}
                     onChange={() =>
-                      SetVenueSpecs((prev) => ({
+                      SetVenueSpecs(prev => ({
                         ...prev,
                         isEventOnline: false,
                       }))
@@ -999,24 +1024,24 @@ function ViewEvent(props) {
                   Offline
                 </label>
               </div>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventVenue && <span>*This field is required</span>}
               </p>
             </div>
 
-            <div className="input-container">
-              <label className="label">Is Event On-campus?</label>
-              <div className="flex flex-col mt-4 gap-3 items-start ">
-                <label htmlFor="EventLocationOnCampus" className="flex gap-3">
+            <div className='input-container'>
+              <label className='label'>Is Event On-campus?</label>
+              <div className='flex flex-col mt-4 gap-3 items-start '>
+                <label htmlFor='EventLocationOnCampus' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventLocationOnCampus"
-                    value="On-Campus"
-                    name="eventLocation"
+                    type='radio'
+                    id='EventLocationOnCampus'
+                    value='On-Campus'
+                    name='eventLocation'
                     disabled={!isEdit}
                     checked={venueSpecs.isEventOnCampus}
                     onChange={() =>
-                      SetVenueSpecs((prev) => ({
+                      SetVenueSpecs(prev => ({
                         ...prev,
                         isEventOnCampus: true,
                       }))
@@ -1024,16 +1049,16 @@ function ViewEvent(props) {
                   />
                   Yes
                 </label>
-                <label htmlFor="EventLocationOffCampus" className="flex gap-3">
+                <label htmlFor='EventLocationOffCampus' className='flex gap-3'>
                   <input
-                    type="radio"
-                    id="EventLocationOffCampus"
-                    value="Off-Campus"
-                    name="eventLocation"
+                    type='radio'
+                    id='EventLocationOffCampus'
+                    value='Off-Campus'
+                    name='eventLocation'
                     disabled={!isEdit}
                     checked={!venueSpecs.isEventOnCampus}
                     onChange={() =>
-                      SetVenueSpecs((prev) => ({
+                      SetVenueSpecs(prev => ({
                         ...prev,
                         isEventOnCampus: false,
                       }))
@@ -1042,27 +1067,27 @@ function ViewEvent(props) {
                   No
                 </label>
               </div>
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.eventLocation && <span>*This field is required</span>}
               </p>
             </div>
 
             {fileUrl.poster && (
-              <div className="media-container">
-                <label className="media-label">Permission Letter:</label>
+              <div className='media-container'>
+                <label className='media-label'>Permission Letter:</label>
                 {renderMedia(fileUrl.poster)}
                 {session?.user?._id === props.data.user_id && (
-                  <div className="media-actions">
+                  <div className='media-actions'>
                     <button
-                      type="button"
+                      type='button'
                       disabled={!isEdit}
-                      className="btn-style"
+                      className='btn-style'
                       onClick={() => {
-                        setTempFileUrl((prevState) => ({
+                        setTempFileUrl(prevState => ({
                           ...prevState,
                           poster: fileUrl.poster,
                         }));
-                        setFileUrl((prevState) => ({ ...prevState, poster: "" }));
+                        setFileUrl(prevState => ({ ...prevState, poster: '' }));
                       }}
                     >
                       Replace Permission Letter
@@ -1072,71 +1097,72 @@ function ViewEvent(props) {
               </div>
             )}
             {/* Pushing code to git */}
-            {fileUrl.poster === "" && renderFileUpload("poster", "Permission Letter")}
+            {fileUrl.poster === '' &&
+              renderFileUpload('poster', 'Permission Letter')}
 
-            <div className="space-box">
+            <div className='space-box'>
               <label>Start Date & Time:</label>
               <input
-                name="eventStartDateTime"
-                type="datetime-local"
-                className="calander"
+                name='eventStartDateTime'
+                type='datetime-local'
+                className='calander'
                 disabled={!isEdit}
-                {...register("StartTime", { required: true })}
+                {...register('StartTime', { required: true })}
                 min={new Date().toISOString().substring(0, 16)}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.StartTime && <span>*This field is required</span>}
               </p>
             </div>
 
-            <div className="space-box">
+            <div className='space-box'>
               <label>End Date & Time:</label>
               <input
-                name="eventEndDateTime"
-                type="datetime-local"
-                className="calander"
+                name='eventEndDateTime'
+                type='datetime-local'
+                className='calander'
                 disabled={!isEdit}
-                {...register("EndTime", {
+                {...register('EndTime', {
                   required: true,
                   validate: {
-                    isAfterStartTime: (value) =>
-                      new Date(value) > new Date(getValues("StartTime")) ||
-                      "End time must be after start time",
+                    isAfterStartTime: value =>
+                      new Date(value) > new Date(getValues('StartTime')) ||
+                      'End time must be after start time',
                   },
                 })}
                 min={new Date().toISOString().substring(0, 16)}
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EndTime && <span>{errors.EndTime.message}</span>}
               </p>
             </div>
 
             <div
-              className="input-container"
-              style={{ display: "flex", flexDirection: "column" }}
+              className='input-container'
+              style={{ display: 'flex', flexDirection: 'column' }}
             >
-              <label htmlFor="EventDuration" className="label">
+              <label htmlFor='EventDuration' className='label'>
                 Event Duration (in hours)
               </label>
               <input
-                type="number"
-                id="EventDuration"
-                name="EventDuration"
-                placeholder="Enter The Duration Of The Event"
-                className="input"
+                type='number'
+                id='EventDuration'
+                name='EventDuration'
+                placeholder='Enter The Duration Of The Event'
+                className='input'
                 disabled={!isEdit}
-                {...register("EventDuration", { required: true, min: 0 })}
+                {...register('EventDuration', { required: true, min: 0 })}
                 required
               />
-              <p className="error-msg">
+              <p className='error-msg'>
                 {errors.EventDuration && <span>*This field is required</span>}
               </p>
             </div>
 
             <button
               onClick={completeFormStep}
-              type="button"
-              className="btn btn-style"
+              type='button'
+              className='btn btn-style'
             >
               Next
             </button>
@@ -1156,19 +1182,19 @@ function ViewEvent(props) {
                 />
               ) : (
                 <>
-                  <div className="input-container mb-3">
-                    <label htmlFor="eventVenueAddInfo" className="label">
+                  <div className='input-container mb-3'>
+                    <label htmlFor='eventVenueAddInfo' className='label'>
                       Event Venue
                     </label>
                     <input
-                      type="text"
-                      id="eventVenueAddInfo"
-                      placeholder="Enter The Event Venue"
-                      name="eventVenueAddInfo"
+                      type='text'
+                      id='eventVenueAddInfo'
+                      placeholder='Enter The Event Venue'
+                      name='eventVenueAddInfo'
                       disabled={!isEdit}
-                      {...register("eventVenueAddInfo", { required: true })}
+                      {...register('eventVenueAddInfo', { required: true })}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventVenueAddInfo && (
                         <span>*This field is required</span>
                       )}
@@ -1176,8 +1202,8 @@ function ViewEvent(props) {
                   </div>
                   <button
                     onClick={completeFormStep}
-                    type="button"
-                    className="btn btn-style"
+                    type='button'
+                    className='btn btn-style'
                   >
                     Next
                   </button>
@@ -1189,32 +1215,35 @@ function ViewEvent(props) {
 
         {formStep === 2 && (
           <section>
-            <h1 className="form-section-title">Coordinator Details</h1>
+            <h1 className='form-section-title'>Coordinator Details</h1>
             {coordinatorfields.map((field, index) => {
               return (
-                <div className="card" key={index}>
-                  <h4 style={{ color: "#bbb" }}>Coordinator {index + 1}</h4>
-                  <div className="input-container">
-                    <label htmlFor="CoordinatorName" className="label">
+                <div className='card' key={index}>
+                  <h4 style={{ color: '#bbb' }}>Coordinator {index + 1}</h4>
+                  <div className='input-container'>
+                    <label htmlFor='CoordinatorName' className='label'>
                       Coordinator Name
                     </label>
                     <input
-                      type="text"
+                      type='text'
                       disabled={!isEdit}
-                      id="CoordinatorName"
-                      name="CoordinatorName"
-                      placeholder="Enter The Name Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorName`, {
-                        required: "Coordinator Name is required",
-                        pattern: {
-                          value: /^[A-Za-z\s]+$/,
-                          message:
-                            "Invalid name. Please enter a valid name without any special characters or numbers.",
-                        },
-                      })}
+                      id='CoordinatorName'
+                      name='CoordinatorName'
+                      placeholder='Enter The Name Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorName`,
+                        {
+                          required: 'Coordinator Name is required',
+                          pattern: {
+                            value: /^[A-Za-z\s]+$/,
+                            message:
+                              'Invalid name. Please enter a valid name without any special characters or numbers.',
+                          },
+                        }
+                      )}
                       required
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorName && (
@@ -1228,25 +1257,28 @@ function ViewEvent(props) {
                     </p>
                   </div>
 
-                  <div className="input-container">
-                    <label htmlFor="CoordinatorMail" className="label">
+                  <div className='input-container'>
+                    <label htmlFor='CoordinatorMail' className='label'>
                       Coordinator E-mail
                     </label>
                     <input
-                      type="email"
-                      id="CoordinatorMail"
+                      type='email'
+                      id='CoordinatorMail'
                       disabled={!isEdit}
-                      name="CoordinatorMail"
-                      placeholder="Enter The Mail Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorMail`, {
-                        required: "Coordinator Mail is required",
-                        pattern: {
-                          value: /^\S+@\S+$/i,
-                          message: "Invalid email format",
-                        },
-                      })}
+                      name='CoordinatorMail'
+                      placeholder='Enter The Mail Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorMail`,
+                        {
+                          required: 'Coordinator Mail is required',
+                          pattern: {
+                            value: /^\S+@\S+$/i,
+                            message: 'Invalid email format',
+                          },
+                        }
+                      )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorMail && (
@@ -1260,28 +1292,28 @@ function ViewEvent(props) {
                     </p>
                   </div>
 
-                  <div className="input-container">
-                    <label htmlFor="CoordinatorPhone" className="label">
+                  <div className='input-container'>
+                    <label htmlFor='CoordinatorPhone' className='label'>
                       Coordinator Phone
                     </label>
                     <input
-                      type="tel"
-                      id="CoordinatorPhone"
-                      name="CoordinatorPhone"
+                      type='tel'
+                      id='CoordinatorPhone'
+                      name='CoordinatorPhone'
                       disabled={!isEdit}
-                      placeholder="Enter The No. Of The Coordinator"
+                      placeholder='Enter The No. Of The Coordinator'
                       {...register(
                         `eventCoordinators.${index}.coordinatorPhone`,
                         {
-                          required: "Coordinator Phone is required",
+                          required: 'Coordinator Phone is required',
                           pattern: {
                             value: /^[6-9]\d{9}$/,
-                            message: "Invalid phone number",
+                            message: 'Invalid phone number',
                           },
                         }
                       )}
                     />
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.eventCoordinators &&
                         errors.eventCoordinators[index] &&
                         errors.eventCoordinators[index].coordinatorPhone && (
@@ -1294,23 +1326,26 @@ function ViewEvent(props) {
                         )}
                     </p>
                   </div>
-                  <div className="input-container">
-                    <label htmlFor="CoordinatorRole" className="label">
+                  <div className='input-container'>
+                    <label htmlFor='CoordinatorRole' className='label'>
                       Designation
                     </label>
                     <input
-                      type="text"
-                      id="CoordinatorRole"
-                      name="CoordinatorRole"
+                      type='text'
+                      id='CoordinatorRole'
+                      name='CoordinatorRole'
                       disabled={!isEdit}
-                      placeholder="Enter The Designation Of The Coordinator"
-                      {...register(`eventCoordinators.${index}.coordinatorRole`, {
-                        required: true,
-                      })}
+                      placeholder='Enter The Designation Of The Coordinator'
+                      {...register(
+                        `eventCoordinators.${index}.coordinatorRole`,
+                        {
+                          required: true,
+                        }
+                      )}
                       required
                     />
 
-                    <p className="error-msg">
+                    <p className='error-msg'>
                       {errors.CoordinatorRole && (
                         <span>*This field is required</span>
                       )}
@@ -1320,8 +1355,8 @@ function ViewEvent(props) {
                   </div>
                   {index > 0 && (
                     <button
-                      type="button"
-                      id="minus1"
+                      type='button'
+                      id='minus1'
                       disabled={!isEdit}
                       onClick={() => coordinatorremove(index)}
                     >
@@ -1331,11 +1366,11 @@ function ViewEvent(props) {
                 </div>
               );
             })}
-            <div className="buttons">
+            <div className='buttons'>
               <button
-                type="button"
-                className="btn-style"
-                id="plus"
+                type='button'
+                className='btn-style'
+                id='plus'
                 disabled={!isEdit}
                 onClick={() => {
                   coordinatorappend({});
@@ -1345,8 +1380,8 @@ function ViewEvent(props) {
               </button>
               <button
                 onClick={completeFormStep}
-                type="button"
-                className="btn btn-style"
+                type='button'
+                className='btn btn-style'
               >
                 Next
               </button>
@@ -1356,20 +1391,22 @@ function ViewEvent(props) {
 
         {formStep === 3 && (
           <section>
-            <h1 className="form-section-title">Resource Person Details</h1>
-            <div className="input-container">
-              <label htmlFor="hasResourcePersons" className="label">
+            <h1 className='form-section-title'>Resource Person Details</h1>
+            <div className='input-container'>
+              <label htmlFor='hasResourcePersons' className='label'>
                 Are there any resource persons for the event?
               </label>
               <select
-                id="hasResourcePersons"
-                name="hasResourcePersons"
-                onChange={(e) => setHasResourcePersons(e.target.value === "yes")}
-                defaultValue={props.data.eventData.isResourcePerson ? "yes" : "no"}
+                id='hasResourcePersons'
+                name='hasResourcePersons'
+                onChange={e => setHasResourcePersons(e.target.value === 'yes')}
+                defaultValue={
+                  props.data.eventData.isResourcePerson ? 'yes' : 'no'
+                }
                 disabled={!isEdit}
               >
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value='yes'>Yes</option>
+                <option value='no'>No</option>
               </select>
             </div>
 
@@ -1377,107 +1414,113 @@ function ViewEvent(props) {
               <>
                 {resourcepersonfields.map((field, index) => {
                   return (
-                    <div className="card" key={index}>
-                      <h4 style={{ color: "#bbb" }}>Resource Person {index + 1}</h4>
-                      <div className="input-container">
+                    <div className='card' key={index}>
+                      <h4 style={{ color: '#bbb' }}>
+                        Resource Person {index + 1}
+                      </h4>
+                      <div className='input-container'>
                         <input
-                          type="text"
-                          id="ResourcePersonName"
+                          type='text'
+                          id='ResourcePersonName'
                           disabled={!isEdit}
-                          name="ResourcePersonName"
-                          placeholder="Enter The Name Of The ResourcePerson"
+                          name='ResourcePersonName'
+                          placeholder='Enter The Name Of The ResourcePerson'
                           {...register(
                             `eventResourcePerson.${index}.ResourcePersonName`,
                             {
-                              required: "Resource Person name is required",
+                              required: 'Resource Person name is required',
                               pattern: {
                                 value: /^[A-Za-z\s]+$/,
                                 message:
-                                  "Invalid name. Please enter a valid name without any special characters or numbers.",
+                                  'Invalid name. Please enter a valid name without any special characters or numbers.',
                               },
                             }
                           )}
                           required
                         />
 
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventResourcePerson &&
                             errors.eventResourcePerson[index] &&
-                            errors.eventResourcePerson[index].ResourcePersonName && (
+                            errors.eventResourcePerson[index]
+                              .ResourcePersonName && (
                               <span>
                                 {
-                                  errors.eventResourcePerson[index].ResourcePersonName
-                                    .message
+                                  errors.eventResourcePerson[index]
+                                    .ResourcePersonName.message
                                 }
                               </span>
                             )}
                         </p>
                       </div>
 
-                      <div className="input-container">
-                        <label htmlFor="ResourcePersonMail" className="label">
+                      <div className='input-container'>
+                        <label htmlFor='ResourcePersonMail' className='label'>
                           E-mail
                         </label>
                         <input
-                          type="email"
-                          id="ResourcePersonMail"
+                          type='email'
+                          id='ResourcePersonMail'
                           disabled={!isEdit}
-                          name="ResourcePersonMail"
-                          placeholder="Enter The Mail Of The ResourcePerson"
+                          name='ResourcePersonMail'
+                          placeholder='Enter The Mail Of The ResourcePerson'
                           {...register(
                             `eventResourcePerson.${index}.ResourcePersonMail`,
                             {
-                              required: "Resource Person Mail is required",
+                              required: 'Resource Person Mail is required',
                               pattern: {
                                 value: /^\S+@\S+$/i,
-                                message: "Invalid email address",
+                                message: 'Invalid email address',
                               },
                             }
                           )}
                           required
                         />
 
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventResourcePerson &&
                             errors.eventResourcePerson[index] &&
-                            errors.eventResourcePerson[index].ResourcePersonMail && (
+                            errors.eventResourcePerson[index]
+                              .ResourcePersonMail && (
                               <span>
                                 {
-                                  errors.eventResourcePerson[index].ResourcePersonMail
-                                    .message
+                                  errors.eventResourcePerson[index]
+                                    .ResourcePersonMail.message
                                 }
                               </span>
                             )}
                         </p>
                       </div>
 
-                      <div className="input-container">
-                        <label htmlFor="ResourcePersonPhone" className="label">
+                      <div className='input-container'>
+                        <label htmlFor='ResourcePersonPhone' className='label'>
                           Phone
                         </label>
                         <input
-                          type="tel"
-                          id="ResourcePersonPhone"
+                          type='tel'
+                          id='ResourcePersonPhone'
                           disabled={!isEdit}
-                          name="ResourcePersonPhone"
-                          placeholder="Enter The No. Of The ResourcePerson"
+                          name='ResourcePersonPhone'
+                          placeholder='Enter The No. Of The ResourcePerson'
                           {...register(
                             `eventResourcePerson.${index}.ResourcePersonPhone`,
                             {
-                              required: "Resource Person phone number is required",
+                              required:
+                                'Resource Person phone number is required',
                               pattern: {
                                 value: /^[6-9]\d{9}$/,
-                                message: "Invalid phone number",
+                                message: 'Invalid phone number',
                               },
                             }
                           )}
                           required
                         />
 
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventResourcePerson &&
                             errors.eventResourcePerson[index] &&
-                            errors.eventResourcePerson[index].ResourcePersonPhone && (
+                            errors.eventResourcePerson[index]
+                              .ResourcePersonPhone && (
                               <span>
                                 {
                                   errors.eventResourcePerson[index]
@@ -1488,27 +1531,28 @@ function ViewEvent(props) {
                         </p>
                       </div>
 
-                      <div className="input-container">
-                        <label htmlFor="ResourcePersonDesgn" className="label">
+                      <div className='input-container'>
+                        <label htmlFor='ResourcePersonDesgn' className='label'>
                           Designation
                         </label>
                         <input
-                          type="text"
-                          id="ResourcePersonDesgn"
+                          type='text'
+                          id='ResourcePersonDesgn'
                           disabled={!isEdit}
-                          name="ResourcePersonDesgn"
-                          placeholder="Enter The Designation Of The ResourcePerson"
+                          name='ResourcePersonDesgn'
+                          placeholder='Enter The Designation Of The ResourcePerson'
                           {...register(
                             `eventResourcePerson.${index}.ResourcePersonDesgn`,
-                            { required: "Designation is Required" }
+                            { required: 'Designation is Required' }
                           )}
                           required
                         />
 
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventResourcePerson &&
                             errors.eventResourcePerson[index] &&
-                            errors.eventResourcePerson[index].ResourcePersonDesgn && (
+                            errors.eventResourcePerson[index]
+                              .ResourcePersonDesgn && (
                               <span>
                                 {
                                   errors.eventResourcePerson[index]
@@ -1519,23 +1563,24 @@ function ViewEvent(props) {
                         </p>
                       </div>
 
-                      <div className="text-area">
-                        <label htmlFor="textarea">Official Address</label>
+                      <div className='text-area'>
+                        <label htmlFor='textarea'>Official Address</label>
                         <textarea
                           {...register(
                             `eventResourcePerson.${index}.ResourcePersonAddr`,
-                            { required: "Address is Required" }
+                            { required: 'Address is Required' }
                           )}
                           disabled={!isEdit}
                         ></textarea>
-                        <p className="error-msg">
+                        <p className='error-msg'>
                           {errors.eventResourcePerson &&
                             errors.eventResourcePerson[index] &&
-                            errors.eventResourcePerson[index].ResourcePersonAddr && (
+                            errors.eventResourcePerson[index]
+                              .ResourcePersonAddr && (
                               <span>
                                 {
-                                  errors.eventResourcePerson[index].ResourcePersonAddr
-                                    .message
+                                  errors.eventResourcePerson[index]
+                                    .ResourcePersonAddr.message
                                 }
                               </span>
                             )}
@@ -1544,8 +1589,8 @@ function ViewEvent(props) {
                       </div>
                       {index > 0 && (
                         <button
-                          type="button"
-                          id="minus2"
+                          type='button'
+                          id='minus2'
                           disabled={!isEdit}
                           onClick={() => resourcepersonremove(index)}
                         >
@@ -1555,11 +1600,11 @@ function ViewEvent(props) {
                     </div>
                   );
                 })}
-                <div className="buttons">
+                <div className='buttons'>
                   <button
-                    type="button"
+                    type='button'
                     disabled={!isEdit}
-                    className="btn-style"
+                    className='btn-style'
                     onClick={() => {
                       resourcepersonappend({});
                     }}
@@ -1568,8 +1613,8 @@ function ViewEvent(props) {
                   </button>
                   <button
                     onClick={completeFormStep}
-                    type="button"
-                    className="btn btn-style"
+                    type='button'
+                    className='btn btn-style'
                   >
                     Next
                   </button>
@@ -1580,8 +1625,8 @@ function ViewEvent(props) {
             {!hasResourcePersons && (
               <button
                 onClick={completeFormStep}
-                type="button"
-                className="btn btn-style"
+                type='button'
+                className='btn btn-style'
               >
                 Next
               </button>
@@ -1591,7 +1636,7 @@ function ViewEvent(props) {
 
         {formStep === 4 && (
           <section>
-            <h1 className="form-section-title">Budget Details</h1>
+            <h1 className='form-section-title'>Budget Details</h1>
             {/* <div>
               <Controller
                 name="eventLocation"
@@ -1631,27 +1676,29 @@ function ViewEvent(props) {
 
             <div>
               <Controller
-                name="eventStakeholders"
+                name='eventStakeholders'
                 control={control}
                 defaultValue={[]}
                 rules={{ required: true }}
                 render={({ field }) => (
                   <div>
-                    <label className="checkbox-box">Event Stakeholders : </label>
-                    {options.map((option) => (
-                      <div key={option.index} className="check-box">
-                        <label key={option.value} className="checkbox-label">
+                    <label className='checkbox-box'>
+                      Event Stakeholders :{' '}
+                    </label>
+                    {options.map(option => (
+                      <div key={option.index} className='check-box'>
+                        <label key={option.value} className='checkbox-label'>
                           <input
-                            type="checkbox"
+                            type='checkbox'
                             value={option.value}
                             disabled={!isEdit}
-                            onChange={(e) => {
+                            onChange={e => {
                               const { checked, value } = e.target;
                               if (checked) {
                                 field.onChange([...field.value, value]);
                               } else {
                                 field.onChange(
-                                  field.value.filter((val) => val !== value)
+                                  field.value.filter(val => val !== value)
                                 );
                               }
                             }}
@@ -1671,45 +1718,45 @@ function ViewEvent(props) {
               <div>
                 <label>
                   <input
-                    type="radio"
+                    type='radio'
                     disabled={!isEdit}
-                    {...register("isSponsored", { required: true })}
+                    {...register('isSponsored', { required: true })}
                     value={true}
                   />
                   Yes
                 </label>
                 <label>
                   <input
-                    type="radio"
+                    type='radio'
                     disabled={!isEdit}
-                    {...register("isSponsored", { required: true })}
+                    {...register('isSponsored', { required: true })}
                     value={false}
                   />
                   No
                 </label>
-                <p className="error-msg">
+                <p className='error-msg'>
                   {errors.isSponsored && <span>*This field is required</span>}
                 </p>
               </div>
             </div>
 
-            {isSponsored === "true" && (
+            {isSponsored === 'true' && (
               <div>
-                <div className="input-container">
-                  <label htmlFor="Budget" className="label">
+                <div className='input-container'>
+                  <label htmlFor='Budget' className='label'>
                     Budget Rs.
                   </label>
                   <input
-                    type="number"
-                    id="Budget"
-                    name="Budget"
-                    placeholder="Enter The Budget"
-                    className="input"
+                    type='number'
+                    id='Budget'
+                    name='Budget'
+                    placeholder='Enter The Budget'
+                    className='input'
                     disabled={!isEdit}
-                    {...register("Budget", { required: true, min: 0 })}
+                    {...register('Budget', { required: true, min: 0 })}
                     min={0}
                   />
-                  <p className="error-msg">
+                  <p className='error-msg'>
                     {errors.Budget && <span>*Invalid Budget</span>}
                   </p>
                 </div>
@@ -1717,24 +1764,24 @@ function ViewEvent(props) {
                 <br />
                 <br></br>
                 {sponsorfield.map((sponsor, index) => (
-                  <div key={index} className="card">
-                    <div className="space-box">
-                      <h4 style={{ color: "#bbb" }}>Sponsor {index + 1}</h4>
+                  <div key={index} className='card'>
+                    <div className='space-box'>
+                      <h4 style={{ color: '#bbb' }}>Sponsor {index + 1}</h4>
                     </div>
-                    <div className="input-container">
-                      <label htmlFor="eventSponsor" className="label">
+                    <div className='input-container'>
+                      <label htmlFor='eventSponsor' className='label'>
                         Sponsor name
                       </label>
                       <input
-                        type="text"
+                        type='text'
                         disabled={!isEdit}
-                        placeholder="Enter The Name Of The Sponsor"
+                        placeholder='Enter The Name Of The Sponsor'
                         {...register(`eventSponsors.${index}.name`, {
-                          required: "Sponsor name is Required",
+                          required: 'Sponsor name is Required',
                         })}
                         required
                       />
-                      <p className="error-msg">
+                      <p className='error-msg'>
                         {errors.eventSponsors &&
                           errors.eventSponsors[index] &&
                           errors.eventSponsors[index].name && (
@@ -1746,11 +1793,11 @@ function ViewEvent(props) {
                     </div>
                     <br />
 
-                    <div className="text-area">
-                      <label htmlFor="SponsorAddr">Sponsor Address</label>
+                    <div className='text-area'>
+                      <label htmlFor='SponsorAddr'>Sponsor Address</label>
                       <textarea
                         {...register(`eventSponsors.${index}.address`, {
-                          required: "Sponsor Address is Required",
+                          required: 'Sponsor Address is Required',
                         })}
                         disabled={!isEdit}
                       ></textarea>
@@ -1758,8 +1805,8 @@ function ViewEvent(props) {
                     <br />
                     {index > 0 && (
                       <button
-                        type="button"
-                        id="minus3"
+                        type='button'
+                        id='minus3'
                         disabled={!isEdit}
                         onClick={() => sponsorremove(index)}
                       >
@@ -1770,7 +1817,7 @@ function ViewEvent(props) {
                 ))}
                 <br />
                 <button
-                  type="button"
+                  type='button'
                   disabled={!isEdit}
                   onClick={() => {
                     sponsorappend({});
@@ -1780,31 +1827,33 @@ function ViewEvent(props) {
                 </button>
               </div>
             )}
-            {isSponsored === "true" && fileUrl.sanctionLetter === "" && (
+            {isSponsored === 'true' && fileUrl.sanctionLetter === '' && (
               <div>
                 <form>
                   <label>Sanction Letter: </label>
-                  <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
+                  <p className='text-sm text-gray-600'>
+                    Accepted formats: Images or PDF • Max size: 5MB
+                  </p>
                   {session.user._id === props.data.user_id && (
                     <>
                       <input
-                        type="file"
-                        accept="image/*,application/pdf"
+                        type='file'
+                        accept='image/*,application/pdf'
                         onChange={handleFileChange}
                       />
                       <button
-                        type="button"
+                        type='button'
                         disabled={!file || uploading || fileUrl.sanctionLetter}
-                        onClick={(e) => handleDelUpload(e, "sanctionLetter")}
+                        onClick={e => handleDelUpload(e, 'sanctionLetter')}
                       >
-                        {uploading ? "Uploading..." : "Upload"}
+                        {uploading ? 'Uploading...' : 'Upload'}
                       </button>
                     </>
                   )}
                 </form>
               </div>
             )}
-            {isSponsored && fileUrl.sanctionLetter !== "" && (
+            {isSponsored && fileUrl.sanctionLetter !== '' && (
               <div>
                 <br />
                 <label>Sanction Letter: </label>
@@ -1812,17 +1861,17 @@ function ViewEvent(props) {
                 {session.user._id === props.data.user_id && (
                   <>
                     <button
-                      type="button"
-                      className="mt-2 mb-2 btn-style"
+                      type='button'
+                      className='mt-2 mb-2 btn-style'
                       disabled={!isEdit}
                       onClick={() => {
-                        setTempFileUrl((prevState) => ({
+                        setTempFileUrl(prevState => ({
                           ...prevState,
                           sanctionLetter: fileUrl.sanctionLetter,
                         }));
-                        setFileUrl((prevState) => ({
+                        setFileUrl(prevState => ({
                           ...prevState,
-                          sanctionLetter: "",
+                          sanctionLetter: '',
                         }));
                       }}
                     >
@@ -1840,10 +1889,10 @@ function ViewEvent(props) {
                 }
                 submitForm(getValues());
               }}
-              className="btn btn-style"
+              className='btn btn-style'
               disabled={isSubmitting || !isEdit}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </section>
         )}
@@ -1860,7 +1909,7 @@ function ViewEvent(props) {
           rotatable
           downloadable
           noNavbar
-          className="custom-viewer"
+          className='custom-viewer'
           drag={false}
           noImgDetails
           changeable={false}
