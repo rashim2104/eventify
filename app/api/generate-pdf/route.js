@@ -1,20 +1,25 @@
-import { chromium } from 'playwright';
 import { connectMongoDB } from '@/lib/mongodb';
 import Events from '@/models/events';
 import { authenticate } from '@/lib/authenticate';
 import { logger } from '@/lib/logger';
 
-async function waitForNetworkIdle(page, timeout = 30000) {
+// Helper function to download image from URL
+async function downloadImage(url) {
   try {
-    await page.waitForLoadState('networkidle', { timeout });
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   } catch (error) {
-    console.warn('Network idle timeout:', error);
+    console.warn(`Failed to download image from ${url}:`, error);
+    return null;
   }
 }
 
 export async function POST(req) {
-  let browser = null;
-  let page = null;
+  let doc = null;
   let user = null;
   const ACTION = 'Generate PDF';
 
@@ -35,360 +40,408 @@ export async function POST(req) {
       });
     }
 
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
+    // Dynamically import pdfkit to avoid webpack bundling issues with font files
+    const PDFDocument = (await import('pdfkit')).default;
+
+    // Create PDF document
+    doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 36, bottom: 36, left: 36, right: 36 }, // 0.5in = 36pt
     });
 
-    // Create new page with error handling
-    page = await browser.newPage();
-    await page.setViewportSize({ width: 1200, height: 800 });
+    // Collect PDF data in a buffer
+    const chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('end', () => {}); // Buffer collection handled by promise
 
-    // Set longer timeouts for navigation
-    page.setDefaultNavigationTimeout(60000);
-    page.setDefaultTimeout(60000);
+    const pdfBufferPromise = new Promise((resolve, reject) => {
+      doc.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+      doc.on('error', reject);
+    });
 
-    // Your HTML content generation
-    const htmlContent = `
-      <html>
-        <head>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-            
-            body {
-              font-family: 'Roboto', Arial, sans-serif;
-              margin: 20px;
-              font-size: 11pt;
-              color: #2c3e50;
-              line-height: 1.4;
-            }
+    // Helper function to add heading
+    function addHeading(text, y, level = 2) {
+      const fontSize = level === 1 ? 16 : level === 2 ? 13 : 12;
+      doc.fontSize(fontSize);
+      doc.fillColor('#2c3e50');
+      doc.font('Helvetica-Bold');
+      const height = doc.heightOfString(text);
+      doc.text(text, doc.page.margins.left, y, {
+        align: level === 1 ? 'center' : 'left',
+      });
+      return height + 8;
+    }
 
-            h1, h2, h3 {
-              color: #2c3e50;
-              margin: 12px 0 8px 0;
-            }
+    // Track page count for footer
+    let pageCount = 1;
 
-            h1 {
-              font-size: 16pt;
-              text-align: center;
-              margin-top: 20px;
-            }
-
-            h2 {
-              font-size: 13pt;
-              color: #34495e;
-              border-bottom: 1px solid #bdc3c7;
-              padding-bottom: 4px;
-              margin-top: 16px;
-            }
-
-            h3 {
-              font-size: 12pt;
-              margin: 8px 0 4px 0;
-            }
-
-            p {
-              margin: 4px 0;
-            }
-
-            ul {
-              margin: 4px 0;
-              padding-left: 20px;
-            }
-
-            li {
-              margin: 2px 0;
-            }
-
-            .header {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-
-            .header img {
-              max-width: 300px;
-              height: auto;
-            }
-
-            .section-title {
-              font-weight: 500;
-              color: #2c3e50;
-            }
-
-            .event-info {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 8px;
-              margin-bottom: 12px;
-            }
-
-            .event-info p {
-              margin: 4px 0;
-            }
-
-            .coordinator-grid, .resource-person-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 8px;
-              margin: 8px 0;
-            }
-
-            .coordinator-item, .resource-person-item {
-              border: 1px solid #eee;
-              padding: 8px;
-              border-radius: 4px;
-              margin-bottom: 8px;
-            }
-
-            .image-container {
-              text-align: center;
-              margin: 12px 0;
-            }
-
-            .image-container img {
-              max-width: 400px;
-              max-height: 200px;
-              object-fit: contain;
-              border: 1px solid #eee;
-              border-radius: 4px;
-            }
-
-            .footer {
-              margin-top: 20px;
-              padding: 8px;
-              text-align: right;
-              font-size: 9pt;
-              color: #95a5a6;
-              border-top: 1px solid #eee;
-            }
-
-            .info-row {
-              margin: 4px 0;
-            }
-
-            .divider {
-              margin: 12px 0;
-              border-top: 1px solid #eee;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <img 
-              src="${
-                eventData.college === 'SIT'
-                  ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png'
-                  : eventData.college === 'SEC'
-                    ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png'
-                    : 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png'
-              }"
-              alt="Header Logo"
-            />
-          </div>
-
-          <h1>Event Report: ${eventData.eventData.EventName}</h1>
-
-          <div class="event-info">
-            <div class="info-row">
-              <span class="section-title">Event ID:</span> ${eventData.ins_id || 'N/A'}
-            </div>
-            <div class="info-row">
-              <span class="section-title">Department:</span> ${eventData.dept}
-            </div>
-            <div class="info-row">
-              <span class="section-title">Venue:</span> ${eventData.eventData.EventVenue}
-            </div>
-            <div class="info-row">
-              <span class="section-title">Duration:</span> ${eventData.eventData.EventDuration} hours
-            </div>
-            <div class="info-row">
-              <span class="section-title">Start:</span> ${new Date(eventData.eventData.StartTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-            </div>
-            <div class="info-row">
-              <span class="section-title">End:</span> ${new Date(eventData.eventData.EndTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-            </div>
-          </div>
-
-          <h2>Event Objective</h2>
-          <p>${eventData.eventData.EventObjective}</p>
-
-          <h2>Stakeholders</h2>
-          <ul>
-            ${
-              eventData.eventData.eventStakeholders
-                ? eventData.eventData.eventStakeholders
-                    .map(stakeholder => `<li>${stakeholder}</li>`)
-                    .join('')
-                : '<li>N/A</li>'
-            }
-          </ul>
-
-          <h2>Event Coordinators</h2>
-          <div class="coordinator-grid">
-            ${
-              eventData.eventData.eventCoordinators
-                ? eventData.eventData.eventCoordinators
-                    .map(
-                      coordinator => `
-                    <div class="coordinator-item">
-                      <p><strong>${coordinator.coordinatorName}</strong> (${coordinator.coordinatorRole})</p>
-                      <p>${coordinator.coordinatorMail}</p>
-                      <p>${coordinator.coordinatorPhone}</p>
-                    </div>
-                  `
-                    )
-                    .join('')
-                : '<p>N/A</p>'
-            }
-          </div>
-
-          ${
-            eventData.eventData.eventResourcePerson &&
-            eventData.eventData.eventResourcePerson.length > 0
-              ? `
-              <h2>Resource Persons</h2>
-              <div class="resource-person-grid">
-                ${eventData.eventData.eventResourcePerson
-                  .map(
-                    person => `
-                      <div class="resource-person-item">
-                        <p><strong>${person.ResourcePersonName}</strong> (${person.ResourcePersonDesgn})</p>
-                        <p>${person.ResourcePersonMail}</p>
-                        <p>${person.ResourcePersonPhone}</p>
-                        <p>${person.ResourcePersonAddr}</p>
-                      </div>
-                    `
-                  )
-                  .join('')}
-              </div>
-            `
-              : ''
-          }
-
-          ${
-            eventData.eventData.Budget
-              ? `
-              <h2>Budget Information</h2>
-              <p><span class="section-title">Budget:</span> ₹${eventData.eventData.Budget}</p>
-            `
-              : ''
-          }
-
-          ${
-            eventData.eventData.fileUrl.poster
-              ? `
-              <h2>Event Poster</h2>
-              <div class="image-container">
-                ${
-                  /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
-                    ? `<img src="${eventData.eventData.fileUrl.poster}" alt="Event Poster"/>`
-                    : `<a href="${eventData.eventData.fileUrl.poster}" target="_blank">View Poster</a>`
-                }
-              </div>
-            `
-              : ''
-          }
-
-          ${
-            eventData.postEventData
-              ? `
-              <h2>Post Event Documentation</h2>
-              ${
-                eventData.postEventData.fileUrl?.geoPhotos &&
-                eventData.postEventData.fileUrl.geoPhotos.length > 0
-                  ? `
-                  <h3>Event Photos</h3>
-                  <div class="image-container">
-                    ${eventData.postEventData.fileUrl.geoPhotos
-                      .map(
-                        photoUrl => `<img src="${photoUrl}" alt="Event Photo"/>`
-                      )
-                      .join('')}
-                  </div>
-                `
-                  : ''
-              }
-              ${
-                eventData.postEventData.fileUrl?.report
-                  ? `<p><strong>Report:</strong> <a href="${eventData.postEventData.fileUrl.report}" target="_blank">View Report</a></p>`
-                  : ''
-              }
-              ${
-                eventData.postEventData.fileUrl?.financialCommitments
-                  ? `<p><strong>Financial Documents:</strong> <a href="${eventData.postEventData.fileUrl.financialCommitments}" target="_blank">View Documents</a></p>`
-                  : ''
-              }
-            `
-              : ''
-          }
-
-          <div class="footer">
-            Generated by Eventify • ${new Date().toLocaleString('en-IN', {
-              timeZone: 'Asia/Kolkata',
-            })}
-          </div>
-        </body>
-      </html>
-    `;
-
-    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
-
-    // Wait for network to be idle
-    await waitForNetworkIdle(page);
-
-    // Ensure all images are loaded
-    await page.evaluate(() => {
-      return Promise.all(
-        Array.from(document.images)
-          .filter(img => !img.complete)
-          .map(
-            img =>
-              new Promise(resolve => {
-                img.onload = resolve;
-                img.onerror = resolve;
-              })
-          )
+    // Add footer to current page
+    const addFooter = () => {
+      const footerY = doc.page.height - doc.page.margins.bottom - 20;
+      doc.fontSize(9);
+      doc.fillColor('#95a5a6');
+      doc.font('Helvetica');
+      doc.text(
+        `Generated by Eventify • ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,
+        doc.page.margins.left,
+        footerY,
+        { align: 'right' }
       );
+    };
+
+    // Add footer when new page is added
+    doc.on('pageAdded', () => {
+      // Add footer to previous page before switching
+      if (pageCount > 1) {
+        doc.switchToPage(pageCount - 2);
+        addFooter();
+        doc.switchToPage(pageCount - 1);
+      }
+      pageCount++;
     });
 
-    // Generate PDF with explicit configuration
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in',
-      },
-      footerTemplate: `
-        <div style="width: 100%; font-size: 8px; padding: 0 20px; color: #666; display: flex; justify-content: flex-end;">
-          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-        </div>
-      `,
-    });
+    let yPosition = doc.page.margins.top;
 
-    // Close browser resources properly
-    if (page) {
+    // Header Logo
+    const logoUrl =
+      eventData.college === 'SIT'
+        ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png'
+        : eventData.college === 'SEC'
+          ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png'
+          : 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png';
+
+    const logoBuffer = await downloadImage(logoUrl);
+    if (logoBuffer) {
       try {
-        await page.close();
+        doc.image(
+          logoBuffer,
+          doc.page.margins.left +
+            (doc.page.width - doc.page.margins.left - doc.page.margins.right) /
+              2 -
+            150,
+          yPosition,
+          {
+            fit: [300, 100],
+            align: 'center',
+          }
+        );
+        yPosition += 120;
       } catch (err) {
-        console.warn('Error closing page:', err);
+        console.warn('Failed to add logo:', err);
+        yPosition += 20;
+      }
+    } else {
+      yPosition += 20;
+    }
+
+    // Title
+    yPosition += addHeading(
+      `Event Report: ${eventData.eventData.EventName}`,
+      yPosition,
+      1
+    );
+    yPosition += 10;
+
+    // Event Info (two columns)
+    const infoLeft = doc.page.margins.left;
+    const infoRight = doc.page.width / 2 + 20;
+    const infoWidth =
+      (doc.page.width - doc.page.margins.left - doc.page.margins.right) / 2 -
+      20;
+    let infoY = yPosition;
+
+    const eventInfo = [
+      ['Event ID:', eventData.ins_id || 'N/A'],
+      ['Department:', eventData.dept],
+      ['Venue:', eventData.eventData.EventVenue],
+      ['Duration:', `${eventData.eventData.EventDuration} hours`],
+      [
+        'Start:',
+        new Date(eventData.eventData.StartTime).toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+        }),
+      ],
+      [
+        'End:',
+        new Date(eventData.eventData.EndTime).toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+        }),
+      ],
+    ];
+
+    eventInfo.forEach(([label, value], index) => {
+      const x = index % 2 === 0 ? infoLeft : infoRight;
+      const y = infoY + Math.floor(index / 2) * 20;
+
+      doc.fontSize(11);
+      doc.fillColor('#2c3e50');
+      doc.font('Helvetica-Bold');
+      doc.text(label, x, y);
+      doc.font('Helvetica');
+      doc.text(value, x + 80, y);
+    });
+
+    yPosition = infoY + Math.ceil(eventInfo.length / 2) * 20 + 15;
+
+    // Event Objective
+    yPosition += addHeading('Event Objective', yPosition);
+    doc.fontSize(11);
+    doc.fillColor('#2c3e50');
+    doc.font('Helvetica');
+    const objectiveHeight = doc.heightOfString(
+      eventData.eventData.EventObjective,
+      {
+        width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+      }
+    );
+    doc.text(
+      eventData.eventData.EventObjective,
+      doc.page.margins.left,
+      yPosition,
+      {
+        width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+      }
+    );
+    yPosition += objectiveHeight + 15;
+
+    // Stakeholders
+    yPosition += addHeading('Stakeholders', yPosition);
+    if (
+      eventData.eventData.eventStakeholders &&
+      eventData.eventData.eventStakeholders.length > 0
+    ) {
+      eventData.eventData.eventStakeholders.forEach(stakeholder => {
+        doc.fontSize(11);
+        doc.fillColor('#2c3e50');
+        doc.font('Helvetica');
+        doc.text(`• ${stakeholder}`, doc.page.margins.left + 20, yPosition);
+        yPosition += 15;
+      });
+    } else {
+      doc.text('N/A', doc.page.margins.left + 20, yPosition);
+      yPosition += 15;
+    }
+    yPosition += 5;
+
+    // Event Coordinators
+    yPosition += addHeading('Event Coordinators', yPosition);
+    if (
+      eventData.eventData.eventCoordinators &&
+      eventData.eventData.eventCoordinators.length > 0
+    ) {
+      eventData.eventData.eventCoordinators.forEach(coordinator => {
+        // Check if we need a new page
+        if (yPosition > doc.page.height - doc.page.margins.bottom - 100) {
+          doc.addPage();
+          yPosition = doc.page.margins.top;
+        }
+
+        const coordX = doc.page.margins.left;
+        const coordY = yPosition;
+
+        // No border - removed doc.rect line
+        doc.fontSize(11);
+        doc.fillColor('#2c3e50');
+        doc.font('Helvetica-Bold');
+        doc.text(
+          `${coordinator.coordinatorName} (${coordinator.coordinatorRole})`,
+          coordX,
+          coordY
+        );
+        doc.font('Helvetica');
+        doc.text(coordinator.coordinatorMail, coordX, coordY + 15);
+        doc.text(coordinator.coordinatorPhone, coordX, coordY + 30);
+
+        // Move to next coordinator position (one below)
+        yPosition += 50;
+      });
+      yPosition += 10;
+    } else {
+      doc.text('N/A', doc.page.margins.left, yPosition);
+      yPosition += 15;
+    }
+
+    // Resource Persons
+    if (
+      eventData.eventData.eventResourcePerson &&
+      eventData.eventData.eventResourcePerson.length > 0
+    ) {
+      yPosition += addHeading('Resource Persons', yPosition);
+      eventData.eventData.eventResourcePerson.forEach(person => {
+        if (yPosition > doc.page.height - doc.page.margins.bottom - 100) {
+          doc.addPage();
+          yPosition = doc.page.margins.top;
+        }
+
+        const personX = doc.page.margins.left;
+        const personY = yPosition;
+
+        // No border - removed doc.rect line
+        doc.fontSize(11);
+        doc.fillColor('#2c3e50');
+        doc.font('Helvetica-Bold');
+        doc.text(
+          `${person.ResourcePersonName} (${person.ResourcePersonDesgn})`,
+          personX,
+          personY
+        );
+        doc.font('Helvetica');
+        doc.text(person.ResourcePersonMail, personX, personY + 15);
+        doc.text(person.ResourcePersonPhone, personX, personY + 30);
+        const addressHeight = doc.heightOfString(person.ResourcePersonAddr, {
+          width:
+            doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        });
+        doc.text(person.ResourcePersonAddr, personX, personY + 45, {
+          width:
+            doc.page.width - doc.page.margins.left - doc.page.margins.right,
+        });
+
+        // Move to next resource person position (one below)
+        yPosition += 60 + addressHeight;
+      });
+      yPosition += 10;
+    }
+
+    // Budget
+    if (eventData.eventData.Budget) {
+      yPosition += addHeading('Budget Information', yPosition);
+      doc.fontSize(11);
+      doc.fillColor('#2c3e50');
+      doc.font('Helvetica-Bold');
+      doc.text('Budget: ', doc.page.margins.left, yPosition);
+      doc.font('Helvetica');
+      doc.text(
+        `₹${eventData.eventData.Budget}`,
+        doc.page.margins.left + 60,
+        yPosition
+      );
+      yPosition += 20;
+    }
+
+    // Event Poster
+    if (
+      eventData.eventData.fileUrl?.poster &&
+      /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
+    ) {
+      yPosition += addHeading('Event Poster', yPosition);
+      const posterBuffer = await downloadImage(
+        eventData.eventData.fileUrl.poster
+      );
+      if (posterBuffer) {
+        try {
+          if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
+            doc.addPage();
+            yPosition = doc.page.margins.top;
+          }
+          doc.image(
+            posterBuffer,
+            doc.page.margins.left +
+              (doc.page.width -
+                doc.page.margins.left -
+                doc.page.margins.right) /
+                2 -
+              200,
+            yPosition,
+            {
+              fit: [400, 200],
+              align: 'center',
+            }
+          );
+          yPosition += 220;
+        } catch (err) {
+          console.warn('Failed to add poster:', err);
+          yPosition += 20;
+        }
       }
     }
 
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (err) {
-        console.warn('Error closing browser:', err);
+    // Post Event Documentation
+    if (eventData.postEventData) {
+      yPosition += addHeading('Post Event Documentation', yPosition);
+
+      // Event Photos
+      if (
+        eventData.postEventData.fileUrl?.geoPhotos &&
+        eventData.postEventData.fileUrl.geoPhotos.length > 0
+      ) {
+        yPosition += addHeading('Event Photos', yPosition, 3);
+        for (const photoUrl of eventData.postEventData.fileUrl.geoPhotos) {
+          if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
+            doc.addPage();
+            yPosition = doc.page.margins.top;
+          }
+          const photoBuffer = await downloadImage(photoUrl);
+          if (photoBuffer) {
+            try {
+              doc.image(
+                photoBuffer,
+                doc.page.margins.left +
+                  (doc.page.width -
+                    doc.page.margins.left -
+                    doc.page.margins.right) /
+                    2 -
+                  200,
+                yPosition,
+                {
+                  fit: [400, 200],
+                  align: 'center',
+                }
+              );
+              yPosition += 220;
+            } catch (err) {
+              console.warn('Failed to add photo:', err);
+            }
+          }
+        }
+      }
+
+      // Report and Financial Documents (as text links)
+      if (eventData.postEventData.fileUrl?.report) {
+        doc.fontSize(11);
+        doc.fillColor('#2c3e50');
+        doc.font('Helvetica-Bold');
+        doc.text('Report: ', doc.page.margins.left, yPosition);
+        doc.font('Helvetica');
+        doc.fillColor('#0066cc');
+        doc.text(
+          eventData.postEventData.fileUrl.report,
+          doc.page.margins.left + 50,
+          yPosition,
+          {
+            link: eventData.postEventData.fileUrl.report,
+          }
+        );
+        yPosition += 50;
+      }
+
+      if (eventData.postEventData.fileUrl?.financialCommitments) {
+        doc.fontSize(11);
+        doc.fillColor('#2c3e50');
+        doc.font('Helvetica-Bold');
+        doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+        doc.font('Helvetica');
+        doc.fillColor('#0066cc');
+        doc.text(
+          eventData.postEventData.fileUrl.financialCommitments,
+          doc.page.margins.left + 130,
+          yPosition,
+          {
+            link: eventData.postEventData.fileUrl.financialCommitments,
+          }
+        );
+        yPosition += 20;
       }
     }
+
+    // Add footer to last page
+    addFooter();
+
+    // Finalize PDF
+    doc.end();
+    const pdfBuffer = await pdfBufferPromise;
 
     await logger(
       user._id,
@@ -407,19 +460,11 @@ export async function POST(req) {
     console.error('PDF Generation Error:', error);
 
     // Cleanup resources in case of error
-    if (page) {
+    if (doc) {
       try {
-        await page.close();
+        doc.end();
       } catch (err) {
-        console.warn('Error closing page during cleanup:', err);
-      }
-    }
-
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (err) {
-        console.warn('Error closing browser during cleanup:', err);
+        console.warn('Error closing PDF document during cleanup:', err);
       }
     }
 
