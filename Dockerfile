@@ -17,16 +17,13 @@ COPY . .
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN npm run build
+# RUN npm run build
 
 # Copy pdfkit font files to the build output directory
 # pdfkit fonts are needed at runtime. The error shows Next.js expects them in .next/server/chunks/data/
 RUN if [ -d "/app/node_modules/pdfkit/js/data" ]; then \
       mkdir -p /app/.next/server/chunks/data && \
       cp /app/node_modules/pdfkit/js/data/*.afm /app/.next/server/chunks/data/ && \
-      # Also copy to any other chunk directories that might exist
-      find /app/.next/server -type d -path "*/chunks" -exec mkdir -p {}/data \; 2>/dev/null || true && \
-      find /app/.next/server -type d -path "*/chunks/data" -exec sh -c 'cp /app/node_modules/pdfkit/js/data/*.afm "$1"/ 2>/dev/null || true' _ {} \; && \
       echo "✓ Copied pdfkit fonts to .next/server/chunks/data/"; \
     else \
       echo "⚠ Warning: pdfkit/js/data directory not found"; \
