@@ -817,7 +817,6 @@ const BasicInfoStep = ({
           {...register('EventDuration', {
             required: 'This field is required',
             min: { value: 1, message: 'Must be at least 1 hour' },
-            max: { value: 24, message: 'Cannot exceed 24 hours' },
           })}
           error={!!errors.EventDuration || !!validationErrors?.EventDuration}
           helperText={
@@ -833,7 +832,6 @@ const BasicInfoStep = ({
           }}
           inputProps={{
             min: 1,
-            max: 24,
           }}
         />
       </Box>
