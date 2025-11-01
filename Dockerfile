@@ -17,7 +17,7 @@ COPY . .
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# RUN npm run build
+RUN npm run build
 
 # Copy pdfkit font files to the build output directory
 # pdfkit fonts are needed at runtime. The error shows Next.js expects them in .next/server/chunks/data/
