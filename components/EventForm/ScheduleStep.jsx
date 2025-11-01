@@ -53,6 +53,7 @@ const ScheduleStep = ({
   setFormStep,
   prevForm,
   completeFormStep,
+  validationErrors,
 }) => {
   // Internal venue selection state (replacing Calven's functionality)
   const [venueFormStep, setVenueFormStep] = useState(1); // 1=Session Selection, 2=Venue Select, 3=Confirm

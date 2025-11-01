@@ -202,15 +202,15 @@ const EventForm = () => {
 
   // Validation function
   const completeFormStep = () => {
-    console.log("================");
-    console.log("STARTING VALIDATION");
-    console.log("================");
+    console.log('================');
+    console.log('STARTING VALIDATION');
+    console.log('================');
     let stepErrors = null;
     switch (formStep) {
       case 0:
-        console.log("================");
-        console.log("CASE 0");
-        console.log("================");
+        console.log('================');
+        console.log('CASE 0');
+        console.log('================');
         stepErrors = validateStep0(
           watch,
           eventOrigin,
@@ -218,20 +218,20 @@ const EventForm = () => {
           currSoc,
           fileUrl
         );
-        console.log("================");
+        console.log('================');
         console.log(stepErrors);
-        console.log("================");
+        console.log('================');
         break;
       case 2:
-        console.log("================");
-        console.log("CASE 2");
-        console.log("================");
+        console.log('================');
+        console.log('CASE 2');
+        console.log('================');
         stepErrors = validateStep2(watch, coordinatorfields);
         break;
       case 3:
-        console.log("================");
-        console.log("CASE 3");
-        console.log("================");
+        console.log('================');
+        console.log('CASE 3');
+        console.log('================');
         stepErrors = validateStep3(
           watch,
           resourcepersonfields,
@@ -239,15 +239,15 @@ const EventForm = () => {
         );
         break;
       case 4:
-        console.log("================");
-        console.log("CASE 4");
-        console.log("================");
+        console.log('================');
+        console.log('CASE 4');
+        console.log('================');
         stepErrors = validateStep4(watch, fileUrl, isSponsored);
         break;
       default:
-        console.log("================");
-        console.log("CASE DEFAULT");
-        console.log("================");
+        console.log('================');
+        console.log('CASE DEFAULT');
+        console.log('================');
         stepErrors = null;
     }
 
@@ -436,7 +436,7 @@ const EventForm = () => {
 
   return (
     <Container maxWidth='lg' sx={{ py: 3 }}>
-      <Card sx={{ borderRadius: 2}}>
+      <Card sx={{ borderRadius: 2 }}>
         <CardContent sx={{ p: 0 }}>
           <form onSubmit={handleSubmit(submitForm)}>
             {formStep < 5 && (
@@ -545,6 +545,7 @@ const EventForm = () => {
                   setFormStep={setFormStep}
                   prevForm={prevForm}
                   completeFormStep={completeFormStep}
+                  validationErrors={validationErrors}
                 />
               )}
 
@@ -601,86 +602,97 @@ const EventForm = () => {
             </Box>
 
             {/* Navigation buttons */}
-            {formStep < 5 && formStep !== 1 && (
-              <Box
-                sx={{
-                  p: 3,
-                  pt: 2,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  borderTop: 1,
-                  borderColor: colors.light.border,
-                }}
-              >
-                <Button
-                  onClick={prevForm}
-                  disabled={formStep === 0}
-                  variant='outlined'
-                  startIcon={<ArrowLeft size={20} />}
+            {/* Show navigation buttons for all steps except when offline venue selection is active */}
+            {formStep < 5 &&
+              !(
+                formStep === 1 &&
+                isEventVenueOnline === 'offline' &&
+                isEventVenueOffCampus === 'On-Campus'
+              ) && (
+                <Box
                   sx={{
-                    color: colors.light.foreground,
+                    p: 3,
+                    pt: 2,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    borderTop: 1,
                     borderColor: colors.light.border,
-                    '&:hover': {
-                      borderColor: colors.light.primary,
-                      backgroundColor: colors.light.primary,
-                      color: colors.light.primaryForeground,
-                    },
                   }}
                 >
-                  Previous
-                </Button>
+                  <Button
+                    onClick={prevForm}
+                    disabled={formStep === 0}
+                    variant='outlined'
+                    startIcon={<ArrowLeft size={20} />}
+                    sx={{
+                      color: colors.light.foreground,
+                      borderColor: colors.light.border,
+                      '&:hover': {
+                        borderColor: colors.light.primary,
+                        backgroundColor: colors.light.primary,
+                        color: colors.light.primaryForeground,
+                      },
+                    }}
+                  >
+                    Previous
+                  </Button>
 
-                <Box>
-                  {formStep === 4 ? (
-                    <Button
-                      variant='contained'
-                      onClick={() => {
-                        const stepErrors = validateStep4(
-                          watch,
-                          fileUrl,
-                          isSponsored
-                        );
-                        if (stepErrors) {
-                          setValidationErrors(stepErrors);
-                          return;
+                  <Box>
+                    {formStep === 4 ? (
+                      <Button
+                        variant='contained'
+                        onClick={() => {
+                          const stepErrors = validateStep4(
+                            watch,
+                            fileUrl,
+                            isSponsored
+                          );
+                          if (stepErrors) {
+                            setValidationErrors(stepErrors);
+                            return;
+                          }
+                          setValidationErrors({});
+                          handleSubmit(submitForm)();
+                        }}
+                        disabled={isSubmitting}
+                        endIcon={<Check size={20} />}
+                        sx={{
+                          backgroundColor: colors.light.primary,
+                          color: colors.light.primaryForeground,
+                          '&:hover': {
+                            backgroundColor: colors.light.primary,
+                            opacity: 0.9,
+                          },
+                        }}
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Submit Event'}
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={completeFormStep}
+                        type='button'
+                        variant='contained'
+                        endIcon={<ArrowRight size={20} />}
+                        disabled={
+                          formStep === 1 &&
+                          isEventVenueOnline === 'online' &&
+                          !watch('eventVenueAddInfo')
                         }
-                        setValidationErrors({});
-                        handleSubmit(submitForm)();
-                      }}
-                      disabled={isSubmitting}
-                      endIcon={<Check size={20} />}
-                      sx={{
-                        backgroundColor: colors.light.primary,
-                        color: colors.light.primaryForeground,
-                        '&:hover': {
+                        sx={{
                           backgroundColor: colors.light.primary,
-                          opacity: 0.9,
-                        },
-                      }}
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Event'}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={completeFormStep}
-                      type='button'
-                      variant='contained'
-                      endIcon={<ArrowRight size={20} />}
-                      sx={{
-                        backgroundColor: colors.light.primary,
-                        color: colors.light.primaryForeground,
-                        '&:hover': {
-                          backgroundColor: colors.light.primary,
-                          opacity: 0.9,
-                        },
-                      }}
-                    >
-                      Next
-                    </Button>
-                  )}
+                          color: colors.light.primaryForeground,
+                          '&:hover': {
+                            backgroundColor: colors.light.primary,
+                            opacity: 0.9,
+                          },
+                        }}
+                      >
+                        Next
+                      </Button>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              )}
           </form>
         </CardContent>
       </Card>

@@ -49,6 +49,8 @@ const eventSchema = new Schema({
     type: Schema.Types.ObjectId,
     default: null,
   },
+}, {
+  timestamps: true, // Adds createdAt and updatedAt fields automatically
 });
 
 const Events = models.Events || mongoose.model('Events', eventSchema);

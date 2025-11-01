@@ -44,6 +44,19 @@ export async function POST(req) {
 
   try {
     const valueToJson = await req.json();
+    console.log('Change Password Request:', {
+      action: valueToJson.action,
+      _id: valueToJson._id,
+    });
+
+    // Validate action is provided
+    if (!valueToJson.action) {
+      await logger(user._id, ACTION, 'Action not provided in request', 400);
+      return NextResponse.json(
+        { message: 'Action is required' },
+        { status: 400 }
+      );
+    }
 
     if (valueToJson.action === 'user') {
       const { oldPassword, newPassword } = valueToJson;
@@ -133,6 +146,15 @@ export async function POST(req) {
           { status: 403 }
         );
       }
+      // Validate _id is provided
+      if (!valueToJson._id) {
+        await logger(user._id, ACTION, 'User ID not provided in request', 400);
+        return NextResponse.json(
+          { message: 'User ID is required' },
+          { status: 400 }
+        );
+      }
+
       const existingUser = await User.findById(valueToJson._id);
       if (!existingUser) {
         await logger(user._id, ACTION, 'User Not Found', 404);
@@ -142,25 +164,132 @@ export async function POST(req) {
         );
       }
 
-      existingUser.password = process.env.DEFAULT_PASSWORD_HASH;
-      await existingUser.save();
+      // Check if DEFAULT_PASSWORD is set (plain text password from env)
+      console.log('Checking DEFAULT_PASSWORD:', {
+        exists: !!process.env.DEFAULT_PASSWORD,
+        length: process.env.DEFAULT_PASSWORD?.length,
+      });
 
-      await logger(user._id, ACTION, 'Password Reset to Default', 200);
+      if (!process.env.DEFAULT_PASSWORD) {
+        try {
+          await logger(
+            user._id?.toString() || 'UNKNOWN',
+            ACTION,
+            'DEFAULT_PASSWORD not configured',
+            500
+          );
+        } catch (logError) {
+          console.error('Logger error:', logError);
+        }
+        return NextResponse.json(
+          {
+            message:
+              'Server configuration error. Please contact administrator.',
+          },
+          { status: 500 }
+        );
+      }
+
+      // Hash the default password before storing
+      const salt = await bcrypt.genSalt(10);
+      const hashedDefaultPassword = await bcrypt.hash(
+        process.env.DEFAULT_PASSWORD,
+        salt
+      );
+
+      console.log('Updating password for user:', valueToJson._id);
+      // Use updateOne instead of save() to avoid validation issues
+      const updateResult = await User.updateOne(
+        { _id: valueToJson._id },
+        { password: hashedDefaultPassword }
+      );
+
+      console.log('Update result:', {
+        matchedCount: updateResult.matchedCount,
+        modifiedCount: updateResult.modifiedCount,
+        acknowledged: updateResult.acknowledged,
+      });
+
+      if (updateResult.matchedCount === 0) {
+        await logger(
+          user._id?.toString() || 'UNKNOWN',
+          ACTION,
+          'User not found for update',
+          404
+        );
+        return NextResponse.json(
+          { message: 'User not found for password update.' },
+          { status: 404 }
+        );
+      }
+
+      if (updateResult.modifiedCount === 0) {
+        await logger(
+          user._id?.toString() || 'UNKNOWN',
+          ACTION,
+          'Password update did not modify any documents',
+          400
+        );
+        return NextResponse.json(
+          {
+            message:
+              'Password was not updated. It may already be set to the default password.',
+          },
+          { status: 400 }
+        );
+      }
+
+      await logger(
+        user._id?.toString() || 'UNKNOWN',
+        ACTION,
+        'Password Reset to Default',
+        200
+      );
       return NextResponse.json(
         { message: 'Password updated to Welcome@321' },
         { status: 200 }
       );
     }
-  } catch (error) {
+
+    // If action doesn't match any handler
     await logger(
       user._id,
       ACTION,
-      'Password Change Failed: ' + error.message,
-      500
+      `Invalid action: ${valueToJson.action}`,
+      400
     );
-    console.log(error);
     return NextResponse.json(
-      { message: 'An error occurred while changing password.' },
+      { message: 'Invalid action specified' },
+      { status: 400 }
+    );
+  } catch (error) {
+    // Safely log the error
+    try {
+      await logger(
+        user?._id?.toString() || 'UNKNOWN',
+        ACTION,
+        'Password Change Failed: ' + error.message,
+        500
+      );
+    } catch (logError) {
+      console.error('Error logging failed:', logError);
+    }
+
+    console.error('Change Password Error:', error);
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    console.error('Error Details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+
+    return NextResponse.json(
+      {
+        message: 'An error occurred while changing password.',
+        error:
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
