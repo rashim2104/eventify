@@ -111,7 +111,7 @@ const ResourcePersonStep = ({
                     <Grid item xs={6}>
                       <TextField
                         fullWidth
-                        label='Name'
+                        label='Name *'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonName`,
                           {
@@ -127,14 +127,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonName ||
                           !!validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonName`
+                          `eventResourcePerson.${index}.ResourcePersonName`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonName?.message ||
                           validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonName`
+                          `eventResourcePerson.${index}.ResourcePersonName`
                           ]
                         }
                         InputProps={{
@@ -158,7 +158,7 @@ const ResourcePersonStep = ({
                       <TextField
                         fullWidth
                         type='email'
-                        label='E-mail'
+                        label='E-mail *'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonMail`,
                           {
@@ -173,14 +173,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonMail ||
                           !!validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonMail`
+                          `eventResourcePerson.${index}.ResourcePersonMail`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonMail?.message ||
                           validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonMail`
+                          `eventResourcePerson.${index}.ResourcePersonMail`
                           ]
                         }
                         InputProps={{
@@ -204,7 +204,7 @@ const ResourcePersonStep = ({
                       <TextField
                         fullWidth
                         type='tel'
-                        label='Phone'
+                        label='Phone *'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonPhone`,
                           {
@@ -220,14 +220,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonPhone ||
                           !!validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonPhone`
+                          `eventResourcePerson.${index}.ResourcePersonPhone`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonPhone?.message ||
                           validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonPhone`
+                          `eventResourcePerson.${index}.ResourcePersonPhone`
                           ]
                         }
                         InputProps={{
@@ -250,7 +250,7 @@ const ResourcePersonStep = ({
                     <Grid item xs={6}>
                       <TextField
                         fullWidth
-                        label='Designation'
+                        label='Designation *'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonDesgn`,
                           {
@@ -261,14 +261,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonDesgn ||
                           !!validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonDesgn`
+                          `eventResourcePerson.${index}.ResourcePersonDesgn`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonDesgn?.message ||
                           validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonDesgn`
+                          `eventResourcePerson.${index}.ResourcePersonDesgn`
                           ]
                         }
                         InputProps={{
@@ -293,7 +293,7 @@ const ResourcePersonStep = ({
                         fullWidth
                         multiline
                         rows={3}
-                        label='Official Address'
+                        label='Official Address *'
                         {...register(
                           `eventResourcePerson.${index}.ResourcePersonAddr`,
                           {
@@ -304,14 +304,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonAddr ||
                           !!validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonAddr`
+                          `eventResourcePerson.${index}.ResourcePersonAddr`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonAddr?.message ||
                           validationErrors?.[
-                            `eventResourcePerson.${index}.ResourcePersonAddr`
+                          `eventResourcePerson.${index}.ResourcePersonAddr`
                           ]
                         }
                         InputProps={{
