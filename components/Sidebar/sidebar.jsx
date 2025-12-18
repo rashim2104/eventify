@@ -235,7 +235,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             boxSizing: 'border-box',
             width: drawerWidth,
             backgroundColor: colors.light.sidebar,
-            borderRight: `1px solid ${colors.light.sidebarBorder}`,
+            borderRight: `2px solid ${colors.light.sidebarBorder}`,
             color: colors.light.sidebarForeground,
           },
         }}
@@ -252,7 +252,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             boxSizing: 'border-box',
             width: drawerWidth,
             mt: '64px',
-            borderRight: `1px solid ${colors.light.sidebarBorder}`,
+            borderRight: `2px solid ${colors.light.sidebarBorder}`,
             backgroundColor: colors.light.sidebar,
             color: colors.light.sidebarForeground,
             zIndex: 0,
