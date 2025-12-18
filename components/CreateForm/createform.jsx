@@ -14,7 +14,7 @@ export default function CreateForm() {
     );
   }
   const currUser = session?.user?.userType;
-  if (currUser === 'student' || currUser === 'admin') {
+  if (currUser === 'student') {
     return (
       <h1 className='grid place-items-center h-screen text-7xl text-red-600	font-extrabold'>
         Not Authorized !!

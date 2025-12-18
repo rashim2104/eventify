@@ -248,12 +248,19 @@ export async function POST(req) {
   const EndTime = new Date(eventData.EndTime);
   let userStatus,
     user_ins_id = null,
-    user_iqac_id = null,
-    user_dept = dept;
+    user_iqac_id = null;
+
+  // Determine the correct dept:
+  // - For Department (1) and AICTE Idea Lab (5): use user's dept from session
+  // - For Professional Societies (2), Clubs (3), and Other (4): use dept from request payload
+  let user_dept = dept;  // Default to user's dept from session
+  if (eventData.EventOrganizer == 2 || eventData.EventOrganizer == 3 || eventData.EventOrganizer == 4) {
+    user_dept = valueToJson.dept;  // Use the dept from the request payload (e.g., "Entrepreneurship Cell")
+  }
+
   let eventCollege =
     eventData.EventOrganizer === 1 ||
-    eventData.EventOrganizer === 1 ||
-    eventData.EventOrganizer === 1
+      eventData.EventOrganizer === 5
       ? college
       : 'common';
   if (userType === 'HOD') {

@@ -82,7 +82,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
       text: 'Create',
       href: '/create',
       icon: <PlusIcon size={20} weight='regular' />,
-      roles: ['HOD', 'staff'],
+      roles: ['HOD', 'staff', 'admin'],
     },
     {
       text: 'Status',

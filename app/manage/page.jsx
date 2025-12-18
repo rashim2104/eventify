@@ -1,1053 +1,569 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import {
-  societies,
-  ieeeSocieties,
-  ieeeSocietiesShort,
-  clubs,
-  clubsShort,
-} from '../../public/data/data';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Tabs,
   Tab,
-  TextField,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
   Button,
-  FormControl,
-  InputLabel,
+  TextField,
+  Switch,
   Select,
   MenuItem,
+  FormControl,
   FormControlLabel,
-  Checkbox,
-  Grid,
-  Paper,
-  Divider,
-  Alert,
+  InputLabel,
+  IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Stack,
+  Chip,
+  Alert,
+  Checkbox,
 } from '@mui/material';
 import {
   Users,
   Pencil,
+  Trash,
+  Plus,
   MagnifyingGlass,
   FloppyDisk,
-  Trash,
   Key,
   ArrowClockwise,
-  CheckCircle,
+  Gear,
+  Buildings,
+  UsersThree,
+  MapPin,
 } from '@phosphor-icons/react';
 import { colors } from '@/lib/colors.config.js';
 
+// ============ HELPER COMPONENTS ============
+
+function TabPanel({ children, value, index }) {
+  return value === index ? <Box sx={{ py: 3 }}>{children}</Box> : null;
+}
+
+function ActiveChip({ isActive }) {
+  return (
+    <Chip
+      size='small'
+      label={isActive ? 'Active' : 'Inactive'}
+      color={isActive ? 'success' : 'default'}
+    />
+  );
+}
+
+function ConfigTable({ title, data, columns, onAdd, onEdit, onDelete, loading, entityName }) {
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant='h6' sx={{ fontWeight: 600 }}>{title} ({data.length})</Typography>
+        <Button variant='contained' startIcon={<Plus size={18} />} onClick={onAdd}
+          sx={{ bgcolor: colors.light.primaryHex, '&:hover': { bgcolor: colors.light.primaryHex, opacity: 0.9 } }}>
+          Add {entityName}
+        </Button>
+      </Box>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+      ) : data.length === 0 ? (
+        <Alert severity='info'>No {entityName.toLowerCase()}s found.</Alert>
+      ) : (
+        <TableContainer component={Paper} sx={{ borderRadius: 2, maxHeight: 400 }}>
+          <Table stickyHeader size='small'>
+            <TableHead>
+              <TableRow>
+                {columns.map((col) => (
+                  <TableCell key={col.key} sx={{ fontWeight: 'bold', bgcolor: colors.light.mutedHex }}>{col.label}</TableCell>
+                ))}
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: colors.light.mutedHex, width: 100 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((item) => (
+                <TableRow key={item._id} hover>
+                  {columns.map((col) => (
+                    <TableCell key={col.key}>{col.render ? col.render(item[col.key], item) : item[col.key]}</TableCell>
+                  ))}
+                  <TableCell>
+                    <Stack direction='row' spacing={0.5}>
+                      <IconButton size='small' onClick={() => onEdit(item)}><Pencil size={16} /></IconButton>
+                      <IconButton size='small' color='error' onClick={() => onDelete(item)}><Trash size={16} /></IconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )
+      }
+    </Box >
+  );
+}
+
+// ============ MAIN COMPONENT ============
+
 export default function Manage() {
   const { data: session, status } = useSession();
+  const [mainTab, setMainTab] = useState(0);
+  const [configTab, setConfigTab] = useState(0);
 
-  // Form state
+  // ---- User Management State ----
+  const [userTab, setUserTab] = useState(0);
   const [name, setName] = useState('');
   const [fetchEMail, setFetchEmail] = useState('');
   const [currSoc, setCurrSoc] = useState('');
   const [collegeName, setCollegeName] = useState('');
   const [dept, setDept] = useState('');
   const [mail, setMail] = useState('');
-  const [idNumber, setIdNumber] = useState('');
-  const [role, setRole] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [userType, setUserType] = useState('');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [id, setId] = useState('');
-
-  // UI state
-  const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+  const [role, setRole] = useState('');
+  const [phone, setPhone] = useState('');
+  const [userLoading, setUserLoading] = useState(false);
   const [userFetched, setUserFetched] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [userErrors, setUserErrors] = useState({});
 
-  const clearForm = () => {
-    setId('');
-    setName('');
-    setCollegeName('');
-    setDept('');
-    setMail('');
-    setPassword('');
-    setUserType('');
-    setIsSuperAdmin(false);
-    setIdNumber('');
-    setRole('');
-    setPhone('');
-    setCurrSoc('');
-    setFetchEmail('');
-    setUserFetched(false);
-    setErrors({});
-  };
+  // ---- Config Management State ----
+  const [colleges, setColleges] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [societies, setSocieties] = useState([]);
+  const [clubs, setClubs] = useState([]);
+  const [parentBlocks, setParentBlocks] = useState([]);
+  const [loadingConfig, setLoadingConfig] = useState({ colleges: true, departments: true, societies: true, clubs: true, blocks: true });
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    clearForm();
-  };
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState('');
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!name.trim()) newErrors.name = 'Name is required';
-    if (!mail.trim()) newErrors.mail = 'Email is required';
-    if (!userType) newErrors.userType = 'User type is required';
-    if (activeTab === 0 && !password.trim())
-      newErrors.password = 'Password is required';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleFetch = async () => {
-    if (!fetchEMail.trim()) {
-      toast.error('Please enter an email address');
-      return;
+  // ---- Fetch Config Data on Mount ----
+  useEffect(() => {
+    if (mainTab === 1) {
+      fetchAllConfig();
     }
+  }, [mainTab]);
 
-    setLoading(true);
+  const fetchAllConfig = () => {
+    fetchColleges();
+    fetchDepartments();
+    fetchSocieties();
+    fetchClubs();
+    fetchParentBlocks();
+  };
+
+  const fetchColleges = async () => {
     try {
-      const response = await fetch('/api/fetchUser', {
+      const res = await fetch('/api/config/colleges?active=false');
+      const data = await res.json();
+      setColleges(data.colleges || []);
+    } catch { toast.error('Failed to fetch colleges'); }
+    finally { setLoadingConfig(prev => ({ ...prev, colleges: false })); }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/config/departments?active=false');
+      const data = await res.json();
+      setDepartments(data.departments || []);
+    } catch { toast.error('Failed to fetch departments'); }
+    finally { setLoadingConfig(prev => ({ ...prev, departments: false })); }
+  };
+
+  const fetchSocieties = async () => {
+    try {
+      const res = await fetch('/api/config/societies?active=false');
+      const data = await res.json();
+      setSocieties(data.societies || []);
+    } catch { toast.error('Failed to fetch societies'); }
+    finally { setLoadingConfig(prev => ({ ...prev, societies: false })); }
+  };
+
+  const fetchClubs = async () => {
+    try {
+      const res = await fetch('/api/config/clubs?active=false');
+      const data = await res.json();
+      setClubs(data.clubs || []);
+    } catch { toast.error('Failed to fetch clubs'); }
+    finally { setLoadingConfig(prev => ({ ...prev, clubs: false })); }
+  };
+
+  const fetchParentBlocks = async () => {
+    try {
+      const res = await fetch('/api/config/parent-blocks?active=false');
+      const data = await res.json();
+      setParentBlocks(data.parentBlocks || []);
+    } catch { toast.error('Failed to fetch parent blocks'); }
+    finally { setLoadingConfig(prev => ({ ...prev, blocks: false })); }
+  };
+
+  // ---- User Management Functions ----
+  const clearUserForm = () => {
+    setUserId(''); setName(''); setCollegeName(''); setDept(''); setMail(''); setPassword('');
+    setUserType(''); setIsSuperAdmin(false); setIdNumber(''); setRole(''); setPhone('');
+    setCurrSoc(''); setFetchEmail(''); setUserFetched(false); setUserErrors({});
+  };
+
+  const validateUserForm = () => {
+    const errors = {};
+    if (!name.trim()) errors.name = 'Name is required';
+    if (!mail.trim()) errors.mail = 'Email is required';
+    if (!userType) errors.userType = 'User type is required';
+    if (userTab === 0 && !password.trim()) errors.password = 'Password is required';
+    setUserErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFetchUser = async () => {
+    if (!fetchEMail.trim()) { toast.error('Please enter an email'); return; }
+    setUserLoading(true);
+    try {
+      const res = await fetch('/api/fetchUser', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'fetchUser', mail: fetchEMail }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.message === 'User not found') { toast.error('User not found'); return; }
+        const user = data.message[0];
+        setUserId(user._id); setDept(user.dept); setName(user.name); setMail(user.email);
+        setUserType(user.userType); setIsSuperAdmin(user.isSuperAdmin); setIdNumber(user.id);
+        setCollegeName(user.college); setRole(user.role); setPhone(user.phone);
+        setUserFetched(true);
+        toast.success('User fetched');
+      } else { toast.error('Failed to fetch user'); }
+    } catch { toast.error('Failed to fetch user'); }
+    finally { setUserLoading(false); }
+  };
+
+  const handleAddUser = async () => {
+    if (!validateUserForm()) return;
+    setUserLoading(true);
+    try {
+      const res = await fetch('/api/addUser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'fetchUser',
-          mail: fetchEMail,
+          name, college: collegeName, dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
+          mail, password, userType: ['professionalsocieties', 'clubincharge'].includes(userType) ? 'HOD' : userType,
+          isSuperAdmin,
         }),
       });
+      if (res.ok) { toast.success('User added!'); clearUserForm(); }
+      else { toast.error('Failed to add user'); }
+    } catch { toast.error('Failed to add user'); }
+    finally { setUserLoading(false); }
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message === 'User not found') {
-          toast.error('User not found');
-          setUserFetched(false);
-          return;
-        }
+  const handleUpdateUser = async () => {
+    if (!validateUserForm()) return;
+    setUserLoading(true);
+    try {
+      const res = await fetch('/api/editUser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _id: userId, name, college: collegeName, dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
+          mail, userType: ['professionalsocieties', 'clubincharge'].includes(userType) ? 'HOD' : userType,
+          isSuperAdmin, phone, role, id: idNumber,
+        }),
+      });
+      if (res.ok) { toast.success('User updated!'); clearUserForm(); }
+      else { toast.error('Failed to update user'); }
+    } catch { toast.error('Failed to update user'); }
+    finally { setUserLoading(false); }
+  };
 
-        const user = data.message[0];
-        setId(user._id);
-        setDept(user.dept);
-        setName(user.name);
-        setMail(user.email);
-        setUserType(user.userType);
-        setIsSuperAdmin(user.isSuperAdmin);
-        setIdNumber(user.id);
-        setCollegeName(user.college);
-        setRole(user.role);
-        setPhone(user.phone);
-
-        const receivedDept = user.dept;
-        let college = user.college;
-
-        if (ieeeSocietiesShort.includes(receivedDept)) {
-          college = 'common';
-          setUserType('professionalsocieties');
-          setDept('IEEE');
-          setCurrSoc(receivedDept);
-        } else if (clubsShort.includes(receivedDept)) {
-          college = 'common';
-          setUserType('clubincharge');
-          setDept(receivedDept);
-        } else if (societies.includes(receivedDept)) {
-          college = 'common';
-          setUserType('professionalsocieties');
-        } else {
-          setDept(receivedDept);
-          setUserType(user.userType);
-        }
-
-        setCollegeName(college);
-        setUserFetched(true);
-        toast.success('User fetched successfully');
-      } else {
-        toast.error('Failed to fetch user');
-        setUserFetched(false);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user', error);
-      toast.error('Failed to fetch user');
-      setUserFetched(false);
-    } finally {
-      setLoading(false);
-    }
+  const handleDeleteUser = async () => {
+    if (!confirm('Delete this user?')) return;
+    setUserLoading(true);
+    try {
+      const res = await fetch('/api/fetchUser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteUser', mail: fetchEMail }),
+      });
+      if (res.ok) { toast.success('User deleted'); clearUserForm(); }
+      else { toast.error('Delete failed'); }
+    } catch { toast.error('Delete failed'); }
+    finally { setUserLoading(false); }
   };
 
   const handleChangePassword = async () => {
-    setLoading(true);
+    setUserLoading(true);
     try {
-      const response = await fetch('/api/changePwd', {
+      const res = await fetch('/api/changePwd', {
         method: 'POST',
-        body: JSON.stringify({ action: 'admin', _id: id }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'admin', _id: userId }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(data.message);
-      } else {
-        toast.error('Error changing password');
-      }
-    } catch (error) {
-      console.error('Error changing password', error);
-      toast.error('Error changing password');
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) { const data = await res.json(); toast.success(data.message); }
+      else { toast.error('Error changing password'); }
+    } catch { toast.error('Error changing password'); }
+    finally { setUserLoading(false); }
   };
 
-  const handleUpdate = async () => {
-    if (!validateForm()) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch('/api/editUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          _id: id,
-          name,
-          college: collegeName,
-          dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
-          mail,
-          userType:
-            userType === 'professionalsocieties' || userType === 'clubincharge'
-              ? 'HOD'
-              : userType,
-          isSuperAdmin,
-          phone,
-          role,
-          id: idNumber,
-        }),
-      });
-      if (response.ok) {
-        toast.success('User updated successfully');
-        clearForm();
-      } else {
-        toast.error('Failed to update user');
-      }
-    } catch (error) {
-      console.error('Failed to update user', error);
-      toast.error('Failed to update user');
-    } finally {
-      setLoading(false);
-    }
+  // ---- Config CRUD Functions ----
+  const openAddDialog = (type) => {
+    setDialogType(type);
+    setEditingItem(null);
+    setFormData({ isActive: true });
+    setDialogOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch('/api/fetchUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'deleteUser',
-          mail: fetchEMail,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success('User deleted successfully');
-        setFetchEmail('');
-        clearForm();
-      } else {
-        toast.error('Failed to delete user');
-      }
-    } catch (error) {
-      console.error('Failed to delete user', error);
-      toast.error('Failed to delete user');
-    } finally {
-      setLoading(false);
-    }
+  const openEditDialog = (type, item) => {
+    setDialogType(type);
+    setEditingItem(item);
+    setFormData({ ...item });
+    setDialogOpen(true);
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+  const closeDialog = () => { setDialogOpen(false); setDialogType(''); setEditingItem(null); setFormData({}); };
 
-    setLoading(true);
+  const handleConfigSave = async () => {
+    setSubmitting(true);
+    const endpoints = { college: '/api/config/colleges', department: '/api/config/departments', society: '/api/config/societies', club: '/api/config/clubs', parentBlock: '/api/config/parent-blocks' };
+    const endpoint = editingItem ? `${endpoints[dialogType]}/${editingItem._id}` : endpoints[dialogType];
     try {
-      const response = await fetch('/api/addUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          college:
-            collegeName !== 'SIT' && collegeName !== 'SEC'
-              ? 'common'
-              : collegeName,
-          dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
-          mail,
-          password,
-          userType:
-            userType === 'professionalsocieties' || userType === 'clubincharge'
-              ? 'HOD'
-              : userType,
-          isSuperAdmin,
-        }),
-      });
-
-      if (response.ok) {
-        toast.success('User added successfully!');
-        clearForm();
-      } else {
-        toast.error('Failed to add user');
-      }
-    } catch (error) {
-      console.error('Failed to add user', error);
-      toast.error('Failed to add user');
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetch(endpoint, { method: editingItem ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (res.ok) { toast.success('Saved!'); closeDialog(); fetchAllConfig(); }
+      else { const err = await res.json(); toast.error(err.message || 'Failed'); }
+    } catch { toast.error('Failed'); }
+    finally { setSubmitting(false); }
   };
 
-  if (status === 'loading') {
+  const handleConfigDelete = async (type, item) => {
+    if (!confirm(`Delete "${item.name || item.code}"?`)) return;
+    const endpoints = { college: '/api/config/colleges', department: '/api/config/departments', society: '/api/config/societies', club: '/api/config/clubs', parentBlock: '/api/config/parent-blocks' };
+    try {
+      const res = await fetch(`${endpoints[type]}/${item._id}`, { method: 'DELETE' });
+      if (res.ok) { toast.success('Deleted!'); fetchAllConfig(); }
+      else { toast.error('Delete failed'); }
+    } catch { toast.error('Delete failed'); }
+  };
+
+  // ---- Auth Check ----
+  if (status === 'loading') return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><CircularProgress /></Box>;
+  if (session?.user?.isSuperAdmin === 0) return <Alert severity='error' sx={{ m: 4 }}>Not Authorized</Alert>;
+
+  // ---- Render Dialog Content ----
+  const renderDialogContent = () => {
+    const fields = {
+      college: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }],
+      department: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'college', label: 'College', type: 'select', options: ['SIT', 'SEC', 'common'] }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMDCSYY' }],
+      society: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Type', type: 'select', options: ['professional', 'ieee'] }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMSTEYY' }],
+      club: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMCTCYY' }],
+      parentBlock: [{ key: 'name', label: 'Name' }],
+    };
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '50vh',
-        }}
-      >
-        <CircularProgress size={40} />
-        <Typography variant='h6' sx={{ ml: 2 }}>
-          Loading...
-        </Typography>
-      </Box>
+      <Stack spacing={2} sx={{ mt: 1, minWidth: 350 }}>
+        {(fields[dialogType] || []).map((f) => f.type === 'select' ? (
+          <FormControl key={f.key} fullWidth>
+            <InputLabel>{f.label}</InputLabel>
+            <Select value={formData[f.key] || ''} onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })} label={f.label}>
+              {f.options.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+            </Select>
+          </FormControl>
+        ) : (
+          <TextField key={f.key} label={f.label} value={formData[f.key] || ''} onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })} fullWidth placeholder={f.placeholder} helperText={f.key === 'eventIdTemplate' ? 'CLG=College, YEAR=Year, MM=Month, D=Dept, YY=Sequence' : ''} />
+        ))}
+        <FormControlLabel control={<Switch checked={formData.isActive ?? true} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />} label='Active' />
+      </Stack>
     );
-  }
-
-  const currUser = session?.user?.isSuperAdmin;
-  if (currUser === 0) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '50vh',
-        }}
-      >
-        <Alert severity='error' sx={{ fontSize: '1.5rem', p: 4 }}>
-          Not Authorized !!
-        </Alert>
-      </Box>
-    );
-  }
-
-  const renderConditionalFields = () => {
-    const fields = [];
-
-    // College Name field
-    if (['staff', 'HOD', 'student', 'admin'].includes(userType)) {
-      fields.push(
-        <FormControl fullWidth error={!!errors.collegeName} key='college'>
-          <InputLabel>College Name</InputLabel>
-          <Select
-            value={collegeName}
-            onChange={e => setCollegeName(e.target.value)}
-            label='College Name'
-          >
-            <MenuItem value='SIT'>SIT</MenuItem>
-            <MenuItem value='SEC'>SEC</MenuItem>
-          </Select>
-        </FormControl>
-      );
-    }
-
-    // Professional Societies field
-    if (userType === 'professionalsocieties') {
-      fields.push(
-        <FormControl fullWidth error={!!errors.dept} key='societies'>
-          <InputLabel>Professional Societies</InputLabel>
-          <Select
-            value={dept}
-            onChange={e => setDept(e.target.value)}
-            label='Professional Societies'
-          >
-            {societies.map((society, index) => (
-              <MenuItem key={index} value={society}>
-                {society}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      );
-    }
-
-    // IEEE Society Name field
-    if (
-      userType === 'professionalsocieties' &&
-      (dept === 'IEEE' || ieeeSocieties.includes(dept))
-    ) {
-      fields.push(
-        <FormControl fullWidth error={!!errors.currSoc} key='ieee'>
-          <InputLabel>IEEE Society Name</InputLabel>
-          <Select
-            value={currSoc}
-            onChange={e => setCurrSoc(e.target.value)}
-            label='IEEE Society Name'
-          >
-            {ieeeSocieties.map((option, index) => (
-              <MenuItem key={index} value={ieeeSocietiesShort[index]}>
-                {option}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      );
-    }
-
-    // Department fields for SIT
-    if (
-      ['HOD', 'staff', 'student'].includes(userType) &&
-      collegeName === 'SIT'
-    ) {
-      fields.push(
-        <FormControl fullWidth error={!!errors.dept} key='sit-dept'>
-          <InputLabel>Department</InputLabel>
-          <Select
-            value={dept}
-            onChange={e => setDept(e.target.value)}
-            label='Department'
-          >
-            <MenuItem value='CS'>CSE</MenuItem>
-            <MenuItem value='IT'>IT</MenuItem>
-            <MenuItem value='EE'>EEE</MenuItem>
-            <MenuItem value='EC'>ECE</MenuItem>
-            <MenuItem value='ME'>MECH</MenuItem>
-            <MenuItem value='SC'>Cyber Security</MenuItem>
-            <MenuItem value='CO'>CCE</MenuItem>
-            <MenuItem value='AI'>AI-DS</MenuItem>
-            <MenuItem value='MB'>MBA</MenuItem>
-            <MenuItem value='PH'>Physics</MenuItem>
-            <MenuItem value='EN'>English</MenuItem>
-            <MenuItem value='MA'>Maths</MenuItem>
-            <MenuItem value='CH'>Chemistry</MenuItem>
-            <MenuItem value='PD'>Physical Education</MenuItem>
-            <MenuItem value='TA'>Tamil</MenuItem>
-            <MenuItem value='SBIT'>IEEE Student Branch</MenuItem>
-          </Select>
-        </FormControl>
-      );
-    }
-
-    // Department fields for SEC
-    if (
-      ['HOD', 'staff', 'student'].includes(userType) &&
-      collegeName === 'SEC'
-    ) {
-      fields.push(
-        <FormControl fullWidth error={!!errors.dept} key='sec-dept'>
-          <InputLabel>Department</InputLabel>
-          <Select
-            value={dept}
-            onChange={e => setDept(e.target.value)}
-            label='Department'
-          >
-            <MenuItem value='AI'>AI-DS</MenuItem>
-            <MenuItem value='AM'>AI-ML</MenuItem>
-            <MenuItem value='CB'>CSBS</MenuItem>
-            <MenuItem value='CS'>CSE</MenuItem>
-            <MenuItem value='EE'>EEE</MenuItem>
-            <MenuItem value='EC'>ECE</MenuItem>
-            <MenuItem value='EI'>E&I</MenuItem>
-            <MenuItem value='ME'>MECH</MenuItem>
-            <MenuItem value='CE'>CIVIL</MenuItem>
-            <MenuItem value='IT'>IT</MenuItem>
-            <MenuItem value='IC'>ICE</MenuItem>
-            <MenuItem value='CI'>IOT</MenuItem>
-            <MenuItem value='MB'>MBA</MenuItem>
-            <MenuItem value='CJ'>M.Tech CSE</MenuItem>
-            <MenuItem value='MU'>Mech & Auto</MenuItem>
-            <MenuItem value='PH'>Physics</MenuItem>
-            <MenuItem value='EN'>English</MenuItem>
-            <MenuItem value='MA'>Maths</MenuItem>
-            <MenuItem value='CH'>Chemistry</MenuItem>
-            <MenuItem value='PD'>Physical Education</MenuItem>
-            <MenuItem value='TA'>Tamil</MenuItem>
-            <MenuItem value='SBEC'>IEEE Student Branch</MenuItem>
-          </Select>
-        </FormControl>
-      );
-    }
-
-    // Clubs field
-    if (userType === 'clubincharge') {
-      fields.push(
-        <FormControl fullWidth error={!!errors.dept} key='clubs'>
-          <InputLabel>Clubs</InputLabel>
-          <Select
-            value={dept}
-            onChange={e => setDept(e.target.value)}
-            label='Clubs'
-          >
-            {clubs.map((club, index) => (
-              <MenuItem key={index} value={clubsShort[index]}>
-                {club}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      );
-    }
-
-    return fields;
   };
 
   return (
-    <Box
-      sx={{
-        bgcolor: colors.light.secondaryHex,
-        display: 'flex',
-        flexDirection: 'column',
-        p: { xs: 2, sm: 3, md: 4 },
-        borderRadius: 3,
-        minHeight: 'calc(100vh - 64px)',
-      }}
-    >
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant='h4'
-          component='h1'
-          sx={{
-            fontWeight: 'bold',
-            color: colors.light.primaryHex,
-            fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
-          }}
-        >
-          User Management
-        </Typography>
-        <Typography
-          variant='body1'
-          color='text.secondary'
-          sx={{ mt: 1, fontSize: '1.1rem' }}
-        >
-          Add new users or manage existing user accounts
-        </Typography>
-      </Box>
+    <Box sx={{ bgcolor: colors.light.secondaryHex, p: { xs: 2, md: 4 }, borderRadius: 3, minHeight: '100vh' }}>
+      <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 3, color: colors.light.primaryHex }}>Admin Panel</Typography>
 
-      <Paper
-        sx={{
-          mb: 3,
-          borderRadius: 2,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant='fullWidth'
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '1rem',
-            },
-          }}
-        >
-          <Tab
-            icon={<Users size={20} />}
-            label='Add User'
-            iconPosition='start'
-          />
-          <Tab
-            icon={<Pencil size={20} />}
-            label='Edit User'
-            iconPosition='start'
-          />
+      {/* Main Tabs */}
+      <Paper sx={{ borderRadius: 2, mb: 3 }}>
+        <Tabs value={mainTab} onChange={(e, v) => setMainTab(v)} variant='fullWidth'>
+          <Tab icon={<Users size={20} />} label='User Management' iconPosition='start' />
+          <Tab icon={<Gear size={20} />} label='Configuration' iconPosition='start' />
         </Tabs>
       </Paper>
 
-      {/* Add User Tab Content */}
-      {activeTab === 0 && (
-        <Card
-          sx={{
-            bgcolor: colors.light.cardHex,
-            borderRadius: 3,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-            <Typography
-              variant='h5'
-              component='h2'
-              gutterBottom
-              sx={{
-                mb: 3,
-                fontWeight: 'bold',
-                color: colors.light.primaryHex,
-              }}
-            >
-              Add New User
-            </Typography>
+      {/* =============== USER MANAGEMENT TAB =============== */}
+      <TabPanel value={mainTab} index={0}>
+        <Paper sx={{ borderRadius: 2, mb: 2 }}>
+          <Tabs value={userTab} onChange={(e, v) => { setUserTab(v); clearUserForm(); }} variant='fullWidth'>
+            <Tab label='Add User' />
+            <Tab label='Edit User' />
+          </Tabs>
+        </Paper>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField
-                fullWidth
-                label='Name'
-                value={name}
-                onChange={e => setName(e.target.value)}
-                error={!!errors.name}
-                helperText={errors.name}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-
-              <FormControl fullWidth error={!!errors.userType} required>
-                <InputLabel>User Type</InputLabel>
-                <Select
-                  value={userType}
-                  onChange={e => setUserType(e.target.value)}
-                  label='User Type'
-                >
-                  <MenuItem value='admin'>Admin</MenuItem>
-                  <MenuItem value='HOD'>HOD</MenuItem>
-                  <MenuItem value='professionalsocieties'>
-                    Professional Society Head
-                  </MenuItem>
-                  <MenuItem value='clubincharge'>Club Incharge</MenuItem>
-                  <MenuItem value='staff'>Staff</MenuItem>
-                </Select>
-              </FormControl>
-
-              {renderConditionalFields()}
-
-              <TextField
-                fullWidth
-                label='Email'
-                type='email'
-                value={mail}
-                onChange={e => setMail(e.target.value)}
-                error={!!errors.mail}
-                helperText={errors.mail}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label='Password'
-                type='password'
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                error={!!errors.password}
-                helperText={errors.password}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  },
-                }}
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isSuperAdmin}
-                    onChange={e => setIsSuperAdmin(e.target.checked)}
-                    sx={{
-                      color: colors.light.primaryHex,
-                      '&.Mui-checked': {
-                        color: colors.light.primaryHex,
-                      },
-                    }}
-                  />
-                }
-                label='Super Admin'
-              />
-
-              <Box>
-                <Stack direction='row' spacing={2} flexWrap='wrap'>
-                  <Button
-                    variant='contained'
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    startIcon={
-                      loading ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <FloppyDisk size={20} />
-                      )
-                    }
-                    sx={{
-                      bgcolor: colors.light.primaryHex,
-                      color: '#ffffff',
-                      '&:hover': {
-                        bgcolor: colors.light.primaryHex,
-                        opacity: 0.9,
-                      },
-                      '&:disabled': {
-                        bgcolor: colors.light.mutedHex,
-                        color: colors.light.mutedForegroundHex,
-                      },
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {loading ? 'Adding...' : 'Add User'}
-                  </Button>
-                  <Button
-                    variant='outlined'
-                    onClick={clearForm}
-                    startIcon={<ArrowClockwise size={20} />}
-                    sx={{
-                      borderColor: colors.light.borderHex,
-                      color: colors.light.primaryHex,
-                      '&:hover': {
-                        borderColor: colors.light.primaryHex,
-                        bgcolor: colors.light.mutedHex,
-                      },
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Clear Form
-                  </Button>
-                </Stack>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Edit User Tab Content */}
-      {activeTab === 1 && (
-        <Card
-          sx={{
-            bgcolor: colors.light.cardHex,
-            borderRadius: 3,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-            <Typography
-              variant='h5'
-              component='h2'
-              gutterBottom
-              sx={{
-                mb: 3,
-                fontWeight: 'bold',
-                color: colors.light.primaryHex,
-              }}
-            >
-              Edit Existing User
-            </Typography>
-
-            {/* Fetch User Section */}
-            <Paper
-              sx={{
-                p: 3,
-                mb: 3,
-                bgcolor: colors.light.mutedHex,
-                borderRadius: 2,
-              }}
-            >
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{ fontWeight: 600, mb: 2 }}
-              >
-                Find User
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label='Email Address'
-                  type='email'
-                  value={fetchEMail}
-                  onChange={e => setFetchEmail(e.target.value)}
-                  placeholder="Enter user's email address"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'white',
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-                <Button
-                  variant='contained'
-                  onClick={handleFetch}
-                  disabled={loading || !fetchEMail.trim()}
-                  startIcon={
-                    loading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      <MagnifyingGlass size={20} />
-                    )
-                  }
-                  fullWidth
-                  sx={{
-                    bgcolor: colors.light.primaryHex,
-                    color: '#ffffff',
-                    '&:hover': {
-                      bgcolor: colors.light.primaryHex,
-                      opacity: 0.9,
-                    },
-                    '&:disabled': {
-                      bgcolor: colors.light.mutedHex,
-                      color: colors.light.mutedForegroundHex,
-                    },
-                    py: 1.5,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                  }}
-                >
-                  {loading ? 'Searching...' : 'Fetch User'}
-                </Button>
-              </Box>
-            </Paper>
-
-            {/* User Details Form */}
-            {userFetched && (
-              <Box>
-                <Alert
-                  severity='success'
-                  sx={{
-                    mb: 3,
-                    borderRadius: 2,
-                    bgcolor: '#4caf5020',
-                    borderColor: '#4caf50',
-                  }}
-                  icon={<CheckCircle size={20} />}
-                >
-                  <Typography>
-                    User found! You can now edit their details below.
-                  </Typography>
-                </Alert>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <TextField
-                    fullWidth
-                    label='User Name'
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    error={!!errors.name}
-                    helperText={errors.name}
-                    required
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                      },
-                    }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label='Email Address'
-                    type='email'
-                    value={mail}
-                    disabled
-                    helperText='Email cannot be changed'
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        bgcolor: colors.light.mutedHex + '15',
-                      },
-                    }}
-                  />
-
-                  <FormControl fullWidth error={!!errors.userType} required>
-                    <InputLabel>User Type</InputLabel>
-                    <Select
-                      value={userType}
-                      onChange={e => setUserType(e.target.value)}
-                      label='User Type'
-                    >
-                      <MenuItem value='admin'>Admin</MenuItem>
-                      <MenuItem value='HOD'>HOD</MenuItem>
-                      <MenuItem value='professionalsocieties'>
-                        Professional Society Head
-                      </MenuItem>
-                      <MenuItem value='clubincharge'>Club Incharge</MenuItem>
-                      <MenuItem value='staff'>Staff</MenuItem>
+        <Card sx={{ borderRadius: 2 }}>
+          <CardContent sx={{ p: 3 }}>
+            {/* Add User */}
+            {userTab === 0 && (
+              <Stack spacing={2}>
+                <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} error={!!userErrors.name} helperText={userErrors.name} required fullWidth />
+                <FormControl fullWidth required error={!!userErrors.userType}>
+                  <InputLabel>User Type</InputLabel>
+                  <Select value={userType} onChange={(e) => setUserType(e.target.value)} label='User Type'>
+                    <MenuItem value='admin'>Admin</MenuItem>
+                    <MenuItem value='HOD'>HOD</MenuItem>
+                    <MenuItem value='professionalsocieties'>Professional Society Head</MenuItem>
+                    <MenuItem value='clubincharge'>Club Incharge</MenuItem>
+                    <MenuItem value='staff'>Staff</MenuItem>
+                  </Select>
+                </FormControl>
+                {['staff', 'HOD', 'admin'].includes(userType) && (
+                  <FormControl fullWidth>
+                    <InputLabel>College</InputLabel>
+                    <Select value={collegeName} onChange={(e) => setCollegeName(e.target.value)} label='College'>
+                      {colleges.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
                     </Select>
                   </FormControl>
+                )}
+                {userType === 'professionalsocieties' && (
+                  <FormControl fullWidth>
+                    <InputLabel>Society</InputLabel>
+                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Society'>
+                      {societies.filter(s => s.type === 'professional').map((s) => <MenuItem key={s._id} value={s.code}>{s.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )}
+                {userType === 'professionalsocieties' && dept === 'IEEE' && (
+                  <FormControl fullWidth>
+                    <InputLabel>IEEE Society</InputLabel>
+                    <Select value={currSoc} onChange={(e) => setCurrSoc(e.target.value)} label='IEEE Society'>
+                      {societies.filter(s => s.type === 'ieee').map((s) => <MenuItem key={s._id} value={s.code}>{s.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )}
+                {userType === 'clubincharge' && (
+                  <FormControl fullWidth>
+                    <InputLabel>Club</InputLabel>
+                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Club'>
+                      {clubs.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )}
+                {['HOD', 'staff'].includes(userType) && collegeName && (
+                  <FormControl fullWidth>
+                    <InputLabel>Department</InputLabel>
+                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Department'>
+                      {departments.filter(d => d.college === collegeName).map((d) => <MenuItem key={d._id} value={d.code}>{d.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )}
+                <TextField label='Email' type='email' value={mail} onChange={(e) => setMail(e.target.value)} error={!!userErrors.mail} helperText={userErrors.mail} required fullWidth />
+                <TextField label='Password' type='password' value={password} onChange={(e) => setPassword(e.target.value)} error={!!userErrors.password} helperText={userErrors.password} required fullWidth />
+                <FormControlLabel control={<Checkbox checked={isSuperAdmin} onChange={(e) => setIsSuperAdmin(e.target.checked)} />} label='Super Admin' />
+                <Stack direction='row' spacing={2}>
+                  <Button variant='contained' startIcon={userLoading ? <CircularProgress size={18} /> : <FloppyDisk size={18} />} onClick={handleAddUser} disabled={userLoading}
+                    sx={{ bgcolor: colors.light.primaryHex }}>Add User</Button>
+                  <Button variant='outlined' startIcon={<ArrowClockwise size={18} />} onClick={clearUserForm}>Clear</Button>
+                </Stack>
+              </Stack>
+            )}
 
-                  {renderConditionalFields()}
-
-                  <TextField
-                    fullWidth
-                    label='ID Number'
-                    value={idNumber}
-                    onChange={e => setIdNumber(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                      },
-                    }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label='Role'
-                    value={role}
-                    onChange={e => setRole(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                      },
-                    }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label='Phone Number'
-                    type='tel'
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                      },
-                    }}
-                  />
-
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isSuperAdmin}
-                        onChange={e => setIsSuperAdmin(e.target.checked)}
-                        sx={{
-                          color: colors.light.primaryHex,
-                          '&.Mui-checked': {
-                            color: colors.light.primaryHex,
-                          },
-                        }}
-                      />
-                    }
-                    label='Is Super Admin?'
-                  />
-
-                  <Box>
-                    <Divider sx={{ my: 2 }} />
-                    <Stack direction='row' spacing={2} flexWrap='wrap'>
-                      <Button
-                        variant='contained'
-                        onClick={handleUpdate}
-                        disabled={loading}
-                        startIcon={
-                          loading ? (
-                            <CircularProgress size={20} />
-                          ) : (
-                            <FloppyDisk size={20} />
-                          )
-                        }
-                        sx={{
-                          bgcolor: colors.light.primaryHex,
-                          color: '#ffffff',
-                          '&:hover': {
-                            bgcolor: colors.light.primaryHex,
-                            opacity: 0.9,
-                          },
-                          '&:disabled': {
-                            bgcolor: colors.light.mutedHex,
-                            color: colors.light.mutedForegroundHex,
-                          },
-                          px: 4,
-                          py: 1.5,
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {loading ? 'Updating...' : 'Update User'}
-                      </Button>
-                      <Button
-                        variant='outlined'
-                        color='error'
-                        onClick={handleDelete}
-                        disabled={loading}
-                        startIcon={<Trash size={20} />}
-                        sx={{
-                          px: 4,
-                          py: 1.5,
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Delete User
-                      </Button>
-                      <Button
-                        variant='outlined'
-                        color='warning'
-                        onClick={handleChangePassword}
-                        disabled={loading}
-                        startIcon={<Key size={20} />}
-                        sx={{
-                          px: 4,
-                          py: 1.5,
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Reset Password
-                      </Button>
-                      <Button
-                        variant='outlined'
-                        onClick={clearForm}
-                        startIcon={<ArrowClockwise size={20} />}
-                        sx={{
-                          borderColor: colors.light.borderHex,
-                          color: colors.light.primaryHex,
-                          '&:hover': {
-                            borderColor: colors.light.primaryHex,
-                            bgcolor: colors.light.mutedHex,
-                          },
-                          px: 4,
-                          py: 1.5,
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Clear Form
-                      </Button>
-                    </Stack>
-                  </Box>
+            {/* Edit User */}
+            {userTab === 1 && (
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField label='Email to Find' value={fetchEMail} onChange={(e) => setFetchEmail(e.target.value)} fullWidth />
+                  <Button variant='contained' startIcon={<MagnifyingGlass size={18} />} onClick={handleFetchUser} disabled={userLoading}
+                    sx={{ bgcolor: colors.light.primaryHex, minWidth: 120 }}>Find</Button>
                 </Box>
-              </Box>
+                {userFetched && (
+                  <>
+                    <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+                    <TextField label='Email' value={mail} onChange={(e) => setMail(e.target.value)} fullWidth />
+                    <FormControl fullWidth>
+                      <InputLabel>User Type</InputLabel>
+                      <Select value={userType} onChange={(e) => setUserType(e.target.value)} label='User Type'>
+                        <MenuItem value='admin'>Admin</MenuItem>
+                        <MenuItem value='HOD'>HOD</MenuItem>
+                        <MenuItem value='staff'>Staff</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControlLabel control={<Checkbox checked={isSuperAdmin} onChange={(e) => setIsSuperAdmin(e.target.checked)} />} label='Super Admin' />
+                    <Stack direction='row' spacing={2} flexWrap='wrap'>
+                      <Button variant='contained' startIcon={<FloppyDisk size={18} />} onClick={handleUpdateUser} disabled={userLoading} sx={{ bgcolor: colors.light.primaryHex }}>Update</Button>
+                      <Button variant='outlined' startIcon={<Key size={18} />} onClick={handleChangePassword} disabled={userLoading}>Reset Password</Button>
+                      <Button variant='outlined' color='error' startIcon={<Trash size={18} />} onClick={handleDeleteUser} disabled={userLoading}>Delete</Button>
+                    </Stack>
+                  </>
+                )}
+              </Stack>
             )}
           </CardContent>
         </Card>
-      )}
+      </TabPanel>
+
+      {/* =============== CONFIGURATION TAB =============== */}
+      <TabPanel value={mainTab} index={1}>
+        <Paper sx={{ borderRadius: 2, mb: 2 }}>
+          <Tabs value={configTab} onChange={(e, v) => setConfigTab(v)} variant='scrollable' scrollButtons='auto'>
+            <Tab icon={<Buildings size={18} />} label='Colleges' iconPosition='start' />
+            <Tab icon={<UsersThree size={18} />} label='Departments' iconPosition='start' />
+            <Tab icon={<Users size={18} />} label='Societies' iconPosition='start' />
+            <Tab icon={<Users size={18} />} label='Clubs' iconPosition='start' />
+            <Tab icon={<MapPin size={18} />} label='Parent Blocks' iconPosition='start' />
+          </Tabs>
+        </Paper>
+
+        <TabPanel value={configTab} index={0}>
+          <ConfigTable title='Colleges' data={colleges} entityName='College' loading={loadingConfig.colleges}
+            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
+            onAdd={() => openAddDialog('college')} onEdit={(item) => openEditDialog('college', item)} onDelete={(item) => handleConfigDelete('college', item)} />
+        </TabPanel>
+        <TabPanel value={configTab} index={1}>
+          <ConfigTable title='Departments' data={departments} entityName='Department' loading={loadingConfig.departments}
+            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'college', label: 'College', render: (v) => <Chip size='small' label={v} /> }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
+            onAdd={() => openAddDialog('department')} onEdit={(item) => openEditDialog('department', item)} onDelete={(item) => handleConfigDelete('department', item)} />
+        </TabPanel>
+        <TabPanel value={configTab} index={2}>
+          <ConfigTable title='Societies' data={societies} entityName='Society' loading={loadingConfig.societies}
+            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Type', render: (v) => <Chip size='small' label={v} color={v === 'ieee' ? 'primary' : 'default'} /> }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
+            onAdd={() => openAddDialog('society')} onEdit={(item) => openEditDialog('society', item)} onDelete={(item) => handleConfigDelete('society', item)} />
+        </TabPanel>
+        <TabPanel value={configTab} index={3}>
+          <ConfigTable title='Clubs' data={clubs} entityName='Club' loading={loadingConfig.clubs}
+            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
+            onAdd={() => openAddDialog('club')} onEdit={(item) => openEditDialog('club', item)} onDelete={(item) => handleConfigDelete('club', item)} />
+        </TabPanel>
+        <TabPanel value={configTab} index={4}>
+          <ConfigTable title='Parent Blocks' data={parentBlocks} entityName='Parent Block' loading={loadingConfig.blocks}
+            columns={[{ key: 'name', label: 'Name' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
+            onAdd={() => openAddDialog('parentBlock')} onEdit={(item) => openEditDialog('parentBlock', item)} onDelete={(item) => handleConfigDelete('parentBlock', item)} />
+        </TabPanel>
+      </TabPanel>
+
+      {/* =============== ADD/EDIT DIALOG =============== */}
+      <Dialog open={dialogOpen} onClose={closeDialog} maxWidth='sm' fullWidth>
+        <DialogTitle>{editingItem ? 'Edit' : 'Add'} {dialogType.replace(/([A-Z])/g, ' $1').trim()}</DialogTitle>
+        <DialogContent>{renderDialogContent()}</DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={closeDialog}>Cancel</Button>
+          <Button variant='contained' onClick={handleConfigSave} disabled={submitting} sx={{ bgcolor: colors.light.primaryHex }}>
+            {submitting ? <CircularProgress size={20} /> : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

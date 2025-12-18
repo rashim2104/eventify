@@ -75,11 +75,7 @@ export async function POST(req) {
       email === 'principal@sairamit.edu.in'
     ) {
       if (action === 'Approve') {
-        const eventId = await IdGen(
-          eventDetails.user_id,
-          eventDetails.dept,
-          eventDetails.eventCollege
-        );
+        const eventId = await IdGen(eventDetails);
         userEvents = await Events.updateOne(
           { _id: event_id },
           { $set: { status: 2, ins_id: eventId } }
@@ -98,11 +94,7 @@ export async function POST(req) {
         case 'Approve':
           const eventId =
             customEventId ||
-            (await IdGen(
-              eventDetails.user_id,
-              eventDetails.dept,
-              eventDetails.eventCollege
-            ));
+            (await IdGen(eventDetails));
           userEvents = await Events.updateOne(
             { _id: event_id },
             {

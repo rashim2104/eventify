@@ -23,15 +23,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { Users } from '@phosphor-icons/react';
 
-// Import colors and data
 const { colors } = require('@/lib/colors.config.js');
-import {
-  societies,
-  ieeeSocieties,
-  ieeeSocietiesShort,
-  clubs,
-  clubsShort,
-} from '@/public/data/data';
 
 const BasicInfoStep = ({
   control,
@@ -52,6 +44,12 @@ const BasicInfoStep = ({
   handleUpload,
   handleDelete,
   renderMedia,
+  // Config data from parent (fetched from API)
+  societies = [],
+  ieeeSocieties = [],
+  clubs = [],
+  departments = [],
+  userType = '',
 }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -132,6 +130,59 @@ const BasicInfoStep = ({
           )}
         </FormControl>
 
+        {/* Department Selection for Admins */}
+        {watch('EventOrganizer') == 1 && userType === 'admin' && (
+          <FormControl fullWidth error={!!validationErrors?.eventSociety}>
+            <FormLabel sx={{ color: colors.light.foreground, mb: 1 }}>
+              Department *
+            </FormLabel>
+            <Select
+              key={watch('EventOrganizer')}
+              value={eventSociety || ''}
+              onChange={e => {
+                setEventSociety(e.target.value);
+                setCurrSoc(e.target.value);
+              }}
+              displayEmpty
+              renderValue={selected => {
+                if (!selected) {
+                  return (
+                    <span style={{ color: colors.light.mutedForeground }}>
+                      Select a Department
+                    </span>
+                  );
+                }
+                const dept = departments.find(d => d.code === selected);
+                return dept ? dept.name : selected;
+              }}
+              sx={{
+                borderRadius: 1,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: colors.light.border,
+                },
+              }}
+            >
+              <MenuItem value='' disabled>
+                <span style={{ color: colors.light.mutedForeground }}>
+                  Select a Department
+                </span>
+              </MenuItem>
+              {departments.map((dept) => (
+                <MenuItem key={dept.code || dept._id} value={dept.code}>
+                  {dept.name} ({dept.college})
+                </MenuItem>
+              ))}
+            </Select>
+            {validationErrors?.eventSociety && (
+              <FormHelperText
+                sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
+              >
+                {validationErrors.eventSociety}
+              </FormHelperText>
+            )}
+          </FormControl>
+        )}
+
         {/* Professional Society Selection */}
         {watch('EventOrganizer') == 2 && (
           <FormControl fullWidth error={!!validationErrors?.eventSociety}>
@@ -167,9 +218,9 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {societies.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
+              {societies.map((society) => (
+                <MenuItem key={society.code || society} value={society.code || society}>
+                  {society.name || society}
                 </MenuItem>
               ))}
             </Select>
@@ -215,9 +266,9 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {ieeeSocieties.map((option, index) => (
-                <MenuItem key={index} value={ieeeSocietiesShort[index]}>
-                  {option}
+              {ieeeSocieties.map((society) => (
+                <MenuItem key={society.code || society} value={society.code || society}>
+                  {society.name || society}
                 </MenuItem>
               ))}
             </Select>
@@ -259,9 +310,9 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {clubs.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
+              {clubs.map((club) => (
+                <MenuItem key={club.code || club} value={club.code || club}>
+                  {club.name || club}
                 </MenuItem>
               ))}
             </Select>
@@ -374,13 +425,13 @@ const BasicInfoStep = ({
           />
           {(errors.EventType?.eventType ||
             validationErrors?.['EventType.eventType']) && (
-            <FormHelperText
-              sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
-            >
-              {errors.EventType?.eventType?.message ||
-                validationErrors?.['EventType.eventType']}
-            </FormHelperText>
-          )}
+              <FormHelperText
+                sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
+              >
+                {errors.EventType?.eventType?.message ||
+                  validationErrors?.['EventType.eventType']}
+              </FormHelperText>
+            )}
         </FormControl>
 
         {/* Event Type Other Option */}
