@@ -1,7 +1,6 @@
-import { colors, colorHexMap } from './lib/colors.config.js';
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class"],
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,68 +8,65 @@ module.exports = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
       colors: {
-        // Eventify Color Palette - shadcn/ui theme (using hex values for compatibility)
-        background: colors.light.backgroundHex,
-        foreground: colors.light.foregroundHex,
-        card: colors.light.cardHex,
-        cardForeground: colors.light.cardForegroundHex,
-        primary: colors.light.primaryHex,
-        primaryForeground: colors.light.primaryForegroundHex,
-        secondary: colors.light.secondaryHex,
-        secondaryForeground: colors.light.secondaryForegroundHex,
-        muted: colors.light.mutedHex,
-        mutedForeground: colors.light.mutedForegroundHex,
-        accent: colors.light.accentHex,
-        accentForeground: colors.light.accentForegroundHex,
-        destructive: colors.light.destructiveHex,
-        border: colors.light.borderHex,
-        input: colors.light.inputHex,
-        ring: colors.light.ringHex,
-        sidebar: colors.light.sidebar,
-        sidebarForeground: colors.light.sidebarForeground,
-        sidebarPrimary: colors.light.sidebarPrimary,
-        sidebarPrimaryForeground: colors.light.sidebarPrimaryForeground,
-        sidebarAccent: colors.light.sidebarAccent,
-        sidebarAccentForeground: colors.light.sidebarAccentForeground,
-        sidebarBorder: colors.light.sidebarBorder,
-        sidebarRing: colors.light.sidebarRing,
-
-        // Legacy support - keeping old color names for backward compatibility
-        success: '#10b981',
-        warning: '#f59e0b',
-        info: '#3b82f6',
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+        sidebar: {
+          DEFAULT: "var(--sidebar)",
+          foreground: "var(--sidebar-foreground)",
+          primary: "var(--sidebar-primary)",
+          "primary-foreground": "var(--sidebar-primary-foreground)",
+          accent: "var(--sidebar-accent)",
+          "accent-foreground": "var(--sidebar-accent-foreground)",
+          border: "var(--sidebar-border)",
+          ring: "var(--sidebar-ring)",
+        },
+        chart: {
+          1: "var(--chart-1)",
+          2: "var(--chart-2)",
+          3: "var(--chart-3)",
+          4: "var(--chart-4)",
+          5: "var(--chart-5)",
+        },
       },
-
-      // Custom utility classes for the design system
-      backgroundColor: {
-        'bg-primary': 'var(--color-bg-primary)',
-        'bg-secondary': 'var(--color-bg-secondary)',
-        'bg-tertiary': 'var(--color-bg-tertiary)',
-        'bg-muted': 'var(--color-bg-muted)',
-        'bg-surface': 'var(--color-surface)',
-        'bg-surface-secondary': 'var(--color-surface-secondary)',
-        'bg-surface-tertiary': 'var(--color-surface-tertiary)',
-      },
-
-      textColor: {
-        'text-primary': 'var(--color-text-primary)',
-        'text-secondary': 'var(--color-text-secondary)',
-        'text-muted': 'var(--color-text-muted)',
-        'text-subtle': 'var(--color-text-subtle)',
-      },
-
-      borderColor: {
-        border: 'var(--color-border)',
-        'border-secondary': 'var(--color-border-secondary)',
-        'border-strong': 'var(--color-border-strong)',
+      borderRadius: {
+        xl: "calc(var(--radius) + 4px)",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },
   plugins: [],
-};
+}

@@ -353,7 +353,7 @@ const BasicInfoStep = ({
         {/* Event Name */}
         <TextField
           fullWidth
-          label='Event Name'
+          label='Event Name *'
           placeholder='Enter The Name Of The Event'
           {...register('EventName', {
             required: 'This field is required',
@@ -471,7 +471,7 @@ const BasicInfoStep = ({
           fullWidth
           multiline
           rows={4}
-          label='Objective of the Event'
+          label='Objective of the Event *'
           placeholder='Enter the objective'
           {...register('EventObjective', {
             required: 'This field is required',
@@ -498,7 +498,7 @@ const BasicInfoStep = ({
         <TextField
           fullWidth
           type='number'
-          label='Expected Number of Participants'
+          label='Expected Number of Participants *'
           placeholder='Enter expected number of participants'
           {...register('EventParticipants', {
             required: 'This field is required',
@@ -595,19 +595,13 @@ const BasicInfoStep = ({
           error={!!errors.eventLocation || !!validationErrors?.eventLocation}
         >
           <FormLabel sx={{ color: colors.light.foreground, mb: 1 }}>
-            Is Event On-campus?
-            {watch('EventVenue') === 'offline' && (
-              <span style={{ color: colors.light.foreground }}> *</span>
-            )}
+            Is Event On-campus? *
           </FormLabel>
           <Controller
             name='eventLocation'
             control={control}
             rules={{
-              required:
-                watch('EventVenue') === 'offline'
-                  ? 'Please specify if the event is on-campus'
-                  : false,
+              required: 'Please specify if the event is on-campus',
             }}
             render={({ field }) => (
               <RadioGroup
@@ -761,7 +755,7 @@ const BasicInfoStep = ({
             rules={{ required: 'Start date and time is required' }}
             render={({ field: { onChange, value } }) => (
               <DateTimePicker
-                label='Start Date & Time'
+                label='Start Date & Time *'
                 value={value ? dayjs(value) : null}
                 onChange={newValue => {
                   onChange(newValue ? newValue.toISOString() : '');
@@ -820,7 +814,7 @@ const BasicInfoStep = ({
             }}
             render={({ field: { onChange, value } }) => (
               <DateTimePicker
-                label='End Date & Time'
+                label='End Date & Time *'
                 value={value ? dayjs(value) : null}
                 onChange={newValue => {
                   onChange(newValue ? newValue.toISOString() : '');
@@ -864,7 +858,7 @@ const BasicInfoStep = ({
         <TextField
           fullWidth
           type='number'
-          label='Event Duration (in hours)'
+          label='Event Duration (in hours) *'
           {...register('EventDuration', {
             required: 'This field is required',
             min: { value: 1, message: 'Must be at least 1 hour' },
