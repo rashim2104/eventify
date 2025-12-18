@@ -324,6 +324,7 @@ const EventForm = () => {
     };
 
     const user_id = session?.user?._id;
+    const userType = session?.user?.userType;
     let dept = '';
     let college = session?.user?.college;
 
@@ -359,7 +360,6 @@ const EventForm = () => {
       college = 'common';
     }
 
-    const userType = session?.user?.userType;
     const status = await fetch('/api/v2/createEvent', {
       method: 'POST',
       headers: {
