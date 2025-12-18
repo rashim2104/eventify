@@ -23,8 +23,12 @@ import {
   CircularProgress,
   Stack,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
-import { Pencil, Calendar, CheckCircle, XCircle } from '@phosphor-icons/react';
+import { Pencil, Calendar, CheckCircle, XCircle, Plus } from '@phosphor-icons/react';
 import { colors } from '@/lib/colors.config.js';
 
 export default function Venues() {
@@ -32,6 +36,17 @@ export default function Venues() {
   const [venues, setVenues] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addingVenue, setAddingVenue] = useState(false);
+  const [newVenue, setNewVenue] = useState({
+    venueName: '',
+    hasAc: false,
+    hasProjector: false,
+    seatingCapacity: '',
+    parentBlock: '',
+    venueId: '',
+    isAvailable: true,
+  });
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -83,6 +98,67 @@ export default function Venues() {
       toast.error('Error updating venues');
     }
     setSubmitting(false);
+  };
+
+  const handleNewVenueChange = (field, value) => {
+    setNewVenue(prev => ({ ...prev, [field]: value }));
+  };
+
+  const resetNewVenueForm = () => {
+    setNewVenue({
+      venueName: '',
+      hasAc: false,
+      hasProjector: false,
+      seatingCapacity: '',
+      parentBlock: '',
+      venueId: '',
+      isAvailable: true,
+    });
+    setIsAddModalOpen(false);
+  };
+
+  const handleAddVenue = async () => {
+    // Validation
+    if (!newVenue.venueName.trim()) {
+      toast.error('Venue name is required');
+      return;
+    }
+    if (!newVenue.venueId.trim()) {
+      toast.error('Venue ID is required');
+      return;
+    }
+    if (!newVenue.parentBlock.trim()) {
+      toast.error('Parent block is required');
+      return;
+    }
+    if (newVenue.seatingCapacity <= 0) {
+      toast.error('Seating capacity must be greater than 0');
+      return;
+    }
+
+    setAddingVenue(true);
+    try {
+      const response = await fetch('/api/venue/addVenue', {
+        method: 'POST',
+        body: JSON.stringify(newVenue),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        toast.success('Venue added successfully');
+        resetNewVenueForm();
+        // Trigger refetch by toggling isEdit
+        setIsEdit(prev => !prev);
+        setTimeout(() => setIsEdit(false), 100);
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Error adding venue');
+      }
+    } catch (error) {
+      toast.error('Error adding venue');
+    }
+    setAddingVenue(false);
   };
 
   if (status === 'loading') {
@@ -163,6 +239,22 @@ export default function Venues() {
                 <Calendar size={24} color={colors.light.backgroundHex} />
               </IconButton>
             </>
+          )}
+          {/* Add Venue Button - always visible for admins */}
+          {isAdmin && (
+            <IconButton
+              sx={{
+                bgcolor: colors.light.primaryHex,
+                color: colors.light.primaryForegroundHex,
+                '&:hover': {
+                  bgcolor: colors.light.primaryHex,
+                  opacity: 0.8,
+                },
+              }}
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus size={24} color={colors.light.backgroundHex} />
+            </IconButton>
           )}
         </Stack>
       </Box>
@@ -429,6 +521,119 @@ export default function Venues() {
           </Button>
         </Box>
       )}
+
+      {/* Add Venue Dialog */}
+      <Dialog
+        open={isAddModalOpen}
+        onClose={resetNewVenueForm}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Add New Venue</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <TextField
+              label='Venue Name'
+              fullWidth
+              value={newVenue.venueName}
+              onChange={e => handleNewVenueChange('venueName', e.target.value)}
+              required
+            />
+            <TextField
+              label='Venue ID'
+              fullWidth
+              value={newVenue.venueId}
+              onChange={e => handleNewVenueChange('venueId', e.target.value)}
+              required
+              helperText='A unique identifier for the venue (e.g., "LH-101")'
+            />
+            <TextField
+              select
+              label='Parent Block'
+              fullWidth
+              value={newVenue.parentBlock}
+              onChange={e => handleNewVenueChange('parentBlock', e.target.value)}
+              required
+              helperText='Select the building or block'
+            >
+              <MenuItem value='A Block'>A Block</MenuItem>
+              <MenuItem value='B Block'>B Block</MenuItem>
+              <MenuItem value='C Block'>C Block</MenuItem>
+              <MenuItem value='D Block'>D Block</MenuItem>
+              <MenuItem value='E Block'>E Block</MenuItem>
+              <MenuItem value='F Block'>F Block</MenuItem>
+              <MenuItem value='G Block'>G Block</MenuItem>
+              <MenuItem value='LMS'>LMS</MenuItem>
+              <MenuItem value='Sigma'>Sigma</MenuItem>
+              <MenuItem value='SIT'>SIT</MenuItem>
+            </TextField>
+            <TextField
+              label='Seating Capacity'
+              type='number'
+              fullWidth
+              value={newVenue.seatingCapacity}
+              onChange={e => handleNewVenueChange('seatingCapacity', parseInt(e.target.value) || 0)}
+              required
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newVenue.hasAc}
+                  onChange={e => handleNewVenueChange('hasAc', e.target.checked)}
+                  color='primary'
+                />
+              }
+              label='Has AC'
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newVenue.hasProjector}
+                  onChange={e => handleNewVenueChange('hasProjector', e.target.checked)}
+                  color='primary'
+                />
+              }
+              label='Has Projector'
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newVenue.isAvailable}
+                  onChange={e => handleNewVenueChange('isAvailable', e.target.checked)}
+                  color='primary'
+                />
+              }
+              label='Is Available'
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={resetNewVenueForm} color='inherit'>
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleAddVenue}
+            disabled={addingVenue}
+            sx={{
+              bgcolor: colors.light.primaryHex,
+              '&:hover': {
+                bgcolor: colors.light.primaryHex,
+                opacity: 0.8,
+              },
+            }}
+          >
+            {addingVenue ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                Adding...
+              </>
+            ) : (
+              'Add Venue'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
