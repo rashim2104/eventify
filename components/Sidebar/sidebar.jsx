@@ -28,6 +28,7 @@ import {
   GearIcon,
   CaretLeftIcon,
 } from '@phosphor-icons/react';
+import { colors } from '@/lib/colors.config.js';
 
 const drawerWidth = 280;
 
@@ -152,31 +153,51 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           </IconButton>
         )}
       </Box>
-      <List sx={{ flexGrow: 1, pt: 1 }}>
+      <List sx={{ flexGrow: 1, pt: 1, px: 2 }}>
         {filteredMenuItems.map(item => (
-          <ListItem key={item.text} disablePadding>
+          <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
             <ListItemButton
               component={Link}
               href={item.href}
               selected={pathname === item.href}
               sx={{
+                borderRadius: '0.5rem',
+                color: colors.light.sidebarForeground,
                 '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
+                  backgroundColor: colors.light.sidebarPrimary,
+                  color: colors.light.sidebarPrimaryForeground,
                   '&:hover': {
-                    backgroundColor: 'primary.dark',
+                    backgroundColor: colors.light.sidebarPrimary,
+                    color: colors.light.sidebarPrimaryForeground,
+                    '& .MuiListItemIcon-root': {
+                      color: colors.light.sidebarPrimaryForeground,
+                    },
                   },
                   '& .MuiListItemIcon-root': {
-                    color: 'primary.contrastText',
+                    color: colors.light.sidebarPrimaryForeground,
                   },
                 },
-                mx: 1,
-                mb: 0.5,
-                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: colors.light.sidebarAccent,
+                  color: colors.light.sidebarAccentForeground,
+                  '& .MuiListItemIcon-root': {
+                    color: colors.light.sidebarAccentForeground,
+                  },
+                },
+                '& .MuiListItemIcon-root': {
+                  minWidth: 40,
+                  color: pathname === item.href ? colors.light.sidebarPrimaryForeground : colors.light.sidebarForeground,
+                },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText
+                primary={item.text}
+                primaryTypographyProps={{
+                  fontWeight: pathname === item.href ? 600 : 400,
+                  fontSize: '0.95rem'
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -191,7 +212,13 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
   return (
     <Box
       component='nav'
-      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+      sx={{
+        width: { md: drawerWidth },
+        flexShrink: { md: 0 },
+        position: { md: 'sticky' },
+        top: { md: 0 },
+        height: { md: '100vh' },
+      }}
       aria-label='navigation menu'
     >
       {/* Mobile drawer */}
@@ -207,7 +234,9 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            mt: { xs: '64px', sm: '64px' }, // Account for AppBar height
+            backgroundColor: colors.light.sidebar,
+            borderRight: `1px solid ${colors.light.sidebarBorder}`,
+            color: colors.light.sidebarForeground,
           },
         }}
       >
@@ -222,9 +251,13 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            mt: '64px', // Account for AppBar height
-            border: 'none',
-            backgroundColor: 'background.paper',
+            mt: '64px',
+            borderRight: `1px solid ${colors.light.sidebarBorder}`,
+            backgroundColor: colors.light.sidebar,
+            color: colors.light.sidebarForeground,
+            zIndex: 0,
+            position: 'relative',
+            height: 'calc(100vh - 64px)',
           },
         }}
         open
