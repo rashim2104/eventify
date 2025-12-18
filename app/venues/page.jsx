@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+
 import {
   Box,
   Typography,
@@ -27,9 +28,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Checkbox,
+  FormGroup,
+  FormLabel,
+  FormControl,
 } from '@mui/material';
-import { Pencil, Calendar, CheckCircle, XCircle, Plus } from '@phosphor-icons/react';
+import { Pencil, Calendar, CheckCircle, XCircle, Plus, CalendarPlus } from '@phosphor-icons/react';
 import { colors } from '@/lib/colors.config.js';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 export default function Venues() {
   const { data: session, status } = useSession();
@@ -48,6 +55,17 @@ export default function Venues() {
     isAvailable: true,
   });
   const [parentBlocks, setParentBlocks] = useState([]);
+
+  // Blocking State
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [blockData, setBlockData] = useState({
+    venueId: '',
+    startDate: null,
+    endDate: null,
+    sessions: ['forenoon', 'afternoon'],
+    reason: ''
+  });
 
   // Fetch parent blocks from API
   useEffect(() => {
@@ -176,6 +194,54 @@ export default function Venues() {
     setAddingVenue(false);
   };
 
+  const handleBlockVenue = async () => {
+    if (!blockData.venueId || !blockData.startDate || !blockData.endDate || blockData.sessions.length === 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (blockData.endDate < blockData.startDate) {
+      toast.error('End date must be after start date');
+      return;
+    }
+
+    setBlocking(true);
+    try {
+      const response = await fetch('/api/venue/blockVenue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...blockData,
+          startDate: blockData.startDate.toISOString(),
+          endDate: blockData.endDate.toISOString()
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(result.message);
+        setIsBlockModalOpen(false);
+        // Reset form
+        setBlockData({
+          venueId: '',
+          startDate: null,
+          endDate: null,
+          sessions: ['forenoon', 'afternoon'],
+          reason: ''
+        });
+      } else {
+        toast.error(result.message || 'Error blocking venue');
+      }
+    } catch (error) {
+      console.error('Error blocking venue:', error);
+      toast.error('Error blocking venue');
+    }
+    setBlocking(false);
+  };
+
   if (status === 'loading') {
     return (
       <Box
@@ -257,19 +323,36 @@ export default function Venues() {
           )}
           {/* Add Venue Button - always visible for admins */}
           {isAdmin && (
-            <IconButton
-              sx={{
-                bgcolor: colors.light.primaryHex,
-                color: colors.light.primaryForegroundHex,
-                '&:hover': {
+            <>
+              <IconButton
+                title="Add New Venue"
+                sx={{
                   bgcolor: colors.light.primaryHex,
-                  opacity: 0.8,
-                },
-              }}
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <Plus size={24} color={colors.light.backgroundHex} />
-            </IconButton>
+                  color: colors.light.primaryForegroundHex,
+                  '&:hover': {
+                    bgcolor: colors.light.primaryHex,
+                    opacity: 0.8,
+                  },
+                }}
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <Plus size={24} color={colors.light.backgroundHex} />
+              </IconButton>
+              <IconButton
+                title="Reserve Venue"
+                sx={{
+                  bgcolor: colors.light.primaryHex,
+                  color: colors.light.primaryForegroundHex,
+                  '&:hover': {
+                    bgcolor: colors.light.primaryHex,
+                    opacity: 0.8,
+                  },
+                }}
+                onClick={() => setIsBlockModalOpen(true)}
+              >
+                <CalendarPlus size={24} color={colors.light.backgroundHex} />
+              </IconButton>
+            </>
           )}
         </Stack>
       </Box>
@@ -640,6 +723,118 @@ export default function Venues() {
               </>
             ) : (
               'Add Venue'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Block Venue Dialog */}
+      <Dialog
+        open={isBlockModalOpen}
+        onClose={() => setIsBlockModalOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Reserve Venue (Block)</DialogTitle>
+        <DialogContent>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <TextField
+                select
+                label='Venue'
+                fullWidth
+                value={blockData.venueId}
+                onChange={e => setBlockData({ ...blockData, venueId: e.target.value })}
+                required
+              >
+                {venues.map((venue) => (
+                  <MenuItem key={venue.venueId} value={venue.venueId}>
+                    {venue.venueName}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <DatePicker
+                label="Start Date"
+                value={blockData.startDate}
+                onChange={(newValue) => setBlockData({ ...blockData, startDate: newValue })}
+                slotProps={{ textField: { fullWidth: true, required: true } }}
+                disablePast
+              />
+              <DatePicker
+                label="End Date"
+                value={blockData.endDate}
+                onChange={(newValue) => setBlockData({ ...blockData, endDate: newValue })}
+                slotProps={{ textField: { fullWidth: true, required: true } }}
+                minDate={blockData.startDate}
+              />
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Sessions</FormLabel>
+                <FormGroup row>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={blockData.sessions.includes('forenoon')}
+                        onChange={(e) => {
+                          const newSessions = e.target.checked
+                            ? [...blockData.sessions, 'forenoon']
+                            : blockData.sessions.filter(s => s !== 'forenoon');
+                          setBlockData({ ...blockData, sessions: newSessions });
+                        }}
+                      />
+                    }
+                    label="Forenoon"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={blockData.sessions.includes('afternoon')}
+                        onChange={(e) => {
+                          const newSessions = e.target.checked
+                            ? [...blockData.sessions, 'afternoon']
+                            : blockData.sessions.filter(s => s !== 'afternoon');
+                          setBlockData({ ...blockData, sessions: newSessions });
+                        }}
+                      />
+                    }
+                    label="Afternoon"
+                  />
+                </FormGroup>
+              </FormControl>
+              <TextField
+                label="Reason"
+                fullWidth
+                multiline
+                rows={3}
+                value={blockData.reason}
+                onChange={e => setBlockData({ ...blockData, reason: e.target.value })}
+                placeholder="e.g., Maintenance, Holiday, etc."
+              />
+            </Stack>
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setIsBlockModalOpen(false)} color='inherit'>
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleBlockVenue}
+            disabled={blocking}
+            sx={{
+              bgcolor: colors.light.primaryHex,
+              '&:hover': {
+                bgcolor: colors.light.primaryHex,
+                opacity: 0.8,
+              },
+            }}
+          >
+            {blocking ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                Reserving...
+              </>
+            ) : (
+              'Reserve'
             )}
           </Button>
         </DialogActions>

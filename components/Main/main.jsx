@@ -44,7 +44,7 @@ export default function Main() {
         <Calendar meetings={events} />
       </div>
       <main>
-        <EventCard events={events} message={message} />
+        <EventCard events={events} message={message} grouped={false} />
       </main>
     </>
   );
