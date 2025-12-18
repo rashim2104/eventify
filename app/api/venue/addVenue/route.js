@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { connectMongoDB } from '@/lib/mongodb';
 import Venue from '@/models/venue';
 import { authenticate } from '@/lib/authenticate';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { logger } from '@/lib/logger';
 
 export async function POST(req) {
@@ -24,11 +25,11 @@ export async function POST(req) {
     );
   }
 
-  if (user.isSuperAdmin === 0) {
+  if (user.userType !== 'admin') {
     await logger(
       user._id,
       ACTION,
-      'Authorization Failed: Not Super Admin',
+      'Authorization Failed: Not Admin',
       403
     );
     return NextResponse.json(
