@@ -87,10 +87,16 @@ const EventForm = () => {
   useEffect(() => {
     const fetchConfigData = async () => {
       try {
+        // Build departments URL with college filter if user has a college
+        const userCollege = session?.user?.college;
+        const departmentsUrl = userCollege
+          ? `/api/config/departments?college=${encodeURIComponent(userCollege)}`
+          : '/api/config/departments';
+
         const [societiesRes, clubsRes, departmentsRes] = await Promise.all([
           fetch('/api/config/societies'),
           fetch('/api/config/clubs'),
-          fetch('/api/config/departments'),
+          fetch(departmentsUrl),
         ]);
         const societiesData = await societiesRes.json();
         const clubsData = await clubsRes.json();
@@ -107,8 +113,12 @@ const EventForm = () => {
         console.error('Failed to fetch config data:', error);
       }
     };
-    fetchConfigData();
-  }, []);
+
+    // Only fetch when session is available
+    if (session?.user) {
+      fetchConfigData();
+    }
+  }, [session]);
 
   // Step labels for the stepper
   const steps = [
@@ -372,7 +382,7 @@ const EventForm = () => {
       }, 2000);
     } else {
       const data = await status.json();
-      // Handle API errors if needed
+      toast.error(data.message || 'An error occurred while creating the event.');
       console.error('Error creating event:', data.message);
     }
     setIsSubmitting(false);
