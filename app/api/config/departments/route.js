@@ -21,7 +21,8 @@ export async function GET(req) {
         const activeOnly = searchParams.get('active') !== 'false';
 
         const query = {};
-        if (college) query.college = college;
+        // Use case-insensitive regex for college filter
+        if (college) query.college = { $regex: new RegExp(`^${college}$`, 'i') };
         if (activeOnly) query.isActive = true;
 
         const departments = await Department.find(query).sort({ college: 1, name: 1 });

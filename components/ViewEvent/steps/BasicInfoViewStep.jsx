@@ -46,9 +46,8 @@ const BasicInfoViewStep = ({
   const getOrganizerDisplay = () => {
     const organizer = getOrganizerLabel(eventData?.EventOrganizer);
     if (eventData?.EventOrganizer == 2 && eventData?.eventSociety) {
-      return `${organizer} - ${eventData.eventSociety}${
-        eventData.currSoc ? ` (${eventData.currSoc})` : ''
-      }`;
+      return `${organizer} - ${eventData.eventSociety}${eventData.currSoc ? ` (${eventData.currSoc})` : ''
+        }`;
     }
     if (eventData?.EventOrganizer == 3 && eventData?.eventSociety) {
       return `${organizer} - ${eventData.eventSociety}`;
@@ -90,6 +89,29 @@ const BasicInfoViewStep = ({
           }}
         />
 
+        {/* Department / Society / Club */}
+        {eventOrigin && (
+          <TextField
+            fullWidth
+            label='Department / Society / Club'
+            value={eventOrigin}
+            InputProps={{
+              readOnly: true,
+              sx: {
+                color: colors.light.foreground,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: colors.light.border,
+                },
+              },
+            }}
+            InputLabelProps={{
+              sx: {
+                color: colors.light.mutedForeground,
+              },
+            }}
+          />
+        )}
+
         {/* Event Name */}
         <TextField
           fullWidth
@@ -117,7 +139,7 @@ const BasicInfoViewStep = ({
           label='Event Type'
           value={
             eventData?.EventType?.eventType === 'other' &&
-            eventData?.EventType?.eventTypeOtherOption
+              eventData?.EventType?.eventTypeOtherOption
               ? `${eventData.EventType.eventType} - ${eventData.EventType.eventTypeOtherOption}`
               : eventData?.EventType?.eventType || 'N/A'
           }

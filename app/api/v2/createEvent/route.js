@@ -243,6 +243,36 @@ export async function POST(req) {
   // Ensure database connection
   await connectMongoDB();
 
+  // Check if user has any completed events (status = 2) with missing postEventData
+  const pendingPostEventUpdates = await Events.find({
+    user_id: user_id,
+    status: 2,
+    postEventData: null,
+    'eventData.EndTime': { $lt: new Date().toISOString() },
+  }).select({ 'eventData.EventName': 1, _id: 1 });
+
+  if (pendingPostEventUpdates.length > 0) {
+    const pendingEventNames = pendingPostEventUpdates.map(
+      event => event.eventData?.EventName || 'Unknown Event'
+    );
+    logger(
+      user_id,
+      'Create Event',
+      `Blocked: User has ${pendingPostEventUpdates.length} events pending post-event annexure upload`,
+      403
+    );
+    return NextResponse.json(
+      {
+        message: `You cannot create a new event until you upload annexures for your previous completed event(s): ${pendingEventNames.join(', ')}`,
+        pendingEvents: pendingPostEventUpdates.map(e => ({
+          id: e._id,
+          name: e.eventData?.EventName,
+        })),
+      },
+      { status: 403 }
+    );
+  }
+
   const crtuser = await User.findOne({ _id: user_id });
   const StartTime = new Date(eventData.StartTime);
   const EndTime = new Date(eventData.EndTime);

@@ -169,7 +169,7 @@ const BasicInfoStep = ({
               </MenuItem>
               {departments.map((dept) => (
                 <MenuItem key={dept.code || dept._id} value={dept.code}>
-                  {dept.name} ({dept.college})
+                  {dept.name}
                 </MenuItem>
               ))}
             </Select>
