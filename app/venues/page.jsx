@@ -47,6 +47,21 @@ export default function Venues() {
     venueId: '',
     isAvailable: true,
   });
+  const [parentBlocks, setParentBlocks] = useState([]);
+
+  // Fetch parent blocks from API
+  useEffect(() => {
+    const fetchParentBlocks = async () => {
+      try {
+        const res = await fetch('/api/config/parent-blocks');
+        const data = await res.json();
+        setParentBlocks(data.parentBlocks || []);
+      } catch (error) {
+        console.error('Failed to fetch parent blocks:', error);
+      }
+    };
+    fetchParentBlocks();
+  }, []);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -556,16 +571,11 @@ export default function Venues() {
               required
               helperText='Select the building or block'
             >
-              <MenuItem value='A Block'>A Block</MenuItem>
-              <MenuItem value='B Block'>B Block</MenuItem>
-              <MenuItem value='C Block'>C Block</MenuItem>
-              <MenuItem value='D Block'>D Block</MenuItem>
-              <MenuItem value='E Block'>E Block</MenuItem>
-              <MenuItem value='F Block'>F Block</MenuItem>
-              <MenuItem value='G Block'>G Block</MenuItem>
-              <MenuItem value='LMS'>LMS</MenuItem>
-              <MenuItem value='Sigma'>Sigma</MenuItem>
-              <MenuItem value='SIT'>SIT</MenuItem>
+              {parentBlocks.map((block) => (
+                <MenuItem key={block._id || block.name} value={block.name}>
+                  {block.name}
+                </MenuItem>
+              ))}
             </TextField>
             <TextField
               label='Seating Capacity'

@@ -6,13 +6,6 @@ import './Form.css';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  societies,
-  ieeeSocieties,
-  ieeeSocietiesShort,
-  clubs,
-  clubsShort,
-} from '@/public/data/data';
 import Calven from '../Calendar/calven';
 import dynamic from 'next/dynamic';
 
@@ -33,6 +26,31 @@ function Form() {
   const { data: session } = useSession();
   const [venueList, setVenueList] = useState([]);
   const [userVenue, setUserVenue] = useState('');
+  // Config data from API
+  const [societies, setSocieties] = useState([]);
+  const [ieeeSocieties, setIeeeSocieties] = useState([]);
+  const [clubs, setClubs] = useState([]);
+
+  // Fetch config data on mount
+  useEffect(() => {
+    const fetchConfigData = async () => {
+      try {
+        const [societiesRes, clubsRes] = await Promise.all([
+          fetch('/api/config/societies'),
+          fetch('/api/config/clubs'),
+        ]);
+        const societiesData = await societiesRes.json();
+        const clubsData = await clubsRes.json();
+        const allSocieties = societiesData.societies || [];
+        setSocieties(allSocieties.filter(s => s.type === 'professional').map(s => s.code));
+        setIeeeSocieties(allSocieties.filter(s => s.type === 'ieee').map(s => s.code));
+        setClubs((clubsData.clubs || []).map(c => c.code));
+      } catch (error) {
+        console.error('Failed to fetch config data:', error);
+      }
+    };
+    fetchConfigData();
+  }, []);
   const {
     watch,
     handleSubmit,
@@ -1102,7 +1120,7 @@ function Form() {
           <section>
             <div>
               {isEventVenueOnline === 'offline' &&
-              isEventVenueOffCampus === 'On-Campus' ? (
+                isEventVenueOffCampus === 'On-Campus' ? (
                 <Calven
                   handleVenueChange={handleVenueChange}
                   startDate={getValues('StartTime')}

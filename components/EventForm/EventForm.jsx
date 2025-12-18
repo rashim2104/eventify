@@ -75,6 +75,41 @@ const EventForm = () => {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
 
+  // Config data from API
+  const [configData, setConfigData] = useState({
+    societies: [],
+    ieeeSocieties: [],
+    clubs: [],
+    departments: [],
+  });
+
+  // Fetch config data on mount
+  useEffect(() => {
+    const fetchConfigData = async () => {
+      try {
+        const [societiesRes, clubsRes, departmentsRes] = await Promise.all([
+          fetch('/api/config/societies'),
+          fetch('/api/config/clubs'),
+          fetch('/api/config/departments'),
+        ]);
+        const societiesData = await societiesRes.json();
+        const clubsData = await clubsRes.json();
+        const departmentsData = await departmentsRes.json();
+
+        const allSocieties = societiesData.societies || [];
+        setConfigData({
+          societies: allSocieties.filter(s => s.type === 'professional'),
+          ieeeSocieties: allSocieties.filter(s => s.type === 'ieee'),
+          clubs: clubsData.clubs || [],
+          departments: departmentsData.departments || [],
+        });
+      } catch (error) {
+        console.error('Failed to fetch config data:', error);
+      }
+    };
+    fetchConfigData();
+  }, []);
+
   // Step labels for the stepper
   const steps = [
     'Basic Information',
@@ -287,7 +322,17 @@ const EventForm = () => {
       dept = college === 'SIT' ? 'SBIT' : 'SBEC';
     }
     if (eventOrigin == 1 || eventOrigin == 5) {
-      dept = session?.user?.dept;
+      // For admins selecting Department, use the selected department from dropdown
+      if (userType === 'admin' && eventOrigin == 1) {
+        dept = eventSociety;
+        // Find the college for the selected department from configData
+        const selectedDept = configData.departments.find(d => d.code === eventSociety);
+        if (selectedDept) {
+          college = selectedDept.college;
+        }
+      } else {
+        dept = session?.user?.dept;
+      }
     } else if (eventOrigin == 2) {
       if (eventSociety === 'IEEE' || eventSociety === '4') {
         dept = currSoc;
@@ -527,6 +572,11 @@ const EventForm = () => {
                   handleUpload={handleUpload}
                   handleDelete={handleDelete}
                   renderMedia={renderMedia}
+                  societies={configData.societies}
+                  ieeeSocieties={configData.ieeeSocieties}
+                  clubs={configData.clubs}
+                  departments={configData.departments}
+                  userType={session?.user?.userType}
                 />
               )}
 
