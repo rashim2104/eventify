@@ -18,6 +18,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { ListIcon, SignOutIcon } from '@phosphor-icons/react';
+import { colors } from '@/lib/colors.config.js';
 
 function Navbar({ onMobileMenuToggle }) {
   const { data: session } = useSession();
@@ -66,7 +67,16 @@ function Navbar({ onMobileMenuToggle }) {
   }
 
   return (
-    <AppBar position='fixed' sx={{ zIndex: theme => theme.zIndex.drawer + 1 }}>
+    <AppBar 
+      position='fixed' 
+      sx={{ 
+        zIndex: theme => theme.zIndex.drawer + 1,
+        backgroundColor: colors.light.sidebar,
+        color: colors.light.sidebarForeground,
+        borderBottom: `2px solid ${colors.light.sidebarBorder}`,
+        boxShadow: 'none',
+      }}
+    >
       <Toolbar>
         <Link
           href='/dashboard'
@@ -101,11 +111,17 @@ function Navbar({ onMobileMenuToggle }) {
             </Box>
           )}
           <Button
-            color='inherit'
             onClick={handleSignOut}
             startIcon={<SignOutIcon size={20} weight='regular' />}
             variant='outlined'
-            sx={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+            sx={{ 
+              borderColor: colors.light.sidebarBorder,
+              color: colors.light.sidebarForeground,
+              '&:hover': {
+                borderColor: colors.light.sidebarPrimary,
+                backgroundColor: colors.light.sidebarAccent,
+              }
+            }}
           >
             Sign out
           </Button>
