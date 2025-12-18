@@ -24,7 +24,7 @@ export default function LayoutContent({ children }) {
 
   if (isAuthLikePage) {
     return (
-      <Box component='main' sx={{ minHeight: '100vh', backgroundColor: colors.light.background }}>
+      <Box component='main' sx={{ minHeight: '100vh', backgroundColor: colors.light.sidebar }}>
         {children}
       </Box>
     );
@@ -45,8 +45,8 @@ export default function LayoutContent({ children }) {
             p: 3,
             mt: '64px',
             width: { sm: `calc(100% - 280px)` },
-            backgroundColor: colors.light.background,
-            color: colors.light.foreground,
+            backgroundColor: colors.light.sidebar,
+            color: colors.light.sidebarForeground,
             minHeight: '100vh',
           }}
         >

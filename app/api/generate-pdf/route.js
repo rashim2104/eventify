@@ -19,6 +19,21 @@ async function downloadImage(url) {
   }
 }
 
+// Helper function to download PDF from URL
+async function downloadPDF(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    console.warn(`Failed to download PDF from ${url}:`, error);
+    return null;
+  }
+}
+
 export async function POST(req) {
   let doc = null;
   let user = null;
@@ -85,9 +100,6 @@ export async function POST(req) {
       return height + 8;
     }
 
-    // Track page count for footer
-    let pageCount = 1;
-
     // Add footer to current page
     const addFooter = () => {
       const footerY = doc.page.height - doc.page.margins.bottom - 20;
@@ -102,16 +114,14 @@ export async function POST(req) {
       );
     };
 
-    // Add footer when new page is added
-    doc.on('pageAdded', () => {
-      // Add footer to previous page before switching
-      if (pageCount > 1) {
-        doc.switchToPage(pageCount - 2);
-        addFooter();
-        doc.switchToPage(pageCount - 1);
-      }
-      pageCount++;
-    });
+    // Helper function to add footer and then add a new page
+    const addPageWithFooter = () => {
+      addFooter();
+      doc.addPage();
+    };
+
+    // Array to track PDFs that need to be appended at the end
+    const pdfsToAppend = [];
 
     let yPosition = doc.page.margins.top;
 
@@ -245,7 +255,7 @@ export async function POST(req) {
       eventData.eventData.eventCoordinators.forEach(coordinator => {
         // Check if we need a new page
         if (yPosition > doc.page.height - doc.page.margins.bottom - 100) {
-          doc.addPage();
+          addPageWithFooter();
           yPosition = doc.page.margins.top;
         }
 
@@ -282,7 +292,7 @@ export async function POST(req) {
       yPosition += addHeading('Resource Persons', yPosition);
       eventData.eventData.eventResourcePerson.forEach(person => {
         if (yPosition > doc.page.height - doc.page.margins.bottom - 100) {
-          doc.addPage();
+          addPageWithFooter();
           yPosition = doc.page.margins.top;
         }
 
@@ -342,9 +352,9 @@ export async function POST(req) {
         eventData.eventData.fileUrl.poster
       );
       if (posterBuffer) {
-        try {
+          try {
           if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
-            doc.addPage();
+            addPageWithFooter();
             yPosition = doc.page.margins.top;
           }
           doc.image(
@@ -381,7 +391,7 @@ export async function POST(req) {
         yPosition += addHeading('Event Photos', yPosition, 3);
         for (const photoUrl of eventData.postEventData.fileUrl.geoPhotos) {
           if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
-            doc.addPage();
+            addPageWithFooter();
             yPosition = doc.page.margins.top;
           }
           const photoBuffer = await downloadImage(photoUrl);
@@ -409,41 +419,260 @@ export async function POST(req) {
         }
       }
 
-      // Report and Financial Documents (as text links)
+      // Report - render as image if JPEG/PNG, append if PDF, otherwise as link
       if (eventData.postEventData.fileUrl?.report) {
-        doc.fontSize(11);
-        doc.fillColor('#2c3e50');
-        doc.font('Inter-Bold');
-        doc.text('Report: ', doc.page.margins.left, yPosition);
-        doc.font('Inter');
-        doc.fillColor('#0066cc');
-        doc.text(
-          eventData.postEventData.fileUrl.report,
-          doc.page.margins.left + 50,
-          yPosition,
-          {
-            link: eventData.postEventData.fileUrl.report,
+        const reportUrl = eventData.postEventData.fileUrl.report;
+        const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(reportUrl);
+        const isPDF = /\.pdf$/i.test(reportUrl);
+        
+        if (isImage) {
+          yPosition += addHeading('Report', yPosition, 3);
+          const reportBuffer = await downloadImage(reportUrl);
+          if (reportBuffer) {
+            try {
+              if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
+                addPageWithFooter();
+                yPosition = doc.page.margins.top;
+              }
+              doc.image(
+                reportBuffer,
+                doc.page.margins.left +
+                (doc.page.width -
+                  doc.page.margins.left -
+                  doc.page.margins.right) /
+                2 -
+                200,
+                yPosition,
+                {
+                  fit: [400, 200],
+                  align: 'center',
+                }
+              );
+              yPosition += 220;
+            } catch (err) {
+              console.warn('Failed to add report image:', err);
+              // Fallback to link if image fails
+              doc.fontSize(11);
+              doc.fillColor('#2c3e50');
+              doc.font('Inter-Bold');
+              doc.text('Report: ', doc.page.margins.left, yPosition);
+              doc.font('Inter');
+              doc.fillColor('#0066cc');
+              doc.text(
+                reportUrl,
+                doc.page.margins.left + 50,
+                yPosition,
+                {
+                  link: reportUrl,
+                }
+              );
+              yPosition += 20;
+            }
+          } else {
+            // Fallback to link if download fails
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter-Bold');
+            doc.text('Report: ', doc.page.margins.left, yPosition);
+            doc.font('Inter');
+            doc.fillColor('#0066cc');
+            doc.text(
+              reportUrl,
+              doc.page.margins.left + 50,
+              yPosition,
+              {
+                link: reportUrl,
+              }
+            );
+            yPosition += 20;
           }
-        );
-        yPosition += 50;
+        } else if (isPDF) {
+          // Download PDF and track for appending
+          const reportPDFBuffer = await downloadPDF(reportUrl);
+          if (reportPDFBuffer) {
+            pdfsToAppend.push({
+              buffer: reportPDFBuffer,
+              type: 'report',
+              url: reportUrl,
+            });
+            // Check if we need a new page before adding heading
+            if (yPosition > doc.page.height - doc.page.margins.bottom - 50) {
+              addPageWithFooter();
+              yPosition = doc.page.margins.top;
+            }
+            // Add heading
+            const headingHeight = addHeading('Report', yPosition, 3);
+            yPosition += headingHeight;
+            // Add placeholder text right after heading
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter');
+            doc.text('Report PDF attached at the end', doc.page.margins.left, yPosition);
+            yPosition += 20;
+          } else {
+            // Fallback to link if download fails
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter-Bold');
+            doc.text('Report: ', doc.page.margins.left, yPosition);
+            doc.font('Inter');
+            doc.fillColor('#0066cc');
+            doc.text(
+              reportUrl,
+              doc.page.margins.left + 50,
+              yPosition,
+              {
+                link: reportUrl,
+              }
+            );
+            yPosition += 20;
+          }
+        } else {
+          // Render as link for other formats
+          doc.fontSize(11);
+          doc.fillColor('#2c3e50');
+          doc.font('Inter-Bold');
+          doc.text('Report: ', doc.page.margins.left, yPosition);
+          doc.font('Inter');
+          doc.fillColor('#0066cc');
+          doc.text(
+            reportUrl,
+            doc.page.margins.left + 50,
+            yPosition,
+            {
+              link: reportUrl,
+            }
+          );
+          yPosition += 20;
+        }
       }
 
+      // Financial Documents - render as image if JPEG/PNG, append if PDF, otherwise as link
       if (eventData.postEventData.fileUrl?.financialCommitments) {
-        doc.fontSize(11);
-        doc.fillColor('#2c3e50');
-        doc.font('Inter-Bold');
-        doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
-        doc.font('Inter');
-        doc.fillColor('#0066cc');
-        doc.text(
-          eventData.postEventData.fileUrl.financialCommitments,
-          doc.page.margins.left + 130,
-          yPosition,
-          {
-            link: eventData.postEventData.fileUrl.financialCommitments,
+        const financialUrl = eventData.postEventData.fileUrl.financialCommitments;
+        const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(financialUrl);
+        const isPDF = /\.pdf$/i.test(financialUrl);
+        
+        if (isImage) {
+          yPosition += addHeading('Financial Documents', yPosition, 3);
+          const financialBuffer = await downloadImage(financialUrl);
+          if (financialBuffer) {
+            try {
+              if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
+                addPageWithFooter();
+                yPosition = doc.page.margins.top;
+              }
+              doc.image(
+                financialBuffer,
+                doc.page.margins.left +
+                (doc.page.width -
+                  doc.page.margins.left -
+                  doc.page.margins.right) /
+                2 -
+                200,
+                yPosition,
+                {
+                  fit: [400, 200],
+                  align: 'center',
+                }
+              );
+              yPosition += 220;
+            } catch (err) {
+              console.warn('Failed to add financial documents image:', err);
+              // Fallback to link if image fails
+              doc.fontSize(11);
+              doc.fillColor('#2c3e50');
+              doc.font('Inter-Bold');
+              doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+              doc.font('Inter');
+              doc.fillColor('#0066cc');
+              doc.text(
+                financialUrl,
+                doc.page.margins.left + 130,
+                yPosition,
+                {
+                  link: financialUrl,
+                }
+              );
+              yPosition += 20;
+            }
+          } else {
+            // Fallback to link if download fails
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter-Bold');
+            doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+            doc.font('Inter');
+            doc.fillColor('#0066cc');
+            doc.text(
+              financialUrl,
+              doc.page.margins.left + 130,
+              yPosition,
+              {
+                link: financialUrl,
+              }
+            );
+            yPosition += 20;
           }
-        );
-        yPosition += 20;
+        } else if (isPDF) {
+          // Download PDF and track for appending
+          const financialPDFBuffer = await downloadPDF(financialUrl);
+          if (financialPDFBuffer) {
+            pdfsToAppend.push({
+              buffer: financialPDFBuffer,
+              type: 'financial',
+              url: financialUrl,
+            });
+            // Check if we need a new page before adding heading
+            if (yPosition > doc.page.height - doc.page.margins.bottom - 50) {
+              addPageWithFooter();
+              yPosition = doc.page.margins.top;
+            }
+            // Add heading
+            const headingHeight = addHeading('Financial Documents', yPosition, 3);
+            yPosition += headingHeight;
+            // Add placeholder text right after heading
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter');
+            doc.text('Financial Documents PDF attached at the end', doc.page.margins.left, yPosition);
+            yPosition += 20;
+          } else {
+            // Fallback to link if download fails
+            doc.fontSize(11);
+            doc.fillColor('#2c3e50');
+            doc.font('Inter-Bold');
+            doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+            doc.font('Inter');
+            doc.fillColor('#0066cc');
+            doc.text(
+              financialUrl,
+              doc.page.margins.left + 130,
+              yPosition,
+              {
+                link: financialUrl,
+              }
+            );
+            yPosition += 20;
+          }
+        } else {
+          // Render as link for other formats
+          doc.fontSize(11);
+          doc.fillColor('#2c3e50');
+          doc.font('Inter-Bold');
+          doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+          doc.font('Inter');
+          doc.fillColor('#0066cc');
+          doc.text(
+            financialUrl,
+            doc.page.margins.left + 130,
+            yPosition,
+            {
+              link: financialUrl,
+            }
+          );
+          yPosition += 20;
+        }
       }
     }
 
@@ -452,7 +681,47 @@ export async function POST(req) {
 
     // Finalize PDF
     doc.end();
-    const pdfBuffer = await pdfBufferPromise;
+    let pdfBuffer = await pdfBufferPromise;
+
+    // Merge PDFs if there are any to append
+    if (pdfsToAppend.length > 0) {
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        
+        // Load the main PDF
+        const mainPdfDoc = await PDFDocument.load(pdfBuffer);
+        
+        // Process each PDF to append
+        for (const pdfInfo of pdfsToAppend) {
+          try {
+            // Load the external PDF
+            const externalPdfDoc = await PDFDocument.load(pdfInfo.buffer);
+            
+            // Copy all pages from the external PDF
+            const externalPageIndices = externalPdfDoc.getPageIndices();
+            const externalPages = await mainPdfDoc.copyPages(
+              externalPdfDoc,
+              externalPageIndices
+            );
+            
+            // Append all pages from the external PDF directly
+            // No separate heading page needed as placeholder text already indicates what's appended
+            externalPages.forEach((externalPage) => {
+              mainPdfDoc.addPage(externalPage);
+            });
+          } catch (err) {
+            console.warn(`Failed to append ${pdfInfo.type} PDF:`, err);
+            // Continue with other PDFs even if one fails
+          }
+        }
+        
+        // Save the merged PDF
+        pdfBuffer = Buffer.from(await mainPdfDoc.save());
+      } catch (err) {
+        console.error('Failed to merge PDFs:', err);
+        // Return original PDF if merging fails
+      }
+    }
 
     await logger(
       user._id,
