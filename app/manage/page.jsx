@@ -158,10 +158,11 @@ export default function Manage() {
 
   // ---- Fetch Config Data on Mount ----
   useEffect(() => {
-    if (mainTab === 1) {
-      fetchAllConfig();
-    }
-  }, [mainTab]);
+    // Fetch all config on mount so that User Management dropdowns act correctly
+    // or we could split it. But simpler to just fetch all on mount or when tab changes if we want to be conservative.
+    // Given the user report, we need colleges/departments for User tab.
+    fetchAllConfig();
+  }, []);
 
   const fetchAllConfig = () => {
     fetchColleges();
@@ -229,6 +230,17 @@ export default function Manage() {
     if (!mail.trim()) errors.mail = 'Email is required';
     if (!userType) errors.userType = 'User type is required';
     if (userTab === 0 && !password.trim()) errors.password = 'Password is required';
+
+    // Both HOD and staff require college and department
+    if (['HOD', 'staff'].includes(userType)) {
+      if (!collegeName) errors.collegeName = 'College is required';
+      if (!dept) errors.dept = 'Department is required';
+    }
+
+    if (!idNumber.trim()) errors.idNumber = 'ID Number is required';
+    if (!phone.trim()) errors.phone = 'Phone is required';
+    if (!role.trim()) errors.role = 'Role is required';
+
     setUserErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -264,9 +276,10 @@ export default function Manage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name, college: collegeName, dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
-          mail, password, userType: ['professionalsocieties', 'clubincharge'].includes(userType) ? 'HOD' : userType,
+          name, college: collegeName, dept,
+          mail, password, userType,
           isSuperAdmin,
+          id: idNumber, phone, role,
         }),
       });
       if (res.ok) { toast.success('User added!'); clearUserForm(); }
@@ -283,8 +296,8 @@ export default function Manage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _id: userId, name, college: collegeName, dept: dept === 'IEEE' ? currSoc : userType === 'admin' ? '-' : dept,
-          mail, userType: ['professionalsocieties', 'clubincharge'].includes(userType) ? 'HOD' : userType,
+          _id: userId, name, college: collegeName, dept,
+          mail, userType,
           isSuperAdmin, phone, role, id: idNumber,
         }),
       });
@@ -397,21 +410,22 @@ export default function Manage() {
       <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 3, color: colors.light.primaryHex }}>Admin Panel</Typography>
 
       {/* Main Tabs */}
-      <Paper sx={{ borderRadius: 2, mb: 3 }}>
-        <Tabs value={mainTab} onChange={(e, v) => setMainTab(v)} variant='fullWidth'>
-          <Tab icon={<Users size={20} />} label='User Management' iconPosition='start' />
-          <Tab icon={<Gear size={20} />} label='Configuration' iconPosition='start' />
+      {/* Main Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
+        <Tabs value={mainTab} onChange={(e, v) => setMainTab(v)} variant='fullWidth' indicatorColor='primary' sx={{ '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' } }}>
+          <Tab icon={<Users size={20} />} label='User Management' iconPosition='start' sx={{ minHeight: 60 }} />
+          <Tab icon={<Gear size={20} />} label='Configuration' iconPosition='start' sx={{ minHeight: 60 }} />
         </Tabs>
-      </Paper>
+      </Box>
 
       {/* =============== USER MANAGEMENT TAB =============== */}
       <TabPanel value={mainTab} index={0}>
-        <Paper sx={{ borderRadius: 2, mb: 2 }}>
-          <Tabs value={userTab} onChange={(e, v) => { setUserTab(v); clearUserForm(); }} variant='fullWidth'>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
+          <Tabs value={userTab} onChange={(e, v) => { setUserTab(v); clearUserForm(); }} variant='fullWidth' indicatorColor='primary'>
             <Tab label='Add User' />
             <Tab label='Edit User' />
           </Tabs>
-        </Paper>
+        </Box>
 
         <Card sx={{ borderRadius: 2 }}>
           <CardContent sx={{ p: 3 }}>
@@ -422,53 +436,34 @@ export default function Manage() {
                 <FormControl fullWidth required error={!!userErrors.userType}>
                   <InputLabel>User Type</InputLabel>
                   <Select value={userType} onChange={(e) => setUserType(e.target.value)} label='User Type'>
-                    <MenuItem value='admin'>Admin</MenuItem>
                     <MenuItem value='HOD'>HOD</MenuItem>
-                    <MenuItem value='professionalsocieties'>Professional Society Head</MenuItem>
-                    <MenuItem value='clubincharge'>Club Incharge</MenuItem>
                     <MenuItem value='staff'>Staff</MenuItem>
                   </Select>
                 </FormControl>
-                {['staff', 'HOD', 'admin'].includes(userType) && (
-                  <FormControl fullWidth>
-                    <InputLabel>College</InputLabel>
-                    <Select value={collegeName} onChange={(e) => setCollegeName(e.target.value)} label='College'>
-                      {colleges.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+
+                {['staff', 'HOD'].includes(userType) && (
+                  <>
+                    <FormControl fullWidth required error={!!userErrors.collegeName}>
+                      <InputLabel>College</InputLabel>
+                      <Select value={collegeName} onChange={(e) => setCollegeName(e.target.value)} label='College'>
+                        {colleges.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+
+                    {collegeName && (
+                      <FormControl fullWidth required error={!!userErrors.dept}>
+                        <InputLabel>Department</InputLabel>
+                        <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Department'>
+                          {departments.filter(d => d.college === collegeName).map((d) => <MenuItem key={d._id} value={d.code}>{d.name}</MenuItem>)}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </>
                 )}
-                {userType === 'professionalsocieties' && (
-                  <FormControl fullWidth>
-                    <InputLabel>Society</InputLabel>
-                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Society'>
-                      {societies.filter(s => s.type === 'professional').map((s) => <MenuItem key={s._id} value={s.code}>{s.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                )}
-                {userType === 'professionalsocieties' && dept === 'IEEE' && (
-                  <FormControl fullWidth>
-                    <InputLabel>IEEE Society</InputLabel>
-                    <Select value={currSoc} onChange={(e) => setCurrSoc(e.target.value)} label='IEEE Society'>
-                      {societies.filter(s => s.type === 'ieee').map((s) => <MenuItem key={s._id} value={s.code}>{s.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                )}
-                {userType === 'clubincharge' && (
-                  <FormControl fullWidth>
-                    <InputLabel>Club</InputLabel>
-                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Club'>
-                      {clubs.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                )}
-                {['HOD', 'staff'].includes(userType) && collegeName && (
-                  <FormControl fullWidth>
-                    <InputLabel>Department</InputLabel>
-                    <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Department'>
-                      {departments.filter(d => d.college === collegeName).map((d) => <MenuItem key={d._id} value={d.code}>{d.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                )}
+                <TextField label='ID Number' value={idNumber} onChange={(e) => setIdNumber(e.target.value)} error={!!userErrors.idNumber} helperText={userErrors.idNumber} required fullWidth />
+                <TextField label='Phone' value={phone} onChange={(e) => setPhone(e.target.value)} error={!!userErrors.phone} helperText={userErrors.phone} required fullWidth />
+                <TextField label='Role' value={role} onChange={(e) => setRole(e.target.value)} error={!!userErrors.role} helperText={userErrors.role} required fullWidth />
+
                 <TextField label='Email' type='email' value={mail} onChange={(e) => setMail(e.target.value)} error={!!userErrors.mail} helperText={userErrors.mail} required fullWidth />
                 <TextField label='Password' type='password' value={password} onChange={(e) => setPassword(e.target.value)} error={!!userErrors.password} helperText={userErrors.password} required fullWidth />
                 <FormControlLabel control={<Checkbox checked={isSuperAdmin} onChange={(e) => setIsSuperAdmin(e.target.checked)} />} label='Super Admin' />
@@ -516,15 +511,15 @@ export default function Manage() {
 
       {/* =============== CONFIGURATION TAB =============== */}
       <TabPanel value={mainTab} index={1}>
-        <Paper sx={{ borderRadius: 2, mb: 2 }}>
-          <Tabs value={configTab} onChange={(e, v) => setConfigTab(v)} variant='scrollable' scrollButtons='auto'>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
+          <Tabs value={configTab} onChange={(e, v) => setConfigTab(v)} variant='scrollable' scrollButtons='auto' indicatorColor='primary'>
             <Tab icon={<Buildings size={18} />} label='Colleges' iconPosition='start' />
             <Tab icon={<UsersThree size={18} />} label='Departments' iconPosition='start' />
             <Tab icon={<Users size={18} />} label='Societies' iconPosition='start' />
             <Tab icon={<Users size={18} />} label='Clubs' iconPosition='start' />
             <Tab icon={<MapPin size={18} />} label='Parent Blocks' iconPosition='start' />
           </Tabs>
-        </Paper>
+        </Box>
 
         <TabPanel value={configTab} index={0}>
           <ConfigTable title='Colleges' data={colleges} entityName='College' loading={loadingConfig.colleges}

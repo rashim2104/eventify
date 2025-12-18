@@ -103,7 +103,7 @@ const CoordinatorStep = ({
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label='Coordinator Name'
+                    label='Coordinator Name *'
                     {...register(`eventCoordinators.${index}.coordinatorName`, {
                       required: 'Coordinator Name is required',
                       pattern: {
@@ -115,14 +115,14 @@ const CoordinatorStep = ({
                     error={
                       !!errors.eventCoordinators?.[index]?.coordinatorName ||
                       !!validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorName`
+                      `eventCoordinators.${index}.coordinatorName`
                       ]
                     }
                     helperText={
                       errors.eventCoordinators?.[index]?.coordinatorName
                         ?.message ||
                       validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorName`
+                      `eventCoordinators.${index}.coordinatorName`
                       ]
                     }
                     InputProps={{
@@ -142,21 +142,21 @@ const CoordinatorStep = ({
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label='Designation'
+                    label='Designation *'
                     {...register(`eventCoordinators.${index}.coordinatorRole`, {
                       required: 'Designation is required',
                     })}
                     error={
                       !!errors.eventCoordinators?.[index]?.coordinatorRole ||
                       !!validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorRole`
+                      `eventCoordinators.${index}.coordinatorRole`
                       ]
                     }
                     helperText={
                       errors.eventCoordinators?.[index]?.coordinatorRole
                         ?.message ||
                       validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorRole`
+                      `eventCoordinators.${index}.coordinatorRole`
                       ] ||
                       (errors.eventCoordinators?.[index]?.coordinatorRole &&
                         'This field is required')
@@ -180,7 +180,7 @@ const CoordinatorStep = ({
                   <TextField
                     fullWidth
                     type='email'
-                    label='Coordinator E-mail'
+                    label='Coordinator E-mail *'
                     {...register(`eventCoordinators.${index}.coordinatorMail`, {
                       required: 'Coordinator Mail is required',
                       pattern: {
@@ -191,14 +191,14 @@ const CoordinatorStep = ({
                     error={
                       !!errors.eventCoordinators?.[index]?.coordinatorMail ||
                       !!validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorMail`
+                      `eventCoordinators.${index}.coordinatorMail`
                       ]
                     }
                     helperText={
                       errors.eventCoordinators?.[index]?.coordinatorMail
                         ?.message ||
                       validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorMail`
+                      `eventCoordinators.${index}.coordinatorMail`
                       ]
                     }
                     InputProps={{
@@ -219,7 +219,7 @@ const CoordinatorStep = ({
                   <TextField
                     fullWidth
                     type='tel'
-                    label='Coordinator Phone'
+                    label='Coordinator Phone *'
                     {...register(
                       `eventCoordinators.${index}.coordinatorPhone`,
                       {
@@ -233,14 +233,14 @@ const CoordinatorStep = ({
                     error={
                       !!errors.eventCoordinators?.[index]?.coordinatorPhone ||
                       !!validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorPhone`
+                      `eventCoordinators.${index}.coordinatorPhone`
                       ]
                     }
                     helperText={
                       errors.eventCoordinators?.[index]?.coordinatorPhone
                         ?.message ||
                       validationErrors?.[
-                        `eventCoordinators.${index}.coordinatorPhone`
+                      `eventCoordinators.${index}.coordinatorPhone`
                       ]
                     }
                     InputProps={{

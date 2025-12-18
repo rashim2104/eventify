@@ -5,6 +5,7 @@ import { Box, useTheme, useMediaQuery } from '@mui/material';
 import Navbar from '@/components/Navbar/navbar';
 import Sidebar from '@/components/Sidebar/sidebar';
 import { usePathname } from 'next/navigation';
+import { colors } from '@/lib/colors.config.js';
 
 export default function LayoutContent({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,7 +24,7 @@ export default function LayoutContent({ children }) {
 
   if (isAuthLikePage) {
     return (
-      <Box component='main' sx={{ minHeight: '100vh' }}>
+      <Box component='main' sx={{ minHeight: '100vh', backgroundColor: colors.light.background }}>
         {children}
       </Box>
     );
@@ -32,24 +33,25 @@ export default function LayoutContent({ children }) {
   return (
     <>
       <Navbar onMobileMenuToggle={handleMobileMenuToggle} />
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
-      <Box
-        component='main'
-        sx={{
-          marginLeft: { md: '280px' },
-          marginTop: '64px',
-          padding: 3,
-          minHeight: 'calc(100vh - 64px)',
-          transition: 'margin-left 0.3s ease-in-out',
-          width: { xs: '100%', md: 'calc(100% - 280px)' },
-          backgroundColor: '#ffffff',
-          color: '#000000',
-        }}
-      >
-        {children}
+      <Box sx={{ display: 'flex' }}>
+        <Sidebar
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
+        <Box
+          component='main'
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            mt: '64px',
+            width: { sm: `calc(100% - 280px)` },
+            backgroundColor: colors.light.background,
+            color: colors.light.foreground,
+            minHeight: '100vh',
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </>
   );
