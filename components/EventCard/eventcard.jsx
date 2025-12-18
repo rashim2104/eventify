@@ -3,337 +3,285 @@
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Chip,
   Box,
-  Avatar,
   Stack,
   Link as MuiLink,
   useTheme,
+  Grid,
 } from '@mui/material';
-import { Calendar, MapPin, Clock, Eye, User } from '@phosphor-icons/react';
-import dayjs from 'dayjs';
+import { Calendar, Clock, MapPin } from '@phosphor-icons/react';
 import Link from 'next/link';
 
-export default function EventCard({ events, message }) {
+export default function EventCard({ events, message, grouped = true }) {
   const theme = useTheme();
 
-  const formatDate = dateString => {
+  const formatDate = (dateString, includeTime = true) => {
     const options = {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
+      ...(includeTime && { hour: 'numeric', minute: 'numeric' }),
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Get the current date/time
   const currentDate = new Date();
 
-  // Separate events into upcoming and past events
-  const upcomingEvents = events.filter(
-    event => new Date(event.eventData.StartTime) > currentDate
-  );
-  const pastEvents = events.filter(
-    event => new Date(event.eventData.StartTime) <= currentDate
-  );
-
-  const getStatusColor = status => {
+  // Status mapping logic with specific colors requested
+  const getStatusInfo = (status) => {
     switch (status) {
-      case 1:
-        return 'primary'; // Pending/Submitted
-      case 2:
-        return 'success'; // Approved
-      case 3:
-        return 'error'; // Rejected
+      case 0: // Submitted (Pending)
+        return {
+          label: 'Pending',
+          bgcolor: '#fef3c7', // amber-100
+          color: '#92400e',   // amber-800
+          border: '#fcd34d'   // amber-300
+        };
+      case 1: // HOD Approved
+        return {
+          label: 'HOD Approved',
+          bgcolor: '#d1fae5', // emerald-100
+          color: '#065f46',   // emerald-800
+          border: '#6ee7b7'   // emerald-300
+        };
+      case 2: // Approved (Final)
+        return {
+          label: 'Approved',
+          bgcolor: '#d1fae5', // emerald-100
+          color: '#065f46',   // emerald-800
+          border: '#6ee7b7'   // emerald-300
+        };
+      case -1: // HOD Rejected
+        return {
+          label: 'HOD Rejected',
+          bgcolor: '#ffe4e6', // rose-100
+          color: '#9f1239',   // rose-800
+          border: '#fda4af'   // rose-300
+        };
+      case -2: // IQAC Rejected
+        return {
+          label: 'IQAC Rejected',
+          bgcolor: '#ffe4e6', // rose-100
+          color: '#9f1239',   // rose-800
+          border: '#fda4af'   // rose-300
+        };
+      case 3: // Marked for Change (HOD)
+        return {
+          label: 'Changes Requested',
+          bgcolor: '#ffe4e6', // rose-100
+          color: '#9f1239',   // rose-800
+          border: '#fda4af'   // rose-300
+        };
+      case 4: // Marked for Change (IQAC)
+        return {
+          label: 'Changes Requested',
+          bgcolor: '#ffe4e6', // rose-100
+          color: '#9f1239',   // rose-800
+          border: '#fda4af'   // rose-300
+        };
+      case 5: // Principal Approved
+        return {
+          label: 'Principal Approved',
+          bgcolor: '#d1fae5', // emerald-100
+          color: '#065f46',   // emerald-800
+          border: '#6ee7b7'   // emerald-300
+        };
       default:
-        return 'default';
+        return {
+          label: 'Unknown',
+          bgcolor: theme.palette.grey[100],
+          color: theme.palette.grey[800],
+          border: theme.palette.grey[300]
+        };
     }
   };
 
-  const getStatusText = status => {
-    switch (status) {
-      case 1:
-        return 'Pending';
-      case 2:
-        return 'Approved';
-      case 3:
-        return 'Rejected';
-      default:
-        return 'Unknown';
-    }
-  };
+  const SingleEventCard = ({ event }) => {
+    const statusInfo = getStatusInfo(event.status);
 
-  const SingleEventCard = ({ event, isPast = false }) => (
-    <Card
-      component={Link}
-      href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-        cursor: 'pointer',
-        textDecoration: 'none',
-        bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-        border: 1,
-        borderColor: theme.palette.divider,
-        '&:hover': {
-          boxShadow: 2,
-          borderColor: theme.palette.primary.main,
-        },
-      }}
-    >
-      <CardContent
+    return (
+      <Card
+        component={Link}
+        href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
+        elevation={0}
         sx={{
-          height: 140,
-          bgcolor: isPast ? theme.palette.grey[50] : theme.palette.primary.main,
+          height: '100%',
+          minHeight: 320,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          p: 2,
+          flexDirection: 'column',
+          textDecoration: 'none',
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 3,
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
+          },
         }}
       >
-        <Box sx={{ textAlign: 'center' }}>
-          <Calendar
-            size={48}
-            color={isPast ? theme.palette.text.secondary : 'white'}
-            weight='regular'
-          />
-        </Box>
-        <Chip
-          label={getStatusText(event.status)}
-          color={getStatusColor(event.status)}
-          size='small'
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-          }}
-        />
-      </CardContent>
-
-      <CardContent sx={{ flexGrow: 1, p: 3 }}>
-        <Typography
-          variant='h6'
-          component='h3'
-          sx={{
-            mb: 2,
-            color: theme.palette.text.primary,
-            fontWeight: 600,
-            lineHeight: 1.3,
-          }}
-        >
-          {event.eventData?.EventName}
-        </Typography>
-
-        {event.status === 2 && event.ins_id && (
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              variant='body2'
+        <CardContent sx={{ p: 3, pb: 1, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Top Row: Status and ID */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+            <Chip
+              label={statusInfo.label}
+              size="small"
               sx={{
-                color: theme.palette.text.secondary,
+                bgcolor: statusInfo.bgcolor,
+                color: statusInfo.color,
+                border: `1px solid ${statusInfo.border}`,
                 fontWeight: 500,
+                fontSize: '0.75rem',
+                height: 24,
+                borderRadius: 1.5,
               }}
-            >
-              Event ID: {event.ins_id}
-            </Typography>
-          </Box>
-        )}
-
-        <Stack spacing={1.5} sx={{ mt: 2 }}>
-          {/* TODO: Add Venue details from API 
-             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-            <MapPin size={18} color={theme.palette.text.secondary} weight="regular" style={{ marginTop: 2 }} />
-            <Typography
-              variant="body2"
-              sx={{
-                color: theme.palette.text.secondary,
-                lineHeight: 1.4,
-              }}
-            >
-              <strong>Venue:</strong> {event.eventData?.EventVenue}
-            </Typography>
-          </Box> */}
-
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-            <Clock
-              size={18}
-              color={theme.palette.text.secondary}
-              weight='regular'
-              style={{ marginTop: 2 }}
             />
-            <Box>
-              <Typography
-                variant='body2'
+            {event.ins_id && statusInfo.label.includes('Approved') && (
+              <Chip
+                label={`ID: ${event.ins_id}`}
+                size="small"
+                variant="outlined"
                 sx={{
-                  color: theme.palette.text.secondary,
-                  lineHeight: 1.4,
+                  fontSize: '0.70rem',
+                  height: 24,
+                  fontWeight: 500,
+                  color: 'text.secondary',
+                  borderColor: 'divider',
+                  borderRadius: 1.5,
                 }}
-              >
-                <strong>Start:</strong> {formatDate(event.eventData?.StartTime)}
-              </Typography>
-              <Typography
-                variant='body2'
-                sx={{
-                  color: theme.palette.text.secondary,
-                  lineHeight: 1.4,
-                }}
-              >
-                <strong>End:</strong> {formatDate(event.eventData?.EndTime)}
-              </Typography>
-            </Box>
+              />
+            )}
           </Box>
 
-          {!isPast && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-              <Eye
-                size={16}
-                color={theme.palette.text.secondary}
-                weight='regular'
-              />
-              <MuiLink
-                href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-                sx={{
-                  color: theme.palette.text.secondary,
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    color: theme.palette.primary.main,
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                View Details →
-              </MuiLink>
+          {/* Title */}
+          <Typography
+            variant='h6'
+            component='h3'
+            sx={{
+              fontWeight: 600,
+              color: 'text.primary',
+              lineHeight: 1.4,
+              mb: 3,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {event.eventData?.EventName}
+          </Typography>
+
+          {/* Metadata */}
+          <Stack spacing={1.5} sx={{ color: 'text.secondary', mt: 'auto', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Calendar size={18} weight="regular" style={{ opacity: 0.7 }} />
+              <Typography variant="body2">
+                {formatDate(event.eventData?.StartTime, false)}
+              </Typography>
             </Box>
-          )}
-        </Stack>
-      </CardContent>
-    </Card>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Clock size={18} weight="regular" style={{ opacity: 0.7 }} />
+              <Typography variant="body2">
+                {new Date(event.eventData?.StartTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} -
+                {new Date(event.eventData?.EndTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <MapPin size={18} weight="regular" style={{ opacity: 0.7 }} />
+              <Typography variant="body2" noWrap sx={{ maxWidth: '220px' }}>
+                {event.eventData?.EventVenue}
+              </Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+
+        <Box sx={{ px: 3 }}>
+          <Box sx={{ height: 1, bgcolor: 'divider', width: '100%', opacity: 0.5 }} />
+        </Box>
+
+        <Box sx={{ p: 2, px: 3, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <MuiLink
+            component="span"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'primary.main',
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              }
+            }}
+          >
+            View Details <Box component="span" sx={{ fontSize: '1.1em', lineHeight: 0 }}>→</Box>
+          </MuiLink>
+        </Box>
+      </Card>
+    );
+  };
+
+
+  const renderGrid = (eventList) => (
+    <Grid container spacing={3}>
+      {eventList.map((event) => (
+        <Grid item xs={12} sm={6} md={6} lg={6} xl={6} key={event._id} sx={{ maxWidth: { sm: '50%', md: '50%', lg: '50%', xl: '50%' }, flexBasis: { sm: '50%', md: '50%', lg: '50%', xl: '50%' } }}>
+          <SingleEventCard event={event} />
+        </Grid>
+      ))}
+    </Grid>
   );
 
+  if (!events || events.length === 0) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="h6">{message || "No events found."}</Typography>
+      </Box>
+    );
+  }
+
+  if (!grouped) {
+    return renderGrid(events);
+  }
+
+  const upcomingEvents = events.filter(
+    event => new Date(event.eventData.EndTime) > currentDate
+  );
+  const pastEvents = events.filter(
+    event => new Date(event.eventData.EndTime) <= currentDate
+  );
+
+
   return (
-    <Box
-      sx={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        py: 4,
-      }}
-    >
-      {/* Display Upcoming Events */}
-      <Box sx={{ width: '100%' }}>
-        <Typography
-          variant='h4'
-          component='h2'
-          sx={{
-            mb: 4,
-            fontWeight: 600,
-            color: theme.palette.text.primary,
-            fontSize: '1.875rem',
-          }}
-        >
-          Upcoming Events
-        </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 3,
-            flexWrap: 'wrap',
-          }}
-        >
-          {upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event, index) => (
-              <Box
-                key={index}
-                sx={{
-                  width: {
-                    xs: '100%',
-                    xl: 'calc(50% - 12px)',
-                  },
-                  minWidth: 300,
-                }}
-              >
-                <SingleEventCard event={event} isPast={false} />
-              </Box>
-            ))
-          ) : events.length > 0 ? (
-            <Typography
-              variant='body1'
-              sx={{ color: theme.palette.text.secondary }}
-            >
-              No upcoming events.
-            </Typography>
-          ) : null}
-        </Box>
-      </Box>
-
-      {/* Display Past Events */}
-      <Box sx={{ width: '100%' }}>
-        <Typography
-          variant='h4'
-          component='h2'
-          sx={{
-            mb: 4,
-            fontWeight: 600,
-            color: theme.palette.text.primary,
-            fontSize: '1.875rem',
-          }}
-        >
-          Past Events
-        </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 3,
-            flexWrap: 'wrap',
-          }}
-        >
-          {pastEvents.length > 0 ? (
-            pastEvents.map((event, index) => (
-              <Box
-                key={index}
-                sx={{
-                  width: {
-                    xs: '100%',
-                    xl: 'calc(50% - 12px)',
-                  },
-                  minWidth: 300,
-                }}
-              >
-                <SingleEventCard event={event} isPast={true} />
-              </Box>
-            ))
-          ) : events.length > 0 ? (
-            <Typography
-              variant='body1'
-              sx={{ color: theme.palette.text.secondary }}
-            >
-              No past events.
-            </Typography>
-          ) : null}
-        </Box>
-      </Box>
-
-      {/* Display message if no events */}
-      {!upcomingEvents.length && !pastEvents.length && (
-        <Box
-          sx={{
-            maxWidth: '50vw',
-            wordWrap: 'break-word',
-            color: theme.palette.text.secondary,
-          }}
-        >
-          {message}
+    <Stack spacing={6} sx={{ py: 4, width: '100%' }}>
+      {upcomingEvents.length > 0 && (
+        <Box>
+          <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 700, color: 'text.primary' }}>
+            Upcoming events
+          </Typography>
+          {renderGrid(upcomingEvents)}
         </Box>
       )}
-    </Box>
+
+      {pastEvents.length > 0 && (
+        <Box>
+          <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 700, color: 'text.secondary' }}>
+            Past events
+          </Typography>
+          <Box sx={{ opacity: 0.8 }}>
+            {renderGrid(pastEvents)}
+          </Box>
+        </Box>
+      )}
+
+      {upcomingEvents.length === 0 && pastEvents.length === 0 && (
+        <Typography>{message || "No events found."}</Typography>
+      )}
+    </Stack>
   );
 }
