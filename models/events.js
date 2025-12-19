@@ -1,4 +1,4 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, models } from 'mongoose';
 
 const eventSchema = new Schema({
   user_id: {
@@ -29,26 +29,28 @@ const eventSchema = new Schema({
     type: Schema.Types.Mixed,
     required: true,
   },
-  comment:{
+  comment: {
     type: String,
-    default:"",
+    default: '',
   },
-  updateStatus:{
+  updateStatus: {
     type: Number,
-    default:0,
+    default: 0,
   },
-  postEventData:{
-    type:Schema.Types.Mixed,
-    default:null,
+  postEventData: {
+    type: Schema.Types.Mixed,
+    default: null,
   },
-  postEventUpdateOn:{
-    type:Date,
-    default:null,
+  postEventUpdateOn: {
+    type: Date,
+    default: null,
   },
-  postEventUpdateBy:{
-    type:Schema.Types.ObjectId,
-    default:null,
+  postEventUpdateBy: {
+    type: Schema.Types.ObjectId,
+    default: null,
   },
+}, {
+  timestamps: true, // Adds createdAt and updatedAt fields automatically
 });
 
 const Events = models.Events || mongoose.model('Events', eventSchema);

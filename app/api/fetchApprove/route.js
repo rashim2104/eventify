@@ -1,24 +1,24 @@
-import { NextResponse } from "next/server";
-import { connectMongoDB } from "@/lib/mongodb";
-import Events from "@/models/events";
-import { authenticate } from "@/lib/authenticate";
-import { logger } from "@/lib/logger";
+import { NextResponse } from 'next/server';
+import { connectMongoDB } from '@/lib/mongodb';
+import Events from '@/models/events';
+import { authenticate } from '@/lib/authenticate';
+import { logger } from '@/lib/logger';
 
 export async function POST(req) {
-  const ACTION = "Fetch Approve";
+  const ACTION = 'Fetch Approve';
   let user;
 
   try {
     user = await authenticate(req);
   } catch (error) {
     await logger(
-      "UNKNOWN",
+      'UNKNOWN',
       ACTION,
-      "Authentication Failed: " + error.message,
+      'Authentication Failed: ' + error.message,
       401
     );
     return NextResponse.json(
-      { message: "Authentication failed" },
+      { message: 'Authentication failed' },
       { status: 401 }
     );
   }
@@ -31,11 +31,11 @@ export async function POST(req) {
     await logger(
       user_id,
       ACTION,
-      "Database Connection Failed: " + error.message,
+      'Database Connection Failed: ' + error.message,
       500
     );
     return NextResponse.json(
-      { message: "Database connection failed" },
+      { message: 'Database connection failed' },
       { status: 500 }
     );
   }
@@ -43,9 +43,9 @@ export async function POST(req) {
   try {
     return await fetchEvents(user_id, userType, dept, college, email);
   } catch (error) {
-    await logger(user_id, ACTION, "Events Fetch Failed: " + error.message, 500);
+    await logger(user_id, ACTION, 'Events Fetch Failed: ' + error.message, 500);
     return NextResponse.json(
-      { message: "An error occurred while fetching data." },
+      { message: 'An error occurred while fetching data.' },
       { status: 500 }
     );
   }
@@ -53,39 +53,39 @@ export async function POST(req) {
 
 async function fetchEvents(user_id, userType, dept, college, email) {
   let userEvents;
-  const ACTION = "Fetch Approve";
+  const ACTION = 'Fetch Approve';
 
   if (
-    email === "principal@sairamit.edu.in" ||
-    email === "principal@sairam.edu.in"
+    email === 'principal@sairamit.edu.in' ||
+    email === 'principal@sairam.edu.in'
   ) {
     userEvents = await Events.find({
       $and: [
         { status: 5 },
-        { $or: [{ eventCollege: college }, { eventCollege: "common" }] },
+        { $or: [{ eventCollege: college }, { eventCollege: 'common' }] },
       ],
     });
-  } else if (userType === "admin") {
+  } else if (userType === 'admin') {
     userEvents = await Events.find({
       $and: [
-        { $or: [{ eventCollege: college }, { eventCollege: "common" }] },
+        { $or: [{ eventCollege: college }, { eventCollege: 'common' }] },
         { status: 1 },
       ],
     });
-  } else if (userType === "HOD") {
+  } else if (userType === 'HOD') {
     if (
-      email === "hodscihum@sairamit.edu.in" ||
-      email === "hod.sh@sairam.edu.in"
+      email === 'hodscihum@sairamit.edu.in' ||
+      email === 'hod.sh@sairam.edu.in'
     ) {
       userEvents = await Events.find({
         $and: [
           {
             $or: [
-              { dept: "TA" },
-              { dept: "EN" },
-              { dept: "MA" },
-              { dept: "PH" },
-              { dept: "CH" },
+              { dept: 'TA' },
+              { dept: 'EN' },
+              { dept: 'MA' },
+              { dept: 'PH' },
+              { dept: 'CH' },
             ],
           },
           { eventCollege: college },

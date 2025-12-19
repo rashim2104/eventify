@@ -1,68 +1,191 @@
-"use client";
-import { signOut, useSession } from "next-auth/react";
-import Image from "next/image";
-import Link from "next/link";
-import "./navbar.css";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+'use client';
+import { signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import { ListIcon, SignOutIcon } from '@phosphor-icons/react';
+import { colors } from '@/lib/colors.config.js';
 
-function Navbar() {
+function Navbar({ onMobileMenuToggle }) {
   const { data: session } = useSession();
   const [print, setPrint] = useState(true);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
   const pathname = usePathname();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     const allowedPaths = [
-      "/dashboard",
-      "/manage",
-      "/create",
-      "/status",
-      "/update",
-      "/approve",
-      "/report",
-      "/profile",
-      "/events",
-      "events/[eventID]",
-      "/venues",
+      '/dashboard',
+      '/manage',
+      '/create',
+      '/status',
+      '/update',
+      '/approve',
+      '/report',
+      '/profile',
+      '/events',
+      'events/[eventID]',
+      '/venues',
     ];
-    if (!allowedPaths.some((path) => pathname.startsWith(path))) {
+    if (!allowedPaths.some(path => pathname.startsWith(path))) {
       setPrint(false);
     } else {
       setPrint(true);
     }
   }, [pathname]);
 
+  const handleMobileMenuOpen = event => {
+    setMobileMenuAnchor(event.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileMenuAnchor(null);
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    handleMobileMenuClose();
+  };
+
+  if (!print) {
+    return null;
+  }
+
   return (
-    <>
-      {print && (
-        <>
-          <nav className="flex justify-between items-center p-4 text-white">
-            <Link href="/dashboard">
-              <Image
-                className="logo-img"
-                src="/assets/images/logo.png"
-                width={185}
-                height={100}
-                quality={100}
-                alt="logo"
-              />
-            </Link>
-            <div className="flex items-center text-black font-bold">
-              {session && session.user && (
-                <span className="mr-4">Hello, {session.user.name}</span>
-              )}
-              <button
-                onClick={() => signOut()}
-                className="sign-out-btn bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
-              >
-                <span>Sign out</span>
-              </button>
-            </div>
-          </nav>
-          <div className="spacer">&nbsp;</div>
-        </>
-      )}
-    </>
+    <AppBar 
+      position='fixed' 
+      sx={{ 
+        zIndex: theme => theme.zIndex.drawer + 1,
+        backgroundColor: colors.light.sidebar,
+        color: colors.light.sidebarForeground,
+        borderBottom: `2px solid ${colors.light.sidebarBorder}`,
+        boxShadow: 'none',
+      }}
+    >
+      <Toolbar>
+        <Link
+          href='/dashboard'
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
+            <Image
+              src='/assets/images/logo.png'
+              width={140}
+              height={50}
+              quality={100}
+              alt='Eventify Logo'
+              style={{ marginRight: '16px' }}
+            />
+          </Box>
+        </Link>
+
+        <Box sx={{ flexGrow: 1 }} />
+
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          {session && session.user && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant='body1' color='inherit'>
+                Hello, {session.user.name}
+              </Typography>
+            </Box>
+          )}
+          <Button
+            onClick={handleSignOut}
+            startIcon={<SignOutIcon size={20} weight='regular' />}
+            variant='outlined'
+            sx={{ 
+              borderColor: colors.light.sidebarBorder,
+              color: colors.light.sidebarForeground,
+              '&:hover': {
+                borderColor: colors.light.sidebarPrimary,
+                backgroundColor: colors.light.sidebarAccent,
+              }
+            }}
+          >
+            Sign out
+          </Button>
+        </Box>
+
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
+          <IconButton
+            size='large'
+            edge='start'
+            color='inherit'
+            aria-label='open navigation menu'
+            onClick={onMobileMenuToggle}
+          >
+            <ListIcon size={24} weight='regular' />
+          </IconButton>
+          <IconButton
+            size='large'
+            edge='end'
+            color='inherit'
+            aria-label='account menu'
+            onClick={handleMobileMenuOpen}
+          >
+            <Avatar sx={{ width: 32, height: 32 }}>
+              {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+            </Avatar>
+          </IconButton>
+        </Box>
+      </Toolbar>
+
+      <Menu
+        anchorEl={mobileMenuAnchor}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        id='mobile-menu'
+        keepMounted
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        open={Boolean(mobileMenuAnchor)}
+        onClose={handleMobileMenuClose}
+      >
+        {session && session.user && (
+          <MenuItem disabled>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ width: 32, height: 32 }}>
+                {session.user.name?.charAt(0).toUpperCase()}
+              </Avatar>
+              Hello, {session.user.name}
+            </Box>
+          </MenuItem>
+        )}
+        <MenuItem onClick={handleSignOut}>
+          <SignOutIcon
+            size={20}
+            weight='regular'
+            style={{ marginRight: '8px' }}
+          />
+          Sign out
+        </MenuItem>
+      </Menu>
+    </AppBar>
   );
 }
 

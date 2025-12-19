@@ -1,50 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
-
-*{
-  font-family: 'Montserrat', sans-serif;
+* {
   margin: 0;
   padding: 0;
 }
-.forme{
-  padding:10px;
+.forme {
+  padding: 10px;
   height: 50vh;
   overflow: hidden;
 }
 
 .gradient-custom-2 {
-    background: #FE914E;
-  }
-
-.gradient-custom-2:hover
-{
-  background: #E73700;
+  background: #fe914e;
 }
-  
-.tit{
-  font-size:28px;
+
+.gradient-custom-2:hover {
+  background: #e73700;
+}
+
+.tit {
+  font-size: 28px;
   font-weight: 600;
-  color:#fb670a
+  color: #fb670a;
 }
 
-
-.content{
-  width:100vw;
+.content {
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: dashed;
 }
 
-  @media (min-width: 768px) {
-    .gradient-form {
-      height: 100vh !important;
-    }
-
+@media (min-width: 768px) {
+  .gradient-form {
+    height: 100vh !important;
   }
-  @media (min-width: 769px) {
-    .gradient-custom-2 {
-      border-top-right-radius: .3rem;
-      border-bottom-right-radius: .3rem;
-    }
-
+}
+@media (min-width: 769px) {
+  .gradient-custom-2 {
+    border-top-right-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+  }
 }
