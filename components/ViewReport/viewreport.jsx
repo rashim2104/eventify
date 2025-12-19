@@ -41,8 +41,12 @@ function ViewEvent(props) {
         const societiesData = await societiesRes.json();
         const clubsData = await clubsRes.json();
         const allSocieties = societiesData.societies || [];
-        setSocieties(allSocieties.filter(s => s.type === 'professional').map(s => s.code));
-        setIeeeSocieties(allSocieties.filter(s => s.type === 'ieee').map(s => s.code));
+        setSocieties(
+          allSocieties.filter(s => s.type === 'professional').map(s => s.code)
+        );
+        setIeeeSocieties(
+          allSocieties.filter(s => s.type === 'ieee').map(s => s.code)
+        );
         setClubs((clubsData.clubs || []).map(c => c.code));
       } catch (error) {
         console.error('Failed to fetch config data:', error);
@@ -85,17 +89,17 @@ function ViewEvent(props) {
       ...props.eventData,
       StartTime: props.eventData.StartTime
         ? new Date(
-          new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .substring(0, 16)
+            new Date(props.eventData.StartTime).getTime() + 5.5 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .substring(0, 16)
         : '',
       EndTime: props.eventData.EndTime
         ? new Date(
-          new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .substring(0, 16)
+            new Date(props.eventData.EndTime).getTime() + 5.5 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .substring(0, 16)
         : '',
     },
   });
@@ -115,19 +119,19 @@ function ViewEvent(props) {
     );
     doc.text(
       'Name of the event Coordinator: ' +
-      props.data.eventData.eventCoordinators[0].coordinatorName,
+        props.data.eventData.eventCoordinators[0].coordinatorName,
       10,
       40
     );
     doc.text(
       'Coordinator Email: ' +
-      props.data.eventData.eventCoordinators[0].coordinatorMail,
+        props.data.eventData.eventCoordinators[0].coordinatorMail,
       10,
       50
     );
     doc.text(
       'Coordinator Phone: ' +
-      props.data.eventData.eventCoordinators[0].coordinatorPhone,
+        props.data.eventData.eventCoordinators[0].coordinatorPhone,
       10,
       60
     );
@@ -145,31 +149,31 @@ function ViewEvent(props) {
     doc.text('Event Location: ' + props.data.eventData.eventLocation, 10, 140);
     doc.text(
       'Resource Person Name: ' +
-      props.data.eventData.eventResourcePerson[0].ResourcePersonName,
+        props.data.eventData.eventResourcePerson[0].ResourcePersonName,
       10,
       150
     );
     doc.text(
       'Resource Person Mail: ' +
-      props.data.eventData.eventResourcePerson[0].ResourcePersonMail,
+        props.data.eventData.eventResourcePerson[0].ResourcePersonMail,
       10,
       160
     );
     doc.text(
       'Resource Person Phone: ' +
-      props.data.eventData.eventResourcePerson[0].ResourcePersonPhone,
+        props.data.eventData.eventResourcePerson[0].ResourcePersonPhone,
       10,
       170
     );
     doc.text(
       'Resource Person Designation: ' +
-      props.data.eventData.eventResourcePerson[0].ResourcePersonDesgn,
+        props.data.eventData.eventResourcePerson[0].ResourcePersonDesgn,
       10,
       180
     );
     doc.text(
       'Resource Person Address: ' +
-      props.data.eventData.eventResourcePerson[0].ResourcePersonAddr,
+        props.data.eventData.eventResourcePerson[0].ResourcePersonAddr,
       10,
       190
     );
@@ -465,7 +469,7 @@ function ViewEvent(props) {
               name='EventName'
               {...register('EventName', { required: true })}
               required
-            // onChange={(e) => alert(e.target.value)}
+              // onChange={(e) => alert(e.target.value)}
             />
             <p className='error-msg'>
               {errors.EventName && <span>*This field is required</span>}

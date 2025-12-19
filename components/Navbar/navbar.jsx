@@ -67,9 +67,9 @@ function Navbar({ onMobileMenuToggle }) {
   }
 
   return (
-    <AppBar 
-      position='fixed' 
-      sx={{ 
+    <AppBar
+      position='fixed'
+      sx={{
         zIndex: theme => theme.zIndex.drawer + 1,
         backgroundColor: colors.light.sidebar,
         color: colors.light.sidebarForeground,
@@ -114,13 +114,13 @@ function Navbar({ onMobileMenuToggle }) {
             onClick={handleSignOut}
             startIcon={<SignOutIcon size={20} weight='regular' />}
             variant='outlined'
-            sx={{ 
+            sx={{
               borderColor: colors.light.sidebarBorder,
               color: colors.light.sidebarForeground,
               '&:hover': {
                 borderColor: colors.light.sidebarPrimary,
                 backgroundColor: colors.light.sidebarAccent,
-              }
+              },
             }}
           >
             Sign out

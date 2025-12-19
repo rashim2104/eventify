@@ -337,7 +337,9 @@ const EventForm = () => {
       if (userType === 'admin' && eventOrigin == 1) {
         dept = eventSociety;
         // Find the college for the selected department from configData
-        const selectedDept = configData.departments.find(d => d.code === eventSociety);
+        const selectedDept = configData.departments.find(
+          d => d.code === eventSociety
+        );
         if (selectedDept) {
           college = selectedDept.college;
         }
@@ -382,7 +384,9 @@ const EventForm = () => {
       }, 2000);
     } else {
       const data = await status.json();
-      toast.error(data.message || 'An error occurred while creating the event.');
+      toast.error(
+        data.message || 'An error occurred while creating the event.'
+      );
       console.error('Error creating event:', data.message);
     }
     setIsSubmitting(false);

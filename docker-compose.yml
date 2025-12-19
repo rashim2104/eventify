@@ -12,6 +12,6 @@ services:
       # Provide your cloud Mongo connection string in .env as MONGODB_URI
       # e.g., MONGODB_URI=mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/eventify
     ports:
-      - "3000:3000"
+      - '3000:3000'
     restart: unless-stopped
 # No local MongoDB service here; app connects to your cloud Mongo via MONGODB_URI
