@@ -6,23 +6,24 @@ import Navbar from '@/components/Navbar/navbar';
 import Sidebar from '@/components/Sidebar/sidebar';
 import { usePathname } from 'next/navigation';
 import { colors } from '@/lib/colors.config.js';
+import { SessionProvider } from 'next-auth/react';
+
+// Public pages that don't need authentication
+const PUBLIC_PATHS = ['/', '/forgot-password', '/reset-password', '/student', '/home'];
 
 export default function LayoutContent({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const pathname = usePathname();
 
-  const isAuthLikePage =
-    pathname === '/' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password';
+  const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  if (isAuthLikePage) {
+  // Public pages - no auth, no navbar/sidebar
+  if (isPublicPage) {
     return (
       <Box
         component='main'
@@ -33,8 +34,9 @@ export default function LayoutContent({ children }) {
     );
   }
 
+  // Authenticated pages - wrap with SessionProvider, show navbar/sidebar
   return (
-    <>
+    <SessionProvider>
       <Navbar onMobileMenuToggle={handleMobileMenuToggle} />
       <Box sx={{ display: 'flex' }}>
         <Sidebar
@@ -56,6 +58,6 @@ export default function LayoutContent({ children }) {
           {children}
         </Box>
       </Box>
-    </>
+    </SessionProvider>
   );
 }
