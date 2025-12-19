@@ -1,8 +1,8 @@
-import Main from "@/components/Main/main"
+import Main from '@/components/Main/main';
 export default function Dashboard() {
   return (
     <>
-    <Main />
+      <Main />
     </>
-  )
+  );
 }

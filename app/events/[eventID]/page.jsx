@@ -1,34 +1,41 @@
-"use client";
-"use session";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import "@/components/CreateForm/Form.css";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import ViewEvent from "@/components/ViewEvent/viewevent";
+'use client';
+'use session';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import ViewEvent from '@/components/ViewEvent/viewevent';
+
+// Material UI imports
 import {
-  societies,
-  ieeeSocieties,
-  ieeeSocietiesShort,
-  clubs,
-  clubsShort,
-} from "@/public/data/data";
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { CheckCircle, Cancel, Edit } from '@mui/icons-material';
+
+// Import colors
+import { colors } from '@/lib/colors.config.js';
 
 export default function EventInfo({ params }) {
   const [eventDetails, setEventDetails] = useState([]);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState('');
   const [redirectStatus, setRedirectStatus] = useState(false);
   const { data: session, status } = useSession();
-  const [suggestedEventId, setSuggestedEventId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showEventIdModal, setShowEventIdModal] = useState(false);
-  const [customEventId, setCustomEventId] = useState("");
+  const [customEventId, setCustomEventId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
   const router = useRouter();
   let email = session?.user?.email;
   const userType = session?.user?.userType;
@@ -40,10 +47,10 @@ export default function EventInfo({ params }) {
   const handleChange = async (event_id, action, customEventId = null) => {
     try {
       const user_id = session?.user?._id;
-      const response = await fetch("/api/approveEvent", {
-        method: "POST",
+      const response = await fetch('/api/approveEvent', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           event_id,
@@ -57,32 +64,32 @@ export default function EventInfo({ params }) {
 
       if (response.ok) {
         // Handle success
-        action === "Approve"
-          ? toast.success("Event Approved Successfully")
-          : action === "Comment"
-          ? toast.success("Event marked for change")
-          : action === "ApprovePrinc"
-          ? toast.success("Event Forwarded to Principal Successfully")
-          : toast.error("Event Rejected Successfully");
+        action === 'Approve'
+          ? toast.success('Event Approved Successfully')
+          : action === 'Comment'
+            ? toast.success('Event marked for change')
+            : action === 'ApprovePrinc'
+              ? toast.success('Event Forwarded to Principal Successfully')
+              : toast.error('Event Rejected Successfully');
 
         setRedirectStatus(true);
       } else {
         // Handle error
-        toast.error("Failed to approve event");
+        toast.error('Failed to approve event');
         setRedirectStatus(false);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
       setRedirectStatus(false);
     }
   };
 
   const generateEventId = async () => {
     try {
-      const response = await fetch("/api/generateEventId", {
-        method: "POST",
+      const response = await fetch('/api/generateEventId', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           userId: eventDetails[0].user_id,
@@ -91,50 +98,37 @@ export default function EventInfo({ params }) {
         }),
       });
       const data = await response.json();
-      setSuggestedEventId(data.eventId);
       setCustomEventId(data.eventId);
       setShowEventIdModal(true);
     } catch (error) {
-      console.error("Error generating event ID:", error);
-      toast.error("Failed to generate event ID");
+      console.error('Error generating event ID:', error);
+      toast.error('Failed to generate event ID');
     }
   };
 
   const handleApproveWithEventId = () => {
     if (!customEventId.trim()) {
-      toast.error("Event ID cannot be empty");
+      toast.error('Event ID cannot be empty');
       return;
     }
     // Pass the customEventId directly
-    handleChange(eventDetails[0]._id, "Approve", customEventId);
+    handleChange(eventDetails[0]._id, 'Approve', customEventId);
     setShowEventIdModal(false);
-  };
-
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      if (redirectStatus) router.replace("/approve");
+      if (redirectStatus) router.replace('/approve');
       // Only run getEvents() when the session is resolved (status is not 'loading')
-      else if (status === "authenticated" || status === "unauthenticated") {
+      else if (status === 'authenticated' || status === 'unauthenticated') {
         const eventId = params.eventID;
-        // const dept = session?.user?.dept;
         const userType = session?.user?.userType;
         try {
-          const response = await fetch("/api/eventDetails", {
-            method: "POST",
+          const response = await fetch('/api/eventDetails', {
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               eventId,
@@ -145,17 +139,14 @@ export default function EventInfo({ params }) {
           if (
             data.message &&
             data.message.length > 0 &&
-            data.message !== "An error occurred while fetching data."
+            data.message !== 'An error occurred while fetching data.'
           ) {
             setEventDetails(data.message);
-            setStatusMessage("");
           } else {
-            setStatusMessage("Error fetching details.");
             setEventDetails([]);
           }
         } catch (error) {
-          console.error("Error:", error);
-          setStatusMessage("Error fetching details.");
+          console.error('Error:', error);
           setEventDetails([]);
         } finally {
           setLoading(false);
@@ -166,17 +157,17 @@ export default function EventInfo({ params }) {
     fetchData();
   }, [status, redirectStatus]);
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
-      <div className="grid place-items-center h-screen text-xl font-extrabold">
+      <div className='grid place-items-center h-screen text-xl font-extrabold'>
         Loading...
       </div>
     );
   }
   const currUser = session?.user?.userType;
-  if (currUser === "student") {
+  if (currUser === 'student') {
     return (
-      <h1 className="grid place-items-center h-screen text-7xl text-red-600	font-extrabold">
+      <h1 className='grid place-items-center h-screen text-7xl text-red-600	font-extrabold'>
         Not Authorized !!
       </h1>
     );
@@ -186,61 +177,113 @@ export default function EventInfo({ params }) {
       <div>
         <div>
           {eventDetails.length != 0 ? (
-            <div className="flex flex-col items-left gap-3">
+            <div className='flex flex-col items-left gap-3'>
               {!loading && (
-                <>
-                  <ViewEvent
-                    eventData={eventDetails[0].eventData}
-                    dept={eventDetails[0].dept}
-                    data={eventDetails[0]}
-                  />
-                </>
+                <ViewEvent
+                  eventData={eventDetails[0].eventData}
+                  dept={eventDetails[0].dept}
+                  data={eventDetails[0]}
+                />
               )}
-              {(email === "principal@sairamit.edu.in" ||
-                email === "principal@sairam.edu.in") &&
+              {(email === 'principal@sairamit.edu.in' ||
+                email === 'principal@sairam.edu.in') &&
                 eventDetails[0].status == 5 && (
-                  <>
-                    <div className="flex gap-3 bg-white justify-center rounded-xl border-2 border-black-400 p-4">
-                      <button
-                        className="text-white bg-green-500 font-xl hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800 cursor-pointer"
-                        onClick={() =>
-                          handleChange(eventDetails[0]._id, "Approve")
-                        }
+                  <Container maxWidth='lg' sx={{ mt: 3 }}>
+                    <Card sx={{ borderRadius: 2 }}>
+                      <CardContent
+                        sx={{
+                          p: 3,
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        <Button
+                          variant='contained'
+                          startIcon={<CheckCircle />}
+                          onClick={() =>
+                            handleChange(eventDetails[0]._id, 'Approve')
+                          }
+                          sx={{
+                            backgroundColor: '#10b981',
+                            color: '#ffffff',
+                            '&:hover': {
+                              backgroundColor: '#059669',
+                            },
+                          }}
+                        >
+                          Approve
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Container>
+                )}
+              {((userType === 'HOD' && eventDetails[0].status == 0) ||
+                (userType === 'admin' && eventDetails[0].status == 1)) && (
+                <Container maxWidth='lg' sx={{ mt: 3 }}>
+                  <Card sx={{ borderRadius: 2 }}>
+                    <CardContent
+                      sx={{
+                        p: 3,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 2,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <Button
+                        variant='contained'
+                        startIcon={<CheckCircle />}
+                        onClick={() => {
+                          if (userType === 'admin') {
+                            handlePrincipalApprovalCheck();
+                          } else {
+                            handleChange(eventDetails[0]._id, 'Approve');
+                          }
+                        }}
+                        sx={{
+                          backgroundColor: '#10b981',
+                          color: '#ffffff',
+                          '&:hover': {
+                            backgroundColor: '#059669',
+                          },
+                        }}
                       >
                         Approve
-                      </button>
-                    </div>
-                  </>
-                )}
-              {((userType === "HOD" && eventDetails[0].status == 0) ||
-                (userType === "admin" && eventDetails[0].status == 1)) && (
-                <div className="flex gap-3 bg-white justify-center rounded-xl border-2 border-black-400 p-4">
-                  <button
-                    className="text-white bg-green-500 font-xl hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800 cursor-pointer"
-                    onClick={() => {
-                      if (userType === "admin") {
-                        handlePrincipalApprovalCheck();
-                      } else {
-                        handleChange(eventDetails[0]._id, "Approve");
-                      }
-                    }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    className="text-white bg-red-500 font-xl hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-800 cursor-pointer"
-                    onClick={() => handleChange(eventDetails[0]._id, "Reject")}
-                  >
-                    Reject
-                  </button>
-                  <button
-                    className="text-white bg-yellow-400 font-xl hover:text-white border border-yellow-700 hover:bg-yellow-800 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-500 dark:text-yellow-500 dark:hover:text-white dark:hover:bg-yellow-600 dark:focus:ring-yellow-800 cursor-pointer"
-                    type="button"
-                    onClick={() => setShowModal(true)}
-                  >
-                    Mark for Change
-                  </button>
-                </div>
+                      </Button>
+                      <Button
+                        variant='contained'
+                        startIcon={<Cancel />}
+                        onClick={() =>
+                          handleChange(eventDetails[0]._id, 'Reject')
+                        }
+                        sx={{
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                          '&:hover': {
+                            backgroundColor: '#dc2626',
+                          },
+                        }}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        variant='contained'
+                        startIcon={<Edit />}
+                        onClick={() => setShowModal(true)}
+                        sx={{
+                          backgroundColor: '#f59e0b',
+                          color: '#ffffff',
+                          '&:hover': {
+                            backgroundColor: '#d97706',
+                          },
+                        }}
+                      >
+                        Mark for Change
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Container>
               )}
             </div>
           ) : (
@@ -248,137 +291,236 @@ export default function EventInfo({ params }) {
           )}
         </div>
       </div>
-      {showModal ? (
-        <div>
-          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
-            <div className="relative w-auto my-6 mx-auto max-w-3xl">
-              <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
-                <div className="relative p-6 flex-auto">
-                  <label htmlFor="">Add a Comment</label>
-                  <div className="flex items-center flex-col w-full">
-                    <textarea
-                      className="my-4 text-blueGray-500 text-lg leading-relaxed w-full h-40 outline rounded"
-                      onChange={(e) => setComment(e.target.value)}
-                    ></textarea>
-                    <div className="flex mt-4 space-x-4">
-                      <button
-                        className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                        type="button"
-                        onClick={() => setShowModal(false)}
-                      >
-                        Close
-                      </button>
-                      <button
-                        className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                        type="button"
-                        onClick={() => {
-                          setShowModal(false);
-                          handleChange(eventDetails[0]._id, "Comment");
-                        }}
-                      >
-                        Send
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
-        </div>
-      ) : (
-        <p></p>
-      )}
-      {showEventIdModal && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"></div>
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen p-4">
-              <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md relative">
-                <h3 className="text-lg font-bold mb-4">Event ID Confirmation</h3>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Suggested Event ID:
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={customEventId}
-                        onChange={(e) => setCustomEventId(e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        autoFocus
-                      />
-                    ) : (
-                      <div className="flex-1 p-2 bg-gray-50 rounded border">
-                        {customEventId}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="px-3 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                    >
-                      {isEditing ? (
-                        <span>Done</span>
-                      ) : (
-                        <span>Edit</span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowEventIdModal(false);
-                      setIsEditing(false);
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleApproveWithEventId();
-                      setIsEditing(false);
-                    }}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                  >
-                    Confirm & Approve
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-      {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Principal Approval</h2>
-            <p className="mb-6 text-gray-600">Does this event need principal approval?</p>
-            <div className="flex justify-end gap-4">
-              <button
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  handleChange(eventDetails[0]._id, "ApprovePrinc");
+      <Dialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle sx={{ color: colors.light.foreground }}>
+          Add a Comment
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={6}
+            placeholder='Enter your comment...'
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            sx={{
+              mt: 2,
+              '& .MuiOutlinedInput-root': {
+                color: colors.light.foreground,
+                '& fieldset': {
+                  borderColor: colors.light.border,
+                },
+                '&:hover fieldset': {
+                  borderColor: colors.light.border,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: colors.light.primary,
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={() => setShowModal(false)}
+            sx={{
+              color: colors.light.destructive,
+              '&:hover': {
+                backgroundColor: colors.light.destructive,
+                color: colors.light.primaryForeground,
+              },
+            }}
+          >
+            Close
+          </Button>
+          <Button
+            onClick={() => {
+              setShowModal(false);
+              handleChange(eventDetails[0]._id, 'Comment');
+            }}
+            variant='contained'
+            sx={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: '#059669',
+              },
+            }}
+          >
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showEventIdModal}
+        onClose={() => {
+          setShowEventIdModal(false);
+          setIsEditing(false);
+        }}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle sx={{ color: colors.light.foreground }}>
+          Event ID Confirmation
+        </DialogTitle>
+        <DialogContent>
+          <Typography
+            component='label'
+            variant='body2'
+            sx={{
+              color: colors.light.mutedForeground,
+              mb: 2,
+              display: 'block',
+            }}
+          >
+            Suggested Event ID:
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                value={customEventId}
+                onChange={e => setCustomEventId(e.target.value)}
+                autoFocus
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: colors.light.foreground,
+                    '& fieldset': {
+                      borderColor: colors.light.border,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: colors.light.border,
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: colors.light.primary,
+                    },
+                  },
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  flex: 1,
+                  p: 2,
+                  backgroundColor: colors.light.muted,
+                  borderRadius: 1,
+                  border: 1,
+                  borderColor: colors.light.border,
                 }}
               >
-                Yes
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  generateEventId();
-                }}
-              >
-                No
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <Typography sx={{ color: colors.light.foreground }}>
+                  {customEventId}
+                </Typography>
+              </Box>
+            )}
+            <Button
+              onClick={() => setIsEditing(!isEditing)}
+              variant='outlined'
+              sx={{
+                color: colors.light.foreground,
+                borderColor: colors.light.border,
+                '&:hover': {
+                  borderColor: colors.light.primary,
+                  backgroundColor: colors.light.primary,
+                  color: colors.light.primaryForeground,
+                },
+              }}
+            >
+              {isEditing ? 'Done' : 'Edit'}
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={() => {
+              setShowEventIdModal(false);
+              setIsEditing(false);
+            }}
+            sx={{
+              color: colors.light.mutedForeground,
+              '&:hover': {
+                backgroundColor: colors.light.muted,
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleApproveWithEventId();
+              setIsEditing(false);
+            }}
+            variant='contained'
+            sx={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: '#059669',
+              },
+            }}
+          >
+            Confirm & Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle sx={{ color: colors.light.foreground }}>
+          Principal Approval
+        </DialogTitle>
+        <DialogContent>
+          <Typography
+            variant='body1'
+            sx={{ color: colors.light.mutedForeground }}
+          >
+            Does this event need principal approval?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={() => {
+              setIsDialogOpen(false);
+              generateEventId();
+            }}
+            variant='outlined'
+            sx={{
+              color: colors.light.foreground,
+              borderColor: colors.light.border,
+              '&:hover': {
+                borderColor: colors.light.border,
+                backgroundColor: colors.light.muted,
+              },
+            }}
+          >
+            No
+          </Button>
+          <Button
+            onClick={() => {
+              setIsDialogOpen(false);
+              handleChange(eventDetails[0]._id, 'ApprovePrinc');
+            }}
+            variant='contained'
+            sx={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: '#059669',
+              },
+            }}
+          >
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

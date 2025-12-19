@@ -1,12 +1,47 @@
 'use client';
-import { useEffect, useState, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { useSession } from "next-auth/react";
-import "@/components/CreateForm/Form.css";
-import { toast } from "sonner";
-import Image from "next/image";
-import styles from '../ViewEvent/ViewEvent.module.css';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+
+// Material UI imports
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Divider,
+  FormControl,
+  FormHelperText,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
+import { CheckCircle } from '@phosphor-icons/react';
+
+import { colors } from '@/lib/colors.config.js';
+
+const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
+
+const S3_BASE_URL = 'https://eventifys3.s3.ap-south-1.amazonaws.com/';
+const MAX_FILE_SIZE = 5000000; // 5MB
+
+// File validation helper
+const validateFile = (file, allowPdf = true) => {
+  if (!file) return false;
+  const isImage = file.type.startsWith('image/');
+  const isPdf = file.type === 'application/pdf';
+  const isValidType = allowPdf ? isImage || isPdf : isImage;
+  return isValidType && file.size <= MAX_FILE_SIZE;
+};
 
 export default function Update() {
   const { data: session, status } = useSession();
@@ -18,9 +53,9 @@ export default function Update() {
   });
   const [fileUrl, setFileUrl] = useState({
     geoPhotos: [],
-    financialCommitments: "",
-    report: "",
-    eventPoster: "",
+    financialCommitments: '',
+    report: '',
+    eventPoster: '',
   });
   const [uploading, setUploading] = useState({
     geoPhotos: false,
@@ -28,774 +63,451 @@ export default function Update() {
     report: false,
     eventPoster: false,
   });
+  const [eventNames, setEventNames] = useState([]);
+  const [displayForm, setDisplayForm] = useState(true);
+  const [viewerState, setViewerState] = useState({ visible: false, activeImage: null });
+
   const {
     handleSubmit,
     watch,
-    control,
     register,
     formState: { errors },
   } = useForm();
 
-  const [eventNames, setEventNames] = useState([]);
-  const [displayForm, setDisplayForm] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-
-  // Function to handle image click
-  const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl);
-    setIsImageModalOpen(true);
-  };
-
-  // Function to close modal
-  const handleCloseModal = () => {
-    setSelectedImage(null);
-    setIsImageModalOpen(false);
-  };
-
-  // Image Modal Component
-  const ImageModal = ({ isOpen, onClose, imageUrl }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" onClick={onClose}>
-        <div className="relative max-w-4xl max-h-[90vh] p-4">
-          <button 
-            className="absolute top-4 right-4 text-white text-2xl font-bold z-50 bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center"
-            onClick={onClose}
-          >
-            ×
-          </button>
-          <Image
-            src={imageUrl}
-            alt="Preview"
-            width={1200}
-            height={800}
-            className="max-w-full max-h-[85vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const [navbarHeight, setNavbarHeight] = useState(0);
-  const navRef = useRef(null);
-
-  useEffect(() => {
-    const updateNavbarHeight = () => {
-      const navbar = document.querySelector('nav');
-      const spacer = document.querySelector('.spacer');
-      if (navbar && spacer) {
-        const totalHeight = navbar.offsetHeight + spacer.offsetHeight;
-        setNavbarHeight(totalHeight);
-      }
-    };
-
-    updateNavbarHeight();
-    window.addEventListener('resize', updateNavbarHeight);
-    return () => window.removeEventListener('resize', updateNavbarHeight);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const navbar = document.querySelector('nav');
-      const spacer = document.querySelector('.spacer');
-      if (navbar && spacer) {
-        spacer.style.height = navbar.offsetHeight + 'px';
-      }
-    }
-  }, []);
-
-  const checkImageDimensions = (file) => {
-    return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined') {
-        // Skip validation during server-side rendering
-        resolve(true);
-        return;
-      }
-      const tempImg = document.createElement('img');
-      tempImg.onload = () => {
-        const { width, height } = tempImg;
-        resolve(width >= 800 && height >= 400);
-      };
-      tempImg.onerror = () => {
-        reject(new Error("Failed to load image"));
-      };
-      tempImg.src = URL.createObjectURL(file);
-    });
-  };
-
   const handleFileChange = (e, action) => {
     e.preventDefault();
-    switch (action) {
-      case "geoPhotos":
-        setFile((prevState) => ({ ...prevState, geoPhotos: null }));
-        if (
-          e.target.files[0] &&
-          e.target.files[0].type.startsWith("image/") &&
-          e.target.files[0].size <= 5000000
-        ) {
-          setFile((prevState) => ({ ...prevState, geoPhotos: e.target.files }));
-        } else {
-          toast.error(
-            "Invalid file. Please upload an image file of size less than 5MB."
-          );
-        }
-        break;
-      case "financialCommitments":
-        setFile((prevState) => ({ ...prevState, financialCommitments: null }));
-        if (
-          e.target.files[0] &&
-          (e.target.files[0].type.startsWith("image/") ||
-            e.target.files[0].type === "application/pdf") &&
-          e.target.files[0].size <= 5000000
-        ) {
-          setFile((prevState) => ({
-            ...prevState,
-            financialCommitments: e.target.files,
-          }));
-        } else {
-          toast.error(
-"Invalid file. Please upload an image or PDF file of size less than 5MB."
-          );
-        }
-        break;
-      case "report":
-        setFile((prevState) => ({ ...prevState, report: null }));
-        if (e.target.files[0]) {
-          if (
-            (e.target.files[0].type.startsWith("image/") ||
-              e.target.files[0].type === "application/pdf") &&
-            e.target.files[0].size <= 5000000
-          ) {
-            setFile((prevState) => ({ ...prevState, report: e.target.files }));
-          } else {
-            toast.error(
-              "Invalid file. Please upload an image or PDF file of size less than 5MB."
-            );
-          }
-        }
-        break;
-      case "eventPoster":
-        setFile((prevState) => ({ ...prevState, eventPoster: null }));
-        if (
-          e.target.files[0] &&
-          (e.target.files[0].type.startsWith("image/") ||
-            e.target.files[0].type === "application/pdf") &&
-          e.target.files[0].size <= 5000000
-        ) {
-          setFile((prevState) => ({
-            ...prevState,
-            eventPoster: e.target.files,
-          }));
-        } else {
-          toast.error(
-            "Invalid file. Please upload an image or PDF file of size less than 5MB."
-          );
-        }
-        break;
-      default:
-        toast.info("Invalid action");
+    const files = e.target.files;
+    
+    if (!files || files.length === 0) return;
+
+    setFile(prev => ({ ...prev, [action]: null }));
+
+    if (action === 'geoPhotos') {
+      // Validate all files for multiple upload (images only)
+      const allValid = Array.from(files).every(f => validateFile(f, false));
+      if (allValid) {
+        setFile(prev => ({ ...prev, geoPhotos: files }));
+      } else {
+        toast.error('Invalid file(s). Please upload image files under 5MB each.');
+      }
+    } else {
+      // Single file upload (images or PDF)
+      if (validateFile(files[0], true)) {
+        setFile(prev => ({ ...prev, [action]: files }));
+      } else {
+        toast.error('Invalid file. Please upload an image or PDF under 5MB.');
+      }
     }
   };
 
   const handleUpload = async (e, action) => {
     e.preventDefault();
-    let currFile;
-    switch (action) {
-      case "geoPhotos":
-        currFile = file.geoPhotos;
-        break;
-      case "financialCommitments":
-        currFile = file.financialCommitments;
-        break;
-      case "report":
-        currFile = file.report;
-        break;
-      case "eventPoster":
-        currFile = file.eventPoster;
-        break;
-      default:
-        toast.info("Invalid action");
-    }
+    const currFile = file[action];
     if (!currFile) return;
 
-    setUploading((prevState) => ({ ...prevState, [action]: true }));
+    setUploading(prev => ({ ...prev, [action]: true }));
 
-    const uploadPromises = Array.from(currFile).map(async (currFile) => {
-      const formData = new FormData();
-      formData.append("file", currFile);
-      try {
-        const response = await fetch("/api/s3-upload", {
-          method: "POST",
+    try {
+      const uploadPromises = Array.from(currFile).map(async f => {
+        const formData = new FormData();
+        formData.append('file', f);
+        const response = await fetch('/api/s3-upload', {
+          method: 'POST',
           body: formData,
         });
         if (response.ok) {
           const data = await response.json();
-          return data.message; // return the file URL
+          return data.message;
         }
-      } catch (error) {
-        console.log(error);
+        return null;
+      });
+
+      const urls = (await Promise.all(uploadPromises)).filter(Boolean);
+
+      if (action === 'geoPhotos') {
+        setFileUrl(prev => ({ ...prev, geoPhotos: urls }));
+      } else {
+        setFileUrl(prev => ({ ...prev, [action]: urls[0] || '' }));
       }
-    });
-
-    const fileUrls = await Promise.all(uploadPromises);
-
-    switch (action) {
-      case "geoPhotos":
-        setFileUrl((prevState) => ({ ...prevState, geoPhotos: fileUrls }));
-        break;
-      case "financialCommitments":
-        setFileUrl((prevState) => ({
-          ...prevState,
-          financialCommitments: fileUrls[0],
-        }));
-        break;
-      case "report":
-        setFileUrl((prevState) => ({ ...prevState, report: fileUrls[0] }));
-        break;
-      case "eventPoster":
-        setFileUrl((prevState) => ({ ...prevState, eventPoster: fileUrls[0] }));
-        break;
+      
+      toast.success('File uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(prev => ({ ...prev, [action]: false }));
     }
-
-    setUploading((prevState) => ({ ...prevState, [action]: false }));
   };
 
   const handleDelete = async (e, action) => {
     e.preventDefault();
-    setFile((prevState) => ({ ...prevState, [action]: null }));
-    const deleteFile = async (fileName) => {
+    
+    const deleteFromS3 = async url => {
+      const fileName = url.replace(S3_BASE_URL, '');
       const formData = new FormData();
-      formData.append("fileName", fileName);
-
+      formData.append('fileName', fileName);
       try {
-        const response = await fetch("/api/s3-delete", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete file");
-        }
+        await fetch('/api/s3-delete', { method: 'POST', body: formData });
       } catch (error) {
-        console.log(error);
+        console.error('Delete error:', error);
       }
     };
 
-    switch (action) {
-      case "geoPhotos":
-        for (const photoUrl of fileUrl.geoPhotos) {
-          const fileName = photoUrl.replace(
-            "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-            ""
-          );
-          await deleteFile(fileName);
-        }
-        setFileUrl((prevState) => ({ ...prevState, geoPhotos: [] }));
-        break;
-      case "financialCommitments":
-        const financialFileName = fileUrl.financialCommitments.replace(
-          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-          ""
-        );
-        await deleteFile(financialFileName);
-        setFileUrl((prevState) => ({ ...prevState, financialCommitments: "" }));
-        break;
-      case "report":
-        const reportFileName = fileUrl.report.replace(
-          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-          ""
-        );
-        await deleteFile(reportFileName);
-        setFileUrl((prevState) => ({ ...prevState, report: "" }));
-        break;
-      case "eventPoster":
-        const posterFileName = fileUrl.eventPoster.replace(
-          "https://eventifys3.s3.ap-south-1.amazonaws.com/",
-          ""
-        );
-        await deleteFile(posterFileName);
-        setFileUrl((prevState) => ({ ...prevState, eventPoster: "" }));
-        break;
-      default:
-        console.error("Invalid action");
+    if (action === 'geoPhotos') {
+      await Promise.all(fileUrl.geoPhotos.map(deleteFromS3));
+      setFileUrl(prev => ({ ...prev, geoPhotos: [] }));
+    } else {
+      await deleteFromS3(fileUrl[action]);
+      setFileUrl(prev => ({ ...prev, [action]: '' }));
     }
 
-    setUploading(false);
-  };
-
-  const handleImageView = (imageUrl) => {
-    // Create a temporary HTML image element
-    const tempImg = document.createElement('img');
-    tempImg.src = imageUrl;
-    
-    tempImg.onload = () => {
-      const maxWidth = window.innerWidth * 0.9;
-      const maxHeight = (window.innerHeight - navbarHeight) * 0.9;
-      
-      // Calculate dimensions maintaining aspect ratio
-      let width = tempImg.naturalWidth;
-      let height = tempImg.naturalHeight;
-      
-      if (width > maxWidth) {
-        const ratio = maxWidth / width;
-        width = maxWidth;
-        height = height * ratio;
-      }
-      
-      if (height > maxHeight) {
-        const ratio = maxHeight / height;
-        height = maxHeight;
-        width = width * ratio;
-      }
-
-      setViewerState({
-        visible: true,
-        activeImage: imageUrl,
-        width,
-        height
-      });
-    };
+    setFile(prev => ({ ...prev, [action]: null }));
+    toast.success('File deleted successfully!');
   };
 
   const renderMedia = (url, type) => {
+    if (!url) return null;
+
+    if (url.endsWith('.pdf')) {
+      return (
+        <Box sx={{ width: '100%', height: 300, border: 1, borderColor: colors.light.borderHex, borderRadius: 1, overflow: 'hidden' }}>
+          <iframe src={url} style={{ width: '100%', height: '100%', border: 'none' }} title={`${type} document`} />
+        </Box>
+      );
+    }
+
     return (
-      <div>
-        <div className={styles['image-container']}>
-          <Image
-            height={400}
-            width={600}
-            className="rounded-md cursor-pointer hover:opacity-90 transition-opacity"
-            src={url}
-            alt={`${type} preview`}
-            onClick={() => handleImageClick(url)}
-          />
-        </div>
-      </div>
+      <Box
+        sx={{
+          width: '100%',
+          height: 250,
+          border: 1,
+          borderColor: colors.light.borderHex,
+          borderRadius: 1,
+          overflow: 'hidden',
+          cursor: 'pointer',
+          '&:hover': { opacity: 0.9 },
+        }}
+        onClick={() => setViewerState({ visible: true, activeImage: url })}
+      >
+        <img src={url} alt={`${type} preview`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      </Box>
     );
   };
 
-  const renderFileUpload = (type, label) => {
+  const FileUploadSection = ({ type, label, accept, multiple = false }) => {
+    const isUploaded = type === 'geoPhotos' ? fileUrl.geoPhotos.length > 0 : fileUrl[type] !== '';
+
     return (
-      <div className={styles['file-upload-container']}>
-        <label className={styles['media-label']}>{label}</label>
-        <p className={styles['helper-text']}>Accepted formats: Images or PDF • Max size: 5MB</p>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => handleFileChange(e, type)}
-          className="file-input"
-        />
-        <button
-          type="button"
-          className="btn-style mt-2"
-          disabled={!file[type] || uploading[type]}
-          onClick={(e) => handleUpload(e, type)}
-        >
-          {uploading[type] ? "Uploading..." : "Upload"}
-        </button>
-      </div>
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>
+          {label}
+        </Typography>
+        
+        {isUploaded ? (
+          <>
+            <Typography variant="body2" sx={{ color: colors.light.foreground, mb: 2 }}>
+              File Uploaded Successfully!
+            </Typography>
+            {type === 'geoPhotos' ? (
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                {fileUrl.geoPhotos.map((photoUrl, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    {renderMedia(photoUrl, `Geo Photo ${index + 1}`)}
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Box sx={{ mb: 2 }}>{renderMedia(fileUrl[type], label)}</Box>
+            )}
+            <Button
+              variant="outlined"
+              onClick={e => handleDelete(e, type)}
+              sx={{
+                color: colors.light.destructive,
+                borderColor: colors.light.destructive,
+                '&:hover': {
+                  backgroundColor: colors.light.destructive,
+                  color: colors.light.primaryForeground,
+                },
+              }}
+            >
+              Delete {type === 'geoPhotos' ? 'Photos' : 'File'}
+            </Button>
+          </>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="body2" sx={{ color: colors.light.mutedForeground }}>
+              {type === 'geoPhotos' ? 'Accepted formats: Images only • Max size: 5MB' : 'Accepted formats: Images or PDF • Max size: 5MB'}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="file"
+                accept={accept}
+                multiple={multiple}
+                onChange={e => handleFileChange(e, type)}
+                style={{ display: 'none' }}
+                id={`${type}-upload`}
+              />
+              <label htmlFor={`${type}-upload`}>
+                <Button
+                  variant="outlined"
+                  component="span"
+                  sx={{
+                    color: colors.light.foreground,
+                    borderColor: colors.light.border,
+                    '&:hover': {
+                      borderColor: colors.light.primary,
+                      backgroundColor: colors.light.primary,
+                      color: colors.light.primaryForeground,
+                    },
+                  }}
+                >
+                  Choose File
+                </Button>
+              </label>
+              {file[type] && (
+                <Typography variant="body2" color="text.secondary">
+                  {file[type].length} file(s) selected
+                </Typography>
+              )}
+              <Button
+                variant="contained"
+                disabled={!file[type] || uploading[type]}
+                onClick={e => handleUpload(e, type)}
+                sx={{
+                  backgroundColor: colors.light.primary,
+                  color: colors.light.primaryForeground,
+                  '&:hover': { backgroundColor: colors.light.primary, opacity: 0.9 },
+                }}
+              >
+                {uploading[type] ? 'Uploading...' : 'Upload'}
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </Box>
     );
   };
 
   useEffect(() => {
-    // Fetch event names from the database and update the state
+    if (!session?.user) return;
+
     const fetchEventNames = async () => {
       try {
-        const dept = session?.user?.dept;
-        const userType = session?.user?.userType;
-        const college = session?.user?.college;
-        const user_id = session?.user?._id;
-        const response = await fetch("/api/fetchUpdate", {
-          method: "POST",
-          body: JSON.stringify({
-            id: user_id,
-            dept,
-            userType,
-            college,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const { dept, userType, college, _id: user_id } = session.user;
+        const response = await fetch('/api/fetchUpdate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: user_id, dept, userType, college }),
         });
         const data = await response.json();
-        setEventNames(
-          data.eventNames.map((item) => ({
-            id: item.id,
-            eventName: item.eventName,
-          }))
-        );
+        setEventNames(data.eventNames.map(({ id, eventName }) => ({ id, eventName })));
       } catch (error) {
-        console.error("Error fetching event names:", error);
+        console.error('Error fetching event names:', error);
       }
     };
 
     fetchEventNames();
-  }, [session, status]);
+  }, [session]);
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
-      <div className="grid place-items-center h-screen text-xl font-extrabold">
-        Loading...
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
+
   const currUser = session?.user?.userType;
-  if (currUser === "student" || currUser === "admin") {
+  if (currUser === 'student' || currUser === 'admin') {
     return (
-      <h1 className="grid place-items-center h-screen text-7xl text-red-600	font-extrabold">
-        Not Authorized !!
-      </h1>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Typography variant="h3" color="error" fontWeight="bold">
+          Not Authorized!
+        </Typography>
+      </Box>
     );
   }
 
-  const validateSubmission = () => {
-    const errors = [];
-    
-    if (!watch("selectedEvent")) {
-      errors.push("Event Selection");
-    }
-    
-    if (fileUrl.geoPhotos.length === 0) {
-      errors.push("Geo Tagged Photos");
-    }
-    
-    if (!fileUrl.financialCommitments) {
-      errors.push("Financial Commitments Document");
-    }
-    
-    if (!fileUrl.report) {
-      errors.push("Event Report");
-    }
-    
-    if (!watch("videoLinks")) {
-      errors.push("Video Links");
-    }
-    
-    if (!watch("amountSpent")) {
-      errors.push("Amount Spent");
-    }
-  
-    if (errors.length > 0) {
-      toast.error(`Please complete the following: ${errors.join(", ")}`);
-      return false;
-    }
-    
-    return true;
-  };
-  
-  const onSubmit = async (data) => {
-    if (!validateSubmission()) {
+  const onSubmit = async data => {
+    const missing = [];
+    if (!data.selectedEvent) missing.push('Event Selection');
+    if (fileUrl.geoPhotos.length === 0) missing.push('Geo Tagged Photos');
+    if (!fileUrl.financialCommitments) missing.push('Financial Commitments');
+    if (!fileUrl.report) missing.push('Event Report');
+    if (!data.videoLinks) missing.push('Video Links');
+    if (!data.amountSpent) missing.push('Amount Spent');
+
+    if (missing.length > 0) {
+      toast.error(`Please complete: ${missing.join(', ')}`);
       return;
     }
-  
-    const jsonData = {
-      selectedEvent: data.selectedEvent,
-      videoLinks: data.videoLinks,
-      amountSpent: data.amountSpent,
-      fileUrl: fileUrl,
-    };
-  
+
     try {
-      const user_id = session?.user?._id;
-      const response = await fetch("/api/updateEvent", {
-        method: "POST",
+      const response = await fetch('/api/updateEvent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id,
-          jsonData,
+          user_id: session?.user?._id,
+          jsonData: {
+            selectedEvent: data.selectedEvent,
+            videoLinks: data.videoLinks,
+            amountSpent: data.amountSpent,
+            fileUrl,
+          },
         }),
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
+
       if (response.ok) {
         setDisplayForm(false);
-        toast.success("Event updated successfully!");
+        toast.success('Event updated successfully!');
       } else {
-        toast.error("Error updating event details!");
+        toast.error('Error updating event details!');
       }
     } catch (error) {
-      toast.error("Error updating event");
-      console.error("Error updating event:", error);
+      toast.error('Error updating event');
+      console.error('Error updating event:', error);
     }
   };
 
+  if (!displayForm) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Card sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, py: 4 }}>
+              <CheckCircle size={64} color={colors.light.primary} />
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" sx={{ color: colors.light.foreground, fontWeight: 600, mb: 2 }}>
+                  Congratulations!
+                </Typography>
+                <Typography variant="h6" sx={{ color: colors.light.mutedForeground }}>
+                  Event details have been updated successfully.
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
+    );
+  }
+
+  const isFormComplete = fileUrl.geoPhotos.length > 0 && fileUrl.financialCommitments && fileUrl.report && watch('videoLinks') && watch('amountSpent');
+
   return (
-    <>
-      {displayForm ? (
-        <>
-          <form
-            className="p-5 form flex flex-col gap-4"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <h1 className="form-section-title">Post Event Form</h1>
-            {/* Event Dropdown */}
-            <div className="input-container">
-              <label className="label">Select Event</label>
-              <select
-                {...register("selectedEvent", {
-                  required: "Please select an event",
-                })}
-              >
-                <option value="">-- Select Event --</option>
-                {eventNames.map((eventName) => (
-                  <option key={eventName.id} value={eventName.id}>
-                    {eventName.eventName}
-                  </option>
-                ))}
-              </select>
-              {errors.selectedEvent && (
-                <p className="error-msg">{errors.selectedEvent.message}</p>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Card sx={{ borderRadius: 2 }}>
+        <CardContent sx={{ p: 0 }}>
+          <Box sx={{ p: 3, borderBottom: 1, borderColor: colors.light.borderHex }}>
+            <Typography variant="h5" fontWeight="bold">
+              Post Event Form
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Update your event with photos, reports, and financial details
+            </Typography>
+          </Box>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: colors.light.borderHex, borderRadius: 2 }}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                  Select Event
+                </Typography>
+                <FormControl fullWidth error={!!errors.selectedEvent}>
+                  <InputLabel id="event-select-label">Choose an event</InputLabel>
+                  <Select
+                    labelId="event-select-label"
+                    label="Choose an event"
+                    defaultValue=""
+                    {...register('selectedEvent', { required: 'Please select an event' })}
+                  >
+                    <MenuItem value="" disabled>-- Select Event --</MenuItem>
+                    {eventNames.map(({ id, eventName }) => (
+                      <MenuItem key={id} value={id}>{eventName}</MenuItem>
+                    ))}
+                  </Select>
+                  {errors.selectedEvent && <FormHelperText>{errors.selectedEvent.message}</FormHelperText>}
+                </FormControl>
+              </Paper>
+
+              {watch('selectedEvent') && (
+                <>
+                  <Divider sx={{ my: 1 }}>
+                    <Typography variant="overline" color="text.secondary">Media & Documents</Typography>
+                  </Divider>
+
+                  <FileUploadSection type="geoPhotos" label="Geo Tagged Photos" accept="image/*" multiple />
+                  <FileUploadSection type="eventPoster" label="Event Poster" accept="image/*,application/pdf" />
+                  <FileUploadSection type="financialCommitments" label="Financial Commitments" accept="image/*,application/pdf" />
+                  <FileUploadSection type="report" label="Event Report" accept="image/*,application/pdf" />
+
+                  <Divider sx={{ my: 1 }}>
+                    <Typography variant="overline" color="text.secondary">Additional Details</Typography>
+                  </Divider>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>Video Links</Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="Enter video links (type 'none' if there are no videos)"
+                      {...register('videoLinks', { required: 'This field is required' })}
+                      error={!!errors.videoLinks}
+                      helperText={errors.videoLinks?.message}
+                    />
+                  </Box>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>Amount Spent (Rs.)</Typography>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      placeholder="Enter the amount spent"
+                      InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                      {...register('amountSpent', { required: true, min: 1 })}
+                      error={!!errors.amountSpent}
+                      helperText={errors.amountSpent && 'Please enter a valid amount'}
+                    />
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2, borderTop: 1, borderColor: colors.light.borderHex }}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      disabled={!isFormComplete}
+                      sx={{
+                        backgroundColor: colors.light.primary,
+                        color: colors.light.primaryForeground,
+                        px: 4,
+                        py: 1.5,
+                        '&:hover': { backgroundColor: colors.light.primary, opacity: 0.9 },
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </Box>
+                </>
               )}
-            </div>
-
-            {watch("selectedEvent") && (
-              <>
-                {/* Geo Tagged Photos - Multiple File Input */}
-                {fileUrl.geoPhotos.length === 0 ? (
-                  <div>
-                    <form>
-                      <label>Geo Tagged Photos:</label>
-                      <p className="text-sm text-gray-600">Accepted formats: Images only • Max size: 5MB</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, "geoPhotos")}
-                        multiple
-                      />
-                      <button
-                        type="button"
-                        className="btn-style"
-                        disabled={
-                          !file.geoPhotos ||
-                          uploading.geoPhotos ||
-                          fileUrl.geoPhotos.length
-                        }
-                        onClick={(e) => handleUpload(e, "geoPhotos")}
-                      >
-                        {uploading.geoPhotos ? "Uploading..." : "Upload"}
-                      </button>
-                    </form>
-                  </div>
-                ) : null}
-
-                {fileUrl.geoPhotos.length != 0 && (
-                  <div className={styles['media-wrapper']}>
-                    <label className={styles['media-label']}>Geo Tagged Photos:</label>
-                    <br />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {fileUrl.geoPhotos.map((photoUrl, index) => (
-                        renderMedia(photoUrl, `Geo Photo ${index + 1}`)
-                      ))}
-                    </div>
-                    <button
-                      className="mt-4 btn-style"
-                      onClick={(e) => handleDelete(e, "geoPhotos")}
-                    >
-                      Delete Photos
-                    </button>
-                  </div>
-                )}
-
-                {/* Video Links - Input Box */}
-                <div className="input-container">
-                  <label className="label">
-                    Video Links (Type none if there is not any)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter Video Links"
-                    {...register("videoLinks", {
-                      required: "This field is required",
-                    })}
-                  />
-                  {errors.videoLinks && (
-                    <p className="error-msg">{errors.videoLinks.message}</p>
-                  )}
-                </div>
-
-                {fileUrl.eventPoster === "" && (
-                  <>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="eventPoster"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Event Poster
-                      </label>
-                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
-                      <input
-                        type="file"
-                        id="eventPoster"
-                        {...register("eventPoster")}
-                        onChange={(e) => handleFileChange(e, "eventPoster")}
-                      />
-                      <button
-                        onClick={(e) => handleUpload(e, "eventPoster")}
-                        className="btn-style"
-                        disabled={uploading.eventPoster || !file.eventPoster}
-                      >
-                        {uploading.eventPoster ? "Uploading..." : "Upload"}
-                      </button>
-                    </div>
-                  </>
-                )}
-                {fileUrl.eventPoster !== "" && (
-                  <div className={styles['media-wrapper']}>
-                    {renderMedia(fileUrl.eventPoster, "Event Poster")}
-                    <button
-                      className="mt-4 btn-style"
-                      onClick={(e) => handleDelete(e, "eventPoster")}
-                    >
-                      Delete File
-                    </button>
-                  </div>
-                )}
-
-                {/* Financial Commitments - File Input (PDF) */}
-                {fileUrl.financialCommitments === "" && (
-                  <div>
-                    <form>
-                      <label>Financial Commitments: </label>
-                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={(e) =>
-                          handleFileChange(e, "financialCommitments")
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="btn-style"
-                        disabled={
-                          !file.financialCommitments ||
-                          uploading.financialCommitments ||
-                          fileUrl.financialCommitments
-                        }
-                        onClick={(e) => {
-                          handleUpload(e, "financialCommitments");
-                        }}
-                      >
-                        {uploading.financialCommitments
-                          ? "Uploading..."
-                          : "Upload"}
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {fileUrl.financialCommitments !== "" && (
-                  <div className={styles['media-wrapper']}>
-                    {renderMedia(fileUrl.financialCommitments, "Financial Commitments")}
-                    <button
-                      className="mt-4 btn-style"
-                      onClick={(e) => handleDelete(e, "financialCommitments")}
-                    >
-                      Delete File
-                    </button>
-                  </div>
-                )}
-
-                {/* Report - File Input (PDF) */}
-                {fileUrl.report === "" && (
-                  <div>
-                    <form>
-                      <label>Event Report: </label>
-                      <p className="text-sm text-gray-600">Accepted formats: Images or PDF • Max size: 5MB</p>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={(e) => handleFileChange(e, "report")}
-                      />
-                      <button
-                        type="button"
-                        className="btn-style"
-                        disabled={
-                          !file.report || uploading.report || fileUrl.report
-                        }
-                        onClick={(e) => {
-                          handleUpload(e, "report");
-                        }}
-                      >
-                        {uploading.report ? "Uploading..." : "Upload"}
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {fileUrl.report !== "" && (
-                  <div className={styles['media-wrapper']}>
-                    {renderMedia(fileUrl.report, "Event Report")}
-                    <button
-                      className="mt-4 btn-style"
-                      onClick={(e) => handleDelete(e, "report")}
-                    >
-                      Delete File
-                    </button>
-                  </div>
-                )}
-
-                {/* Amount Spent - Input */}
-                <div
-                  className="input-container"
-                  style={{ display: "flex", flexDirection: "column" }}
-                >
-                  <label htmlFor="amountSpent" className="label">
-                    Amount Spent
-                  </label>
-                  <input
-                    type="number"
-                    id="amountSpent"
-                    name="amountSpent"
-                    placeholder="Enter Amount Spent"
-                    className="input"
-                    {...register("amountSpent", { required: true, min: 1 })}
-                    min={0}
-                  />
-                  <p className="error-msg">
-                    {errors.amountSpent && <span>*Invalid Amount Spent</span>}
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn-style"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSubmit(onSubmit)();
-                  }}
-                  disabled={
-                    !(
-                      fileUrl.geoPhotos.length > 0 &&
-                      fileUrl.financialCommitments &&
-                      fileUrl.report &&
-                      watch("videoLinks") &&
-                      watch("amountSpent")
-                    )
-                  }
-                >
-                  Submit
-                </button>
-              </>
-            )}
+            </Box>
           </form>
-          <ImageModal 
-            isOpen={isImageModalOpen} 
-            onClose={handleCloseModal} 
-            imageUrl={selectedImage}
-          />
-        </>
-      ) : (
-        <div className="form">
-          <section>
-            <h1 className="form-section-title">Congratulations!</h1>
-            <h3>Details Updated</h3>
-          </section>
-        </div>
-      )}
-    </>
+        </CardContent>
+      </Card>
+
+      <Viewer
+        visible={viewerState.visible}
+        onClose={() => setViewerState({ visible: false, activeImage: null })}
+        images={[{ src: viewerState.activeImage }]}
+        zoomable
+        scalable
+        rotatable
+        downloadable
+        noNavbar
+        drag={false}
+        noImgDetails
+        changeable={false}
+        zIndex={1001}
+      />
+    </Container>
   );
 }

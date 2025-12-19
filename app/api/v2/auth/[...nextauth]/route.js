@@ -1,14 +1,14 @@
-import { connectMongoDB } from "@/lib/mongodb";
-import User from "@/models/user";
-import NextAuth from "next-auth/next";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { logger } from "@/lib/logger";
+import { connectMongoDB } from '@/lib/mongodb';
+import User from '@/models/user';
+import NextAuth from 'next-auth/next';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {},
 
       async authorize(credentials) {
@@ -27,25 +27,25 @@ export const authOptions = {
           if (!passwordsMatch) {
             return null;
           }
-          logger(user._id, "Login", "Logged in", 200);
+          logger(user._id, 'Login', 'Logged in', 200);
           return user;
         } catch (error) {
-          console.log("Error: ", error);
+          console.log('Error: ', error);
         }
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 3600,
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/",
+    signIn: '/',
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.hasDefaultPassword !== undefined) {
+      if (trigger === 'update' && session?.hasDefaultPassword !== undefined) {
         token.hasDefaultPassword = session.hasDefaultPassword;
         return token;
       }
@@ -54,7 +54,10 @@ export const authOptions = {
         // Store all user fields in token
         token.userType = user.userType;
         token.userId = user._id;
-        token.hasDefaultPassword = user.password === "$2a$10$OTAVa.umH/vANyQ53DCpCOM9XrKAguEatocXzWSUQiXFSEIyTYcqG";
+        token.hasDefaultPassword = await bcrypt.compare(
+          'Welcome123!',
+          user.password
+        );
         token.name = user.name;
         token.email = user.email;
         token.college = user.college;
@@ -62,7 +65,7 @@ export const authOptions = {
         token.role = user.role;
         token.phone = user.phone;
         token.isSuperAdmin = user.isSuperAdmin;
-        token.id = user.id;  // Staff ID
+        token.id = user.id; // Staff ID
       }
 
       return token;

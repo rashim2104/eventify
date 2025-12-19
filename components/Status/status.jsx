@@ -1,8 +1,8 @@
-"use client";
+'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import TabBar from '../TabBar/tabBar';
-import { Toaster, toast } from 'sonner'
+import { Toaster, toast } from 'sonner';
 
 export default function Status() {
   const { data: session, status } = useSession();
@@ -18,12 +18,12 @@ export default function Status() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: session?.user?._id
+          user_id: session?.user?._id,
         }),
       });
 
       const data = await response.json();
-      
+
       if (data.message && data.message.length > 0) {
         setEvents(data.message);
         setMessage('');
@@ -46,21 +46,26 @@ export default function Status() {
   }, [status, fetchEvents]);
 
   if (status === 'loading' || !isDataFetched) {
-    return <div className="grid place-items-center h-screen text-xl font-extrabold">Loading...</div>;
+    return (
+      <div className='grid place-items-center h-screen text-xl font-extrabold'>
+        Loading...
+      </div>
+    );
   }
 
   const currUser = session?.user?.userType;
 
   if (currUser === 'student' || currUser === 'admin') {
-    return <h1 className='grid place-items-center h-screen text-7xl text-red-600 font-extrabold'>Not Authorized !!</h1>;
+    return (
+      <h1 className='grid place-items-center h-screen text-7xl text-red-600 font-extrabold'>
+        Not Authorized !!
+      </h1>
+    );
   }
 
   return (
     <>
-      <TabBar
-        events={events}
-        message={message}
-      />
+      <TabBar events={events} message={message} />
     </>
   );
 }

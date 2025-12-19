@@ -1,21 +1,18 @@
-import "mdb-react-ui-kit/dist/css/mdb.min.css";
-import "@/styles/globals.css";
-import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
-
-const inter = Inter({ subsets: ["latin"] });
+import 'mdb-react-ui-kit/dist/css/mdb.min.css';
+import '@/styles/globals.css';
+import { Toaster } from 'sonner';
+import { GeistSans } from 'geist/font/sans';
 
 export const metadata = {
-  title: "Eventify",
-  description: "Manage all your events",
+  title: 'Eventify',
+  description: 'Manage all your events',
 };
 
 export default function RootLayout({ children }) {
-
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <Toaster richColors position="top-right" closeButton />
+    <html lang='en'>
+      <body className={`${GeistSans.className} antialiased`}>
+        <Toaster richColors position='top-right' closeButton />
 
         <div>{children}</div>
       </body>
