@@ -38,16 +38,16 @@ jobs:
             rm -f bun.lockb package-lock.json yarn.lock pnpm-lock.yaml
 
             # Install dependencies
-            bun install
+            npm install
 
             # Build the project (if applicable)
-            bun run build
+            npm run build
 
             # Start or restart the application using PM2
             if pm2 list | grep -q 'eventify'; then
               pm2 restart eventify  # Restart if already running
             else
-              pm2 start bun --name "eventify" -- start  # Start if not running
+              pm2 start npm --name "eventify" -- start  # Start if not running
             fi
 
             # Save the PM2 process list to make it persist across reboots
