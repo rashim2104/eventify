@@ -186,7 +186,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
                 },
                 '& .MuiListItemIcon-root': {
                   minWidth: 40,
-                  color: pathname === item.href ? colors.light.sidebarPrimaryForeground : colors.light.sidebarForeground,
+                  color:
+                    pathname === item.href
+                      ? colors.light.sidebarPrimaryForeground
+                      : colors.light.sidebarForeground,
                 },
               }}
             >
@@ -195,7 +198,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
                 primary={item.text}
                 primaryTypographyProps={{
                   fontWeight: pathname === item.href ? 600 : 400,
-                  fontSize: '0.95rem'
+                  fontSize: '0.95rem',
                 }}
               />
             </ListItemButton>

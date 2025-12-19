@@ -1,11 +1,12 @@
 'use client';
+import { Box, Typography, TextField, Divider } from '@mui/material';
 import {
-  Box,
-  Typography,
-  TextField,
-  Divider,
-} from '@mui/material';
-import { User, Envelope, Phone, Briefcase, MapPin } from '@phosphor-icons/react';
+  User,
+  Envelope,
+  Phone,
+  Briefcase,
+  MapPin,
+} from '@phosphor-icons/react';
 const { colors } = require('@/lib/colors.config.js');
 
 const ResourcePersonViewStep = ({ resourcePersons, hasResourcePersons }) => {
@@ -126,7 +127,10 @@ const ResourcePersonViewStep = ({ resourcePersons, hasResourcePersons }) => {
                   readOnly: true,
                   startAdornment: (
                     <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                      <Briefcase size={20} color={colors.light.mutedForeground} />
+                      <Briefcase
+                        size={20}
+                        color={colors.light.mutedForeground}
+                      />
                     </Box>
                   ),
                   sx: {
@@ -151,7 +155,10 @@ const ResourcePersonViewStep = ({ resourcePersons, hasResourcePersons }) => {
                   readOnly: true,
                   startAdornment: (
                     <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                      <Envelope size={20} color={colors.light.mutedForeground} />
+                      <Envelope
+                        size={20}
+                        color={colors.light.mutedForeground}
+                      />
                     </Box>
                   ),
                   sx: {
@@ -228,4 +235,3 @@ const ResourcePersonViewStep = ({ resourcePersons, hasResourcePersons }) => {
 };
 
 export default ResourcePersonViewStep;
-

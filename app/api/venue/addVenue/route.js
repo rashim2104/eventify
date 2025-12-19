@@ -26,12 +26,7 @@ export async function POST(req) {
   }
 
   if (user.userType !== 'admin') {
-    await logger(
-      user._id,
-      ACTION,
-      'Authorization Failed: Not Admin',
-      403
-    );
+    await logger(user._id, ACTION, 'Authorization Failed: Not Admin', 403);
     return NextResponse.json(
       { message: 'You are not authorized to perform this action.' },
       { status: 403 }

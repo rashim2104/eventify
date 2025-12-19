@@ -46,7 +46,7 @@ export async function POST(req) {
 
     // For events with venueList containing reservation IDs, fetch and populate venue names
     const eventsWithVenueNames = await Promise.all(
-      userEvents.map(async (event) => {
+      userEvents.map(async event => {
         const venueList = event.eventData?.venueList;
 
         // Check if venueList exists and contains string IDs (reservation IDs)
@@ -57,7 +57,7 @@ export async function POST(req) {
           if (typeof firstItem === 'string') {
             try {
               const reservations = await Reservation.find({
-                _id: { $in: venueList }
+                _id: { $in: venueList },
               }).lean();
 
               // Convert reservations to venue objects with proper structure
@@ -73,7 +73,11 @@ export async function POST(req) {
               event.eventData.venueList = populatedVenueList;
             } catch (err) {
               // If fetching reservations fails, keep the original venueList
-              console.error('Error fetching reservations for event:', event._id, err);
+              console.error(
+                'Error fetching reservations for event:',
+                event._id,
+                err
+              );
             }
           }
         }
@@ -88,7 +92,10 @@ export async function POST(req) {
       `Events Fetched Successfully - Count: ${eventsWithVenueNames.length}`,
       200
     );
-    return NextResponse.json({ message: eventsWithVenueNames }, { status: 200 });
+    return NextResponse.json(
+      { message: eventsWithVenueNames },
+      { status: 200 }
+    );
   } catch (error) {
     await logger(
       user._id,

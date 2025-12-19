@@ -30,11 +30,14 @@ const SuccessStep = () => {
         >
           Congratulations!
         </Typography>
-        <Typography variant='h6' sx={{ color: colors.light.mutedForeground, mb: 3 }}>
+        <Typography
+          variant='h6'
+          sx={{ color: colors.light.mutedForeground, mb: 3 }}
+        >
           Event Created Successfully
         </Typography>
         <Button
-          variant="contained"
+          variant='contained'
           onClick={handleStatusClick}
           sx={{
             bgcolor: colors.light.primary,

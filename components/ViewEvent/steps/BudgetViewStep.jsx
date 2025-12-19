@@ -1,15 +1,10 @@
 'use client';
-import {
-  Box,
-  Typography,
-  TextField,
-  Chip,
-  Divider,
-} from '@mui/material';
+import { Box, Typography, TextField, Chip, Divider } from '@mui/material';
 const { colors } = require('@/lib/colors.config.js');
 
 const BudgetViewStep = ({ eventData, fileUrl, renderMedia }) => {
-  const isSponsored = eventData?.isSponsored === 'true' || eventData?.isSponsored === true;
+  const isSponsored =
+    eventData?.isSponsored === 'true' || eventData?.isSponsored === true;
   const stakeholders = eventData?.eventStakeholders || [];
   const sponsors = eventData?.eventSponsors || [];
 
@@ -36,7 +31,9 @@ const BudgetViewStep = ({ eventData, fileUrl, renderMedia }) => {
             readOnly: true,
             endAdornment:
               stakeholders.length > 0 ? (
-                <Box sx={{ ml: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                <Box
+                  sx={{ ml: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}
+                >
                   {stakeholders.map((stakeholder, index) => (
                     <Chip
                       key={index}
@@ -139,7 +136,9 @@ const BudgetViewStep = ({ eventData, fileUrl, renderMedia }) => {
                     >
                       Sponsor {index + 1}
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+                    >
                       <TextField
                         fullWidth
                         label='Sponsor Name'
@@ -207,4 +206,3 @@ const BudgetViewStep = ({ eventData, fileUrl, renderMedia }) => {
 };
 
 export default BudgetViewStep;
-

@@ -12,7 +12,15 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Plus, X, User, Envelope, Phone, Briefcase, MapPin } from '@phosphor-icons/react';
+import {
+  Plus,
+  X,
+  User,
+  Envelope,
+  Phone,
+  Briefcase,
+  MapPin,
+} from '@phosphor-icons/react';
 const { colors } = require('@/lib/colors.config.js');
 
 const ResourcePersonStep = ({
@@ -63,9 +71,13 @@ const ResourcePersonStep = ({
                 })
               }
               displayEmpty
-              renderValue={(selected) => {
+              renderValue={selected => {
                 if (!selected) {
-                  return <span style={{ color: colors.light.mutedForeground }}>Select an option</span>;
+                  return (
+                    <span style={{ color: colors.light.mutedForeground }}>
+                      Select an option
+                    </span>
+                  );
                 }
                 return selected === 'yes' ? 'Yes' : 'No';
               }}
@@ -77,7 +89,9 @@ const ResourcePersonStep = ({
               }}
             >
               <MenuItem value='' disabled>
-                <span style={{ color: colors.light.mutedForeground }}>Select an option</span>
+                <span style={{ color: colors.light.mutedForeground }}>
+                  Select an option
+                </span>
               </MenuItem>
               <MenuItem value='yes'>Yes</MenuItem>
               <MenuItem value='no'>No</MenuItem>
@@ -127,14 +141,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonName ||
                           !!validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonName`
+                            `eventResourcePerson.${index}.ResourcePersonName`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonName?.message ||
                           validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonName`
+                            `eventResourcePerson.${index}.ResourcePersonName`
                           ]
                         }
                         InputProps={{
@@ -173,14 +187,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonMail ||
                           !!validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonMail`
+                            `eventResourcePerson.${index}.ResourcePersonMail`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonMail?.message ||
                           validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonMail`
+                            `eventResourcePerson.${index}.ResourcePersonMail`
                           ]
                         }
                         InputProps={{
@@ -220,14 +234,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonPhone ||
                           !!validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonPhone`
+                            `eventResourcePerson.${index}.ResourcePersonPhone`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonPhone?.message ||
                           validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonPhone`
+                            `eventResourcePerson.${index}.ResourcePersonPhone`
                           ]
                         }
                         InputProps={{
@@ -261,14 +275,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonDesgn ||
                           !!validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonDesgn`
+                            `eventResourcePerson.${index}.ResourcePersonDesgn`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonDesgn?.message ||
                           validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonDesgn`
+                            `eventResourcePerson.${index}.ResourcePersonDesgn`
                           ]
                         }
                         InputProps={{
@@ -304,14 +318,14 @@ const ResourcePersonStep = ({
                           !!errors.eventResourcePerson?.[index]
                             ?.ResourcePersonAddr ||
                           !!validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonAddr`
+                            `eventResourcePerson.${index}.ResourcePersonAddr`
                           ]
                         }
                         helperText={
                           errors.eventResourcePerson?.[index]
                             ?.ResourcePersonAddr?.message ||
                           validationErrors?.[
-                          `eventResourcePerson.${index}.ResourcePersonAddr`
+                            `eventResourcePerson.${index}.ResourcePersonAddr`
                           ]
                         }
                         InputProps={{
