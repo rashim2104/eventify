@@ -14,7 +14,12 @@ import { Calendar, Clock, MapPin, ArrowRight } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { alpha } from '@mui/material/styles';
 
-export default function EventCard({ events, message, grouped = true }) {
+export default function EventCard({
+  events,
+  message,
+  grouped = true,
+  isStudent = false,
+}) {
   const theme = useTheme();
 
   const formatDate = dateString => {
@@ -93,35 +98,52 @@ export default function EventCard({ events, message, grouped = true }) {
   const SingleEventCard = ({ event }) => {
     const statusInfo = getStatusInfo(event.status);
 
-    return (
-      <Card
-        component={Link}
-        href={`${process.env.NEXT_PUBLIC_URL}/events/${event._id}`}
-        elevation={0}
-        sx={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          textDecoration: 'none',
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 3,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          position: 'relative',
-          overflow: 'hidden',
-          '&:hover': {
-            borderColor: 'primary.main',
-            transform: 'translateY(-2px)',
-            boxShadow: `0 12px 24px -10px ${alpha(theme.palette.primary.main, 0.15)}`,
-            '& .view-details-btn': {
-              opacity: 1,
-              transform: 'translateX(0)',
+    const cardStyles = {
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      textDecoration: 'none',
+      bgcolor: 'background.paper',
+      border: '1px solid',
+      borderColor: 'divider',
+      borderRadius: 3,
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      position: 'relative',
+      overflow: 'hidden',
+      ...(isStudent
+        ? {
+            cursor: 'default',
+            '&:hover': {
+              borderColor: 'primary.light',
+              boxShadow: `0 8px 20px -8px ${alpha(theme.palette.primary.main, 0.12)}`,
             },
-          },
-        }}
-      >
+          }
+        : {
+            '&:hover': {
+              borderColor: 'primary.main',
+              transform: 'translateY(-2px)',
+              boxShadow: `0 12px 24px -10px ${alpha(theme.palette.primary.main, 0.15)}`,
+              '& .view-details-btn': {
+                opacity: 1,
+                transform: 'translateX(0)',
+              },
+            },
+          }),
+    };
+
+    const CardWrapper = isStudent ? Box : Card;
+    const cardProps = isStudent
+      ? { sx: cardStyles }
+      : {
+          component: Link,
+          href: `${process.env.NEXT_PUBLIC_URL}/events/${event._id}`,
+          elevation: 0,
+          sx: cardStyles,
+        };
+
+    return (
+      <CardWrapper {...cardProps}>
         <CardContent
           sx={{
             p: 2.5,
@@ -131,49 +153,51 @@ export default function EventCard({ events, message, grouped = true }) {
             gap: 2,
           }}
         >
-          {/* Header: Status & ID */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              gap: 1,
-            }}
-          >
-            <Chip
-              label={statusInfo.label}
-              size='small'
-              color={statusInfo.color}
-              variant='soft' // If supported by theme, otherwise defaults
+          {/* Header: Status & ID - Only show for non-student view */}
+          {!isStudent && (
+            <Box
               sx={{
-                fontWeight: 600,
-                fontSize: '0.7rem',
-                height: 22,
-                borderRadius: 1,
-                bgcolor: alpha(
-                  theme.palette[statusInfo.color]?.main ||
-                    theme.palette.grey[500],
-                  0.1
-                ),
-                color:
-                  theme.palette[statusInfo.color]?.dark ||
-                  theme.palette.grey[700],
-                border: 'none',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: 1,
               }}
-            />
-            {event.ins_id && statusInfo.label.includes('Approved') && (
-              <Typography
-                variant='caption'
+            >
+              <Chip
+                label={statusInfo.label}
+                size='small'
+                color={statusInfo.color}
+                variant='soft'
                 sx={{
-                  fontFamily: 'monospace',
-                  color: 'text.disabled',
+                  fontWeight: 600,
                   fontSize: '0.7rem',
+                  height: 22,
+                  borderRadius: 1,
+                  bgcolor: alpha(
+                    theme.palette[statusInfo.color]?.main ||
+                      theme.palette.grey[500],
+                    0.1
+                  ),
+                  color:
+                    theme.palette[statusInfo.color]?.dark ||
+                    theme.palette.grey[700],
+                  border: 'none',
                 }}
-              >
-                #{event.ins_id}
-              </Typography>
-            )}
-          </Box>
+              />
+              {event.ins_id && statusInfo.label.includes('Approved') && (
+                <Typography
+                  variant='caption'
+                  sx={{
+                    fontFamily: 'monospace',
+                    color: 'text.disabled',
+                    fontSize: '0.7rem',
+                  }}
+                >
+                  #{event.ins_id}
+                </Typography>
+              )}
+            </Box>
+          )}
 
           {/* Content */}
           <Box sx={{ flexGrow: 1 }}>
@@ -239,39 +263,41 @@ export default function EventCard({ events, message, grouped = true }) {
             </Typography>
           </Box>
 
-          {/* Footer Action */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              mt: 0.5,
-            }}
-          >
-            <Button
-              className='view-details-btn'
-              endIcon={<ArrowRight weight='bold' />}
-              size='small'
+          {/* Footer Action - Only show for non-student view */}
+          {!isStudent && (
+            <Box
               sx={{
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: 'primary.main',
-                opacity: 0.8,
-                transform: 'translateX(-4px)',
-                transition: 'all 0.2s ease',
-                p: 0,
-                minWidth: 'auto',
-                '&:hover': {
-                  bgcolor: 'transparent',
-                  opacity: 1,
-                },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                mt: 0.5,
               }}
             >
-              View Details
-            </Button>
-          </Box>
+              <Button
+                className='view-details-btn'
+                endIcon={<ArrowRight weight='bold' />}
+                size='small'
+                sx={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  opacity: 0.8,
+                  transform: 'translateX(-4px)',
+                  transition: 'all 0.2s ease',
+                  p: 0,
+                  minWidth: 'auto',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    opacity: 1,
+                  },
+                }}
+              >
+                View Details
+              </Button>
+            </Box>
+          )}
         </CardContent>
-      </Card>
+      </CardWrapper>
     );
   };
 
@@ -284,8 +310,26 @@ export default function EventCard({ events, message, grouped = true }) {
         width: '100%',
       }}
     >
-      {eventList.map(event => (
-        <Box key={event._id} sx={{ display: 'flex' }}>
+      {eventList.map((event, index) => (
+        <Box
+          key={event._id}
+          sx={{
+            display: 'flex',
+            animation: isStudent ? 'fadeInUp 0.5s ease forwards' : 'none',
+            animationDelay: isStudent ? `${index * 0.1}s` : '0s',
+            opacity: isStudent ? 0 : 1,
+            '@keyframes fadeInUp': {
+              from: {
+                opacity: 0,
+                transform: 'translateY(20px)',
+              },
+              to: {
+                opacity: 1,
+                transform: 'translateY(0)',
+              },
+            },
+          }}
+        >
           <SingleEventCard event={event} />
         </Box>
       ))}
