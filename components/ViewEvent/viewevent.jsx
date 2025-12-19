@@ -176,7 +176,7 @@ const ViewEvent = props => {
   };
 
   // Generate PDF
-  const generatePDF = async () => { 
+  const generatePDF = async () => {
     try {
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',

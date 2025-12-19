@@ -44,7 +44,7 @@ export default function Main() {
       <div>
         <Calendar meetings={events} />
       </div>
-      <Box component="main" sx={{ width: '100%', px: { xs: 2, sm: 3 }, py: 3 }}>
+      <Box component='main' sx={{ width: '100%', px: { xs: 2, sm: 3 }, py: 3 }}>
         <EventCard events={events} message={message} grouped={true} />
       </Box>
     </>

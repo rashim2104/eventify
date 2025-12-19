@@ -17,21 +17,24 @@ import { alpha } from '@mui/material/styles';
 export default function EventCard({ events, message, grouped = true }) {
   const theme = useTheme();
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     const options = {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const formatTime = dateString => {
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
   };
 
   // Helper function to get venue display text
-  const getVenueDisplay = (eventData) => {
+  const getVenueDisplay = eventData => {
     // Check if event is online
     if (eventData?.EventVenue === 'online') {
       return eventData?.eventVenueAddInfo || 'Online';
@@ -41,7 +44,9 @@ export default function EventCard({ events, message, grouped = true }) {
     const venueList = eventData?.venueList;
     if (venueList && venueList.length > 0) {
       // Get unique venue names
-      const uniqueVenueNames = [...new Set(venueList.map(v => v.venueName).filter(Boolean))];
+      const uniqueVenueNames = [
+        ...new Set(venueList.map(v => v.venueName).filter(Boolean)),
+      ];
       if (uniqueVenueNames.length > 0) {
         if (uniqueVenueNames.length === 1) {
           return uniqueVenueNames[0];
@@ -62,17 +67,26 @@ export default function EventCard({ events, message, grouped = true }) {
 
   const currentDate = new Date();
 
-  const getStatusInfo = (status) => {
+  const getStatusInfo = status => {
     switch (status) {
-      case 0: return { label: 'Pending', color: 'warning' };
-      case 1: return { label: 'HOD Approved', color: 'success' };
-      case 2: return { label: 'Approved', color: 'success' };
-      case -1: return { label: 'HOD Rejected', color: 'error' };
-      case -2: return { label: 'IQAC Rejected', color: 'error' };
-      case 3: return { label: 'Changes Requested', color: 'error' };
-      case 4: return { label: 'Changes Requested', color: 'error' };
-      case 5: return { label: 'Principal Approved', color: 'success' };
-      default: return { label: 'Unknown', color: 'default' };
+      case 0:
+        return { label: 'Pending', color: 'warning' };
+      case 1:
+        return { label: 'HOD Approved', color: 'success' };
+      case 2:
+        return { label: 'Approved', color: 'success' };
+      case -1:
+        return { label: 'HOD Rejected', color: 'error' };
+      case -2:
+        return { label: 'IQAC Rejected', color: 'error' };
+      case 3:
+        return { label: 'Changes Requested', color: 'error' };
+      case 4:
+        return { label: 'Changes Requested', color: 'error' };
+      case 5:
+        return { label: 'Principal Approved', color: 'success' };
+      default:
+        return { label: 'Unknown', color: 'default' };
     }
   };
 
@@ -104,30 +118,58 @@ export default function EventCard({ events, message, grouped = true }) {
             '& .view-details-btn': {
               opacity: 1,
               transform: 'translateX(0)',
-            }
+            },
           },
         }}
       >
-        <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <CardContent
+          sx={{
+            p: 2.5,
+            flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
           {/* Header: Status & ID */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 1,
+            }}
+          >
             <Chip
               label={statusInfo.label}
-              size="small"
+              size='small'
               color={statusInfo.color}
-              variant="soft" // If supported by theme, otherwise defaults
+              variant='soft' // If supported by theme, otherwise defaults
               sx={{
                 fontWeight: 600,
                 fontSize: '0.7rem',
                 height: 22,
                 borderRadius: 1,
-                bgcolor: alpha(theme.palette[statusInfo.color]?.main || theme.palette.grey[500], 0.1),
-                color: theme.palette[statusInfo.color]?.dark || theme.palette.grey[700],
+                bgcolor: alpha(
+                  theme.palette[statusInfo.color]?.main ||
+                    theme.palette.grey[500],
+                  0.1
+                ),
+                color:
+                  theme.palette[statusInfo.color]?.dark ||
+                  theme.palette.grey[700],
                 border: 'none',
               }}
             />
             {event.ins_id && statusInfo.label.includes('Approved') && (
-              <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled', fontSize: '0.7rem' }}>
+              <Typography
+                variant='caption'
+                sx={{
+                  fontFamily: 'monospace',
+                  color: 'text.disabled',
+                  fontSize: '0.7rem',
+                }}
+              >
                 #{event.ins_id}
               </Typography>
             )}
@@ -154,40 +196,62 @@ export default function EventCard({ events, message, grouped = true }) {
           </Box>
 
           {/* Metadata Grid */}
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr',
-            gap: 1.5,
-            mt: 'auto',
-            p: 1.5,
-            bgcolor: alpha(theme.palette.grey[100], 0.5),
-            borderRadius: 2,
-          }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: 1.5,
+              mt: 'auto',
+              p: 1.5,
+              bgcolor: alpha(theme.palette.grey[100], 0.5),
+              borderRadius: 2,
+            }}
+          >
             {/* Date */}
-            <Calendar size={18} weight="duotone" color={theme.palette.text.secondary} />
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+            <Calendar
+              size={18}
+              weight='duotone'
+              color={theme.palette.text.secondary}
+            />
+            <Typography variant='body2' color='text.secondary' fontWeight={500}>
               {formatDate(event.eventData?.StartTime)}
             </Typography>
 
             {/* Time */}
-            <Clock size={18} weight="duotone" color={theme.palette.text.secondary} />
-            <Typography variant="body2" color="text.secondary">
-              {formatTime(event.eventData?.StartTime)} - {formatTime(event.eventData?.EndTime)}
+            <Clock
+              size={18}
+              weight='duotone'
+              color={theme.palette.text.secondary}
+            />
+            <Typography variant='body2' color='text.secondary'>
+              {formatTime(event.eventData?.StartTime)} -{' '}
+              {formatTime(event.eventData?.EndTime)}
             </Typography>
 
             {/* Venue */}
-            <MapPin size={18} weight="duotone" color={theme.palette.text.secondary} />
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <MapPin
+              size={18}
+              weight='duotone'
+              color={theme.palette.text.secondary}
+            />
+            <Typography variant='body2' color='text.secondary' noWrap>
               {getVenueDisplay(event.eventData)}
             </Typography>
           </Box>
 
           {/* Footer Action */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mt: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              mt: 0.5,
+            }}
+          >
             <Button
-              className="view-details-btn"
-              endIcon={<ArrowRight weight="bold" />}
-              size="small"
+              className='view-details-btn'
+              endIcon={<ArrowRight weight='bold' />}
+              size='small'
               sx={{
                 fontSize: '0.8rem',
                 fontWeight: 600,
@@ -200,7 +264,7 @@ export default function EventCard({ events, message, grouped = true }) {
                 '&:hover': {
                   bgcolor: 'transparent',
                   opacity: 1,
-                }
+                },
               }}
             >
               View Details
@@ -211,7 +275,7 @@ export default function EventCard({ events, message, grouped = true }) {
     );
   };
 
-  const renderGrid = (eventList) => (
+  const renderGrid = eventList => (
     <Box
       sx={{
         display: 'grid',
@@ -220,7 +284,7 @@ export default function EventCard({ events, message, grouped = true }) {
         width: '100%',
       }}
     >
-      {eventList.map((event) => (
+      {eventList.map(event => (
         <Box key={event._id} sx={{ display: 'flex' }}>
           <SingleEventCard event={event} />
         </Box>
@@ -231,7 +295,7 @@ export default function EventCard({ events, message, grouped = true }) {
   if (!events || events.length === 0) {
     return (
       <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-        <Typography variant="body1">{message || "No events found."}</Typography>
+        <Typography variant='body1'>{message || 'No events found.'}</Typography>
       </Box>
     );
   }
@@ -252,11 +316,22 @@ export default function EventCard({ events, message, grouped = true }) {
       {upcomingEvents.length > 0 && (
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
-            <Box sx={{ width: 4, height: 24, bgcolor: 'primary.main', borderRadius: 1 }} />
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 700 }}>
+            <Box
+              sx={{
+                width: 4,
+                height: 24,
+                bgcolor: 'primary.main',
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant='h6' component='h2' sx={{ fontWeight: 700 }}>
               Upcoming Events
             </Typography>
-            <Chip label={upcomingEvents.length} size="small" sx={{ ml: 1, height: 20, fontSize: '0.75rem', fontWeight: 600 }} />
+            <Chip
+              label={upcomingEvents.length}
+              size='small'
+              sx={{ ml: 1, height: 20, fontSize: '0.75rem', fontWeight: 600 }}
+            />
           </Box>
           {renderGrid(upcomingEvents)}
         </Box>
@@ -264,8 +339,20 @@ export default function EventCard({ events, message, grouped = true }) {
 
       {pastEvents.length > 0 && (
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5, mt: 1 }}>
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 2.5,
+              mt: 1,
+            }}
+          >
+            <Typography
+              variant='h6'
+              component='h2'
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
               Past Events
             </Typography>
           </Box>
@@ -276,7 +363,7 @@ export default function EventCard({ events, message, grouped = true }) {
       )}
 
       {upcomingEvents.length === 0 && pastEvents.length === 0 && (
-        <Typography>{message || "No events found."}</Typography>
+        <Typography>{message || 'No events found.'}</Typography>
       )}
     </Stack>
   );

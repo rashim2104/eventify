@@ -67,41 +67,96 @@ function ActiveChip({ isActive }) {
   );
 }
 
-function ConfigTable({ title, data, columns, onAdd, onEdit, onDelete, loading, entityName }) {
+function ConfigTable({
+  title,
+  data,
+  columns,
+  onAdd,
+  onEdit,
+  onDelete,
+  loading,
+  entityName,
+}) {
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant='h6' sx={{ fontWeight: 600 }}>{title} ({data.length})</Typography>
-        <Button variant='contained' startIcon={<Plus size={18} />} onClick={onAdd}
-          sx={{ bgcolor: colors.light.primaryHex, '&:hover': { bgcolor: colors.light.primaryHex, opacity: 0.9 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Typography variant='h6' sx={{ fontWeight: 600 }}>
+          {title} ({data.length})
+        </Typography>
+        <Button
+          variant='contained'
+          startIcon={<Plus size={18} />}
+          onClick={onAdd}
+          sx={{
+            bgcolor: colors.light.primaryHex,
+            '&:hover': { bgcolor: colors.light.primaryHex, opacity: 0.9 },
+          }}
+        >
           Add {entityName}
         </Button>
       </Box>
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : data.length === 0 ? (
         <Alert severity='info'>No {entityName.toLowerCase()}s found.</Alert>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, maxHeight: 400 }}>
+        <TableContainer
+          component={Paper}
+          sx={{ borderRadius: 2, maxHeight: 400 }}
+        >
           <Table stickyHeader size='small'>
             <TableHead>
               <TableRow>
-                {columns.map((col) => (
-                  <TableCell key={col.key} sx={{ fontWeight: 'bold', bgcolor: colors.light.mutedHex }}>{col.label}</TableCell>
+                {columns.map(col => (
+                  <TableCell
+                    key={col.key}
+                    sx={{ fontWeight: 'bold', bgcolor: colors.light.mutedHex }}
+                  >
+                    {col.label}
+                  </TableCell>
                 ))}
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: colors.light.mutedHex, width: 100 }}>Actions</TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: 'bold',
+                    bgcolor: colors.light.mutedHex,
+                    width: 100,
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {data.map((item) => (
+              {data.map(item => (
                 <TableRow key={item._id} hover>
-                  {columns.map((col) => (
-                    <TableCell key={col.key}>{col.render ? col.render(item[col.key], item) : item[col.key]}</TableCell>
+                  {columns.map(col => (
+                    <TableCell key={col.key}>
+                      {col.render
+                        ? col.render(item[col.key], item)
+                        : item[col.key]}
+                    </TableCell>
                   ))}
                   <TableCell>
                     <Stack direction='row' spacing={0.5}>
-                      <IconButton size='small' onClick={() => onEdit(item)}><Pencil size={16} /></IconButton>
-                      <IconButton size='small' color='error' onClick={() => onDelete(item)}><Trash size={16} /></IconButton>
+                      <IconButton size='small' onClick={() => onEdit(item)}>
+                        <Pencil size={16} />
+                      </IconButton>
+                      <IconButton
+                        size='small'
+                        color='error'
+                        onClick={() => onDelete(item)}
+                      >
+                        <Trash size={16} />
+                      </IconButton>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -109,9 +164,8 @@ function ConfigTable({ title, data, columns, onAdd, onEdit, onDelete, loading, e
             </TableBody>
           </Table>
         </TableContainer>
-      )
-      }
-    </Box >
+      )}
+    </Box>
   );
 }
 
@@ -147,7 +201,13 @@ export default function Manage() {
   const [societies, setSocieties] = useState([]);
   const [clubs, setClubs] = useState([]);
   const [parentBlocks, setParentBlocks] = useState([]);
-  const [loadingConfig, setLoadingConfig] = useState({ colleges: true, departments: true, societies: true, clubs: true, blocks: true });
+  const [loadingConfig, setLoadingConfig] = useState({
+    colleges: true,
+    departments: true,
+    societies: true,
+    clubs: true,
+    blocks: true,
+  });
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -177,8 +237,11 @@ export default function Manage() {
       const res = await fetch('/api/config/colleges?active=false');
       const data = await res.json();
       setColleges(data.colleges || []);
-    } catch { toast.error('Failed to fetch colleges'); }
-    finally { setLoadingConfig(prev => ({ ...prev, colleges: false })); }
+    } catch {
+      toast.error('Failed to fetch colleges');
+    } finally {
+      setLoadingConfig(prev => ({ ...prev, colleges: false }));
+    }
   };
 
   const fetchDepartments = async () => {
@@ -186,8 +249,11 @@ export default function Manage() {
       const res = await fetch('/api/config/departments?active=false');
       const data = await res.json();
       setDepartments(data.departments || []);
-    } catch { toast.error('Failed to fetch departments'); }
-    finally { setLoadingConfig(prev => ({ ...prev, departments: false })); }
+    } catch {
+      toast.error('Failed to fetch departments');
+    } finally {
+      setLoadingConfig(prev => ({ ...prev, departments: false }));
+    }
   };
 
   const fetchSocieties = async () => {
@@ -195,8 +261,11 @@ export default function Manage() {
       const res = await fetch('/api/config/societies?active=false');
       const data = await res.json();
       setSocieties(data.societies || []);
-    } catch { toast.error('Failed to fetch societies'); }
-    finally { setLoadingConfig(prev => ({ ...prev, societies: false })); }
+    } catch {
+      toast.error('Failed to fetch societies');
+    } finally {
+      setLoadingConfig(prev => ({ ...prev, societies: false }));
+    }
   };
 
   const fetchClubs = async () => {
@@ -204,8 +273,11 @@ export default function Manage() {
       const res = await fetch('/api/config/clubs?active=false');
       const data = await res.json();
       setClubs(data.clubs || []);
-    } catch { toast.error('Failed to fetch clubs'); }
-    finally { setLoadingConfig(prev => ({ ...prev, clubs: false })); }
+    } catch {
+      toast.error('Failed to fetch clubs');
+    } finally {
+      setLoadingConfig(prev => ({ ...prev, clubs: false }));
+    }
   };
 
   const fetchParentBlocks = async () => {
@@ -213,15 +285,30 @@ export default function Manage() {
       const res = await fetch('/api/config/parent-blocks?active=false');
       const data = await res.json();
       setParentBlocks(data.parentBlocks || []);
-    } catch { toast.error('Failed to fetch parent blocks'); }
-    finally { setLoadingConfig(prev => ({ ...prev, blocks: false })); }
+    } catch {
+      toast.error('Failed to fetch parent blocks');
+    } finally {
+      setLoadingConfig(prev => ({ ...prev, blocks: false }));
+    }
   };
 
   // ---- User Management Functions ----
   const clearUserForm = () => {
-    setUserId(''); setName(''); setCollegeName(''); setDept(''); setMail(''); setPassword('');
-    setUserType(''); setIsSuperAdmin(false); setIdNumber(''); setRole(''); setPhone('');
-    setCurrSoc(''); setFetchEmail(''); setUserFetched(false); setUserErrors({});
+    setUserId('');
+    setName('');
+    setCollegeName('');
+    setDept('');
+    setMail('');
+    setPassword('');
+    setUserType('');
+    setIsSuperAdmin(false);
+    setIdNumber('');
+    setRole('');
+    setPhone('');
+    setCurrSoc('');
+    setFetchEmail('');
+    setUserFetched(false);
+    setUserErrors({});
   };
 
   const validateUserForm = () => {
@@ -229,7 +316,8 @@ export default function Manage() {
     if (!name.trim()) errors.name = 'Name is required';
     if (!mail.trim()) errors.mail = 'Email is required';
     if (!userType) errors.userType = 'User type is required';
-    if (userTab === 0 && !password.trim()) errors.password = 'Password is required';
+    if (userTab === 0 && !password.trim())
+      errors.password = 'Password is required';
 
     // Both HOD and staff require college and department
     if (['HOD', 'staff'].includes(userType)) {
@@ -246,7 +334,10 @@ export default function Manage() {
   };
 
   const handleFetchUser = async () => {
-    if (!fetchEMail.trim()) { toast.error('Please enter an email'); return; }
+    if (!fetchEMail.trim()) {
+      toast.error('Please enter an email');
+      return;
+    }
     setUserLoading(true);
     try {
       const res = await fetch('/api/fetchUser', {
@@ -256,16 +347,31 @@ export default function Manage() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.message === 'User not found') { toast.error('User not found'); return; }
+        if (data.message === 'User not found') {
+          toast.error('User not found');
+          return;
+        }
         const user = data.message[0];
-        setUserId(user._id); setDept(user.dept); setName(user.name); setMail(user.email);
-        setUserType(user.userType); setIsSuperAdmin(user.isSuperAdmin); setIdNumber(user.id);
-        setCollegeName(user.college); setRole(user.role); setPhone(user.phone);
+        setUserId(user._id);
+        setDept(user.dept);
+        setName(user.name);
+        setMail(user.email);
+        setUserType(user.userType);
+        setIsSuperAdmin(user.isSuperAdmin);
+        setIdNumber(user.id);
+        setCollegeName(user.college);
+        setRole(user.role);
+        setPhone(user.phone);
         setUserFetched(true);
         toast.success('User fetched');
-      } else { toast.error('Failed to fetch user'); }
-    } catch { toast.error('Failed to fetch user'); }
-    finally { setUserLoading(false); }
+      } else {
+        toast.error('Failed to fetch user');
+      }
+    } catch {
+      toast.error('Failed to fetch user');
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   const handleAddUser = async () => {
@@ -276,16 +382,29 @@ export default function Manage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name, college: collegeName, dept,
-          mail, password, userType,
+          name,
+          college: collegeName,
+          dept,
+          mail,
+          password,
+          userType,
           isSuperAdmin,
-          id: idNumber, phone, role,
+          id: idNumber,
+          phone,
+          role,
         }),
       });
-      if (res.ok) { toast.success('User added!'); clearUserForm(); }
-      else { toast.error('Failed to add user'); }
-    } catch { toast.error('Failed to add user'); }
-    finally { setUserLoading(false); }
+      if (res.ok) {
+        toast.success('User added!');
+        clearUserForm();
+      } else {
+        toast.error('Failed to add user');
+      }
+    } catch {
+      toast.error('Failed to add user');
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   const handleUpdateUser = async () => {
@@ -296,15 +415,29 @@ export default function Manage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _id: userId, name, college: collegeName, dept,
-          mail, userType,
-          isSuperAdmin, phone, role, id: idNumber,
+          _id: userId,
+          name,
+          college: collegeName,
+          dept,
+          mail,
+          userType,
+          isSuperAdmin,
+          phone,
+          role,
+          id: idNumber,
         }),
       });
-      if (res.ok) { toast.success('User updated!'); clearUserForm(); }
-      else { toast.error('Failed to update user'); }
-    } catch { toast.error('Failed to update user'); }
-    finally { setUserLoading(false); }
+      if (res.ok) {
+        toast.success('User updated!');
+        clearUserForm();
+      } else {
+        toast.error('Failed to update user');
+      }
+    } catch {
+      toast.error('Failed to update user');
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   const handleDeleteUser = async () => {
@@ -316,10 +449,17 @@ export default function Manage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'deleteUser', mail: fetchEMail }),
       });
-      if (res.ok) { toast.success('User deleted'); clearUserForm(); }
-      else { toast.error('Delete failed'); }
-    } catch { toast.error('Delete failed'); }
-    finally { setUserLoading(false); }
+      if (res.ok) {
+        toast.success('User deleted');
+        clearUserForm();
+      } else {
+        toast.error('Delete failed');
+      }
+    } catch {
+      toast.error('Delete failed');
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -330,14 +470,21 @@ export default function Manage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'admin', _id: userId }),
       });
-      if (res.ok) { const data = await res.json(); toast.success(data.message); }
-      else { toast.error('Error changing password'); }
-    } catch { toast.error('Error changing password'); }
-    finally { setUserLoading(false); }
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message);
+      } else {
+        toast.error('Error changing password');
+      }
+    } catch {
+      toast.error('Error changing password');
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   // ---- Config CRUD Functions ----
-  const openAddDialog = (type) => {
+  const openAddDialog = type => {
     setDialogType(type);
     setEditingItem(null);
     setFormData({ isActive: true });
@@ -351,77 +498,265 @@ export default function Manage() {
     setDialogOpen(true);
   };
 
-  const closeDialog = () => { setDialogOpen(false); setDialogType(''); setEditingItem(null); setFormData({}); };
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setDialogType('');
+    setEditingItem(null);
+    setFormData({});
+  };
 
   const handleConfigSave = async () => {
     setSubmitting(true);
-    const endpoints = { college: '/api/config/colleges', department: '/api/config/departments', society: '/api/config/societies', club: '/api/config/clubs', parentBlock: '/api/config/parent-blocks' };
-    const endpoint = editingItem ? `${endpoints[dialogType]}/${editingItem._id}` : endpoints[dialogType];
+    const endpoints = {
+      college: '/api/config/colleges',
+      department: '/api/config/departments',
+      society: '/api/config/societies',
+      club: '/api/config/clubs',
+      parentBlock: '/api/config/parent-blocks',
+    };
+    const endpoint = editingItem
+      ? `${endpoints[dialogType]}/${editingItem._id}`
+      : endpoints[dialogType];
     try {
-      const res = await fetch(endpoint, { method: editingItem ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
-      if (res.ok) { toast.success('Saved!'); closeDialog(); fetchAllConfig(); }
-      else { const err = await res.json(); toast.error(err.message || 'Failed'); }
-    } catch { toast.error('Failed'); }
-    finally { setSubmitting(false); }
+      const res = await fetch(endpoint, {
+        method: editingItem ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        toast.success('Saved!');
+        closeDialog();
+        fetchAllConfig();
+      } else {
+        const err = await res.json();
+        toast.error(err.message || 'Failed');
+      }
+    } catch {
+      toast.error('Failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleConfigDelete = async (type, item) => {
     if (!confirm(`Delete "${item.name || item.code}"?`)) return;
-    const endpoints = { college: '/api/config/colleges', department: '/api/config/departments', society: '/api/config/societies', club: '/api/config/clubs', parentBlock: '/api/config/parent-blocks' };
+    const endpoints = {
+      college: '/api/config/colleges',
+      department: '/api/config/departments',
+      society: '/api/config/societies',
+      club: '/api/config/clubs',
+      parentBlock: '/api/config/parent-blocks',
+    };
     try {
-      const res = await fetch(`${endpoints[type]}/${item._id}`, { method: 'DELETE' });
-      if (res.ok) { toast.success('Deleted!'); fetchAllConfig(); }
-      else { toast.error('Delete failed'); }
-    } catch { toast.error('Delete failed'); }
+      const res = await fetch(`${endpoints[type]}/${item._id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Deleted!');
+        fetchAllConfig();
+      } else {
+        toast.error('Delete failed');
+      }
+    } catch {
+      toast.error('Delete failed');
+    }
   };
 
   // ---- Auth Check ----
-  if (status === 'loading') return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><CircularProgress /></Box>;
-  if (session?.user?.isSuperAdmin === 0) return <Alert severity='error' sx={{ m: 4 }}>Not Authorized</Alert>;
+  if (status === 'loading')
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '50vh',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  if (session?.user?.isSuperAdmin === 0)
+    return (
+      <Alert severity='error' sx={{ m: 4 }}>
+        Not Authorized
+      </Alert>
+    );
 
   // ---- Render Dialog Content ----
   const renderDialogContent = () => {
     const fields = {
-      college: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }],
-      department: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'college', label: 'College', type: 'select', options: ['SIT', 'SEC', 'common'] }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMDCSYY' }],
-      society: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Type', type: 'select', options: ['professional', 'ieee'] }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMSTEYY' }],
-      club: [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'eventIdTemplate', label: 'Event ID Template', placeholder: 'e.g., CLGYEARMMCTCYY' }],
+      college: [
+        { key: 'code', label: 'Code' },
+        { key: 'name', label: 'Name' },
+      ],
+      department: [
+        { key: 'code', label: 'Code' },
+        { key: 'name', label: 'Name' },
+        {
+          key: 'college',
+          label: 'College',
+          type: 'select',
+          options: ['SIT', 'SEC', 'common'],
+        },
+        {
+          key: 'eventIdTemplate',
+          label: 'Event ID Template',
+          placeholder: 'e.g., CLGYEARMMDCSYY',
+        },
+      ],
+      society: [
+        { key: 'code', label: 'Code' },
+        { key: 'name', label: 'Name' },
+        {
+          key: 'type',
+          label: 'Type',
+          type: 'select',
+          options: ['professional', 'ieee'],
+        },
+        {
+          key: 'eventIdTemplate',
+          label: 'Event ID Template',
+          placeholder: 'e.g., CLGYEARMMSTEYY',
+        },
+      ],
+      club: [
+        { key: 'code', label: 'Code' },
+        { key: 'name', label: 'Name' },
+        {
+          key: 'eventIdTemplate',
+          label: 'Event ID Template',
+          placeholder: 'e.g., CLGYEARMMCTCYY',
+        },
+      ],
       parentBlock: [{ key: 'name', label: 'Name' }],
     };
     return (
       <Stack spacing={2} sx={{ mt: 1, minWidth: 350 }}>
-        {(fields[dialogType] || []).map((f) => f.type === 'select' ? (
-          <FormControl key={f.key} fullWidth>
-            <InputLabel>{f.label}</InputLabel>
-            <Select value={formData[f.key] || ''} onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })} label={f.label}>
-              {f.options.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
-            </Select>
-          </FormControl>
-        ) : (
-          <TextField key={f.key} label={f.label} value={formData[f.key] || ''} onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })} fullWidth placeholder={f.placeholder} helperText={f.key === 'eventIdTemplate' ? 'CLG=College, YEAR=Year, MM=Month, D=Dept, YY=Sequence' : ''} />
-        ))}
-        <FormControlLabel control={<Switch checked={formData.isActive ?? true} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} />} label='Active' />
+        {(fields[dialogType] || []).map(f =>
+          f.type === 'select' ? (
+            <FormControl key={f.key} fullWidth>
+              <InputLabel>{f.label}</InputLabel>
+              <Select
+                value={formData[f.key] || ''}
+                onChange={e =>
+                  setFormData({ ...formData, [f.key]: e.target.value })
+                }
+                label={f.label}
+              >
+                {f.options.map(o => (
+                  <MenuItem key={o} value={o}>
+                    {o}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : (
+            <TextField
+              key={f.key}
+              label={f.label}
+              value={formData[f.key] || ''}
+              onChange={e =>
+                setFormData({ ...formData, [f.key]: e.target.value })
+              }
+              fullWidth
+              placeholder={f.placeholder}
+              helperText={
+                f.key === 'eventIdTemplate'
+                  ? 'CLG=College, YEAR=Year, MM=Month, D=Dept, YY=Sequence'
+                  : ''
+              }
+            />
+          )
+        )}
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.isActive ?? true}
+              onChange={e =>
+                setFormData({ ...formData, isActive: e.target.checked })
+              }
+            />
+          }
+          label='Active'
+        />
       </Stack>
     );
   };
 
   return (
-    <Box sx={{ bgcolor: colors.light.secondaryHex, p: { xs: 2, md: 4 }, borderRadius: 3, minHeight: '100vh' }}>
-      <Typography variant='h4' sx={{ fontWeight: 'bold', mb: 3, color: colors.light.primaryHex }}>Admin Panel</Typography>
+    <Box
+      sx={{
+        bgcolor: colors.light.secondaryHex,
+        p: { xs: 2, md: 4 },
+        borderRadius: 3,
+        minHeight: '100vh',
+      }}
+    >
+      <Typography
+        variant='h4'
+        sx={{ fontWeight: 'bold', mb: 3, color: colors.light.primaryHex }}
+      >
+        Admin Panel
+      </Typography>
 
       {/* Main Tabs */}
       {/* Main Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
-        <Tabs value={mainTab} onChange={(e, v) => setMainTab(v)} variant='fullWidth' indicatorColor='primary' sx={{ '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' } }}>
-          <Tab icon={<Users size={20} />} label='User Management' iconPosition='start' sx={{ minHeight: 60 }} />
-          <Tab icon={<Gear size={20} />} label='Configuration' iconPosition='start' sx={{ minHeight: 60 }} />
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          mb: 3,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <Tabs
+          value={mainTab}
+          onChange={(e, v) => setMainTab(v)}
+          variant='fullWidth'
+          indicatorColor='primary'
+          sx={{
+            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+          }}
+        >
+          <Tab
+            icon={<Users size={20} />}
+            label='User Management'
+            iconPosition='start'
+            sx={{ minHeight: 60 }}
+          />
+          <Tab
+            icon={<Gear size={20} />}
+            label='Configuration'
+            iconPosition='start'
+            sx={{ minHeight: 60 }}
+          />
         </Tabs>
       </Box>
 
       {/* =============== USER MANAGEMENT TAB =============== */}
       <TabPanel value={mainTab} index={0}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
-          <Tabs value={userTab} onChange={(e, v) => { setUserTab(v); clearUserForm(); }} variant='fullWidth' indicatorColor='primary'>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            mb: 2,
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Tabs
+            value={userTab}
+            onChange={(e, v) => {
+              setUserTab(v);
+              clearUserForm();
+            }}
+            variant='fullWidth'
+            indicatorColor='primary'
+          >
             <Tab label='Add User' />
             <Tab label='Edit User' />
           </Tabs>
@@ -432,10 +767,22 @@ export default function Manage() {
             {/* Add User */}
             {userTab === 0 && (
               <Stack spacing={2}>
-                <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} error={!!userErrors.name} helperText={userErrors.name} required fullWidth />
+                <TextField
+                  label='Name'
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  error={!!userErrors.name}
+                  helperText={userErrors.name}
+                  required
+                  fullWidth
+                />
                 <FormControl fullWidth required error={!!userErrors.userType}>
                   <InputLabel>User Type</InputLabel>
-                  <Select value={userType} onChange={(e) => setUserType(e.target.value)} label='User Type'>
+                  <Select
+                    value={userType}
+                    onChange={e => setUserType(e.target.value)}
+                    label='User Type'
+                  >
                     <MenuItem value='HOD'>HOD</MenuItem>
                     <MenuItem value='staff'>Staff</MenuItem>
                   </Select>
@@ -443,34 +790,125 @@ export default function Manage() {
 
                 {['staff', 'HOD'].includes(userType) && (
                   <>
-                    <FormControl fullWidth required error={!!userErrors.collegeName}>
+                    <FormControl
+                      fullWidth
+                      required
+                      error={!!userErrors.collegeName}
+                    >
                       <InputLabel>College</InputLabel>
-                      <Select value={collegeName} onChange={(e) => setCollegeName(e.target.value)} label='College'>
-                        {colleges.map((c) => <MenuItem key={c._id} value={c.code}>{c.name}</MenuItem>)}
+                      <Select
+                        value={collegeName}
+                        onChange={e => setCollegeName(e.target.value)}
+                        label='College'
+                      >
+                        {colleges.map(c => (
+                          <MenuItem key={c._id} value={c.code}>
+                            {c.name}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
 
                     {collegeName && (
                       <FormControl fullWidth required error={!!userErrors.dept}>
                         <InputLabel>Department</InputLabel>
-                        <Select value={dept} onChange={(e) => setDept(e.target.value)} label='Department'>
-                          {departments.filter(d => d.college === collegeName).map((d) => <MenuItem key={d._id} value={d.code}>{d.name}</MenuItem>)}
+                        <Select
+                          value={dept}
+                          onChange={e => setDept(e.target.value)}
+                          label='Department'
+                        >
+                          {departments
+                            .filter(d => d.college === collegeName)
+                            .map(d => (
+                              <MenuItem key={d._id} value={d.code}>
+                                {d.name}
+                              </MenuItem>
+                            ))}
                         </Select>
                       </FormControl>
                     )}
                   </>
                 )}
-                <TextField label='ID Number' value={idNumber} onChange={(e) => setIdNumber(e.target.value)} error={!!userErrors.idNumber} helperText={userErrors.idNumber} required fullWidth />
-                <TextField label='Phone' value={phone} onChange={(e) => setPhone(e.target.value)} error={!!userErrors.phone} helperText={userErrors.phone} required fullWidth />
-                <TextField label='Role' value={role} onChange={(e) => setRole(e.target.value)} error={!!userErrors.role} helperText={userErrors.role} required fullWidth />
+                <TextField
+                  label='ID Number'
+                  value={idNumber}
+                  onChange={e => setIdNumber(e.target.value)}
+                  error={!!userErrors.idNumber}
+                  helperText={userErrors.idNumber}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  label='Phone'
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  error={!!userErrors.phone}
+                  helperText={userErrors.phone}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  label='Role'
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                  error={!!userErrors.role}
+                  helperText={userErrors.role}
+                  required
+                  fullWidth
+                />
 
-                <TextField label='Email' type='email' value={mail} onChange={(e) => setMail(e.target.value)} error={!!userErrors.mail} helperText={userErrors.mail} required fullWidth />
-                <TextField label='Password' type='password' value={password} onChange={(e) => setPassword(e.target.value)} error={!!userErrors.password} helperText={userErrors.password} required fullWidth />
-                <FormControlLabel control={<Checkbox checked={isSuperAdmin} onChange={(e) => setIsSuperAdmin(e.target.checked)} />} label='Super Admin' />
+                <TextField
+                  label='Email'
+                  type='email'
+                  value={mail}
+                  onChange={e => setMail(e.target.value)}
+                  error={!!userErrors.mail}
+                  helperText={userErrors.mail}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  label='Password'
+                  type='password'
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  error={!!userErrors.password}
+                  helperText={userErrors.password}
+                  required
+                  fullWidth
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={isSuperAdmin}
+                      onChange={e => setIsSuperAdmin(e.target.checked)}
+                    />
+                  }
+                  label='Super Admin'
+                />
                 <Stack direction='row' spacing={2}>
-                  <Button variant='contained' startIcon={userLoading ? <CircularProgress size={18} /> : <FloppyDisk size={18} />} onClick={handleAddUser} disabled={userLoading}
-                    sx={{ bgcolor: colors.light.primaryHex }}>Add User</Button>
-                  <Button variant='outlined' startIcon={<ArrowClockwise size={18} />} onClick={clearUserForm}>Clear</Button>
+                  <Button
+                    variant='contained'
+                    startIcon={
+                      userLoading ? (
+                        <CircularProgress size={18} />
+                      ) : (
+                        <FloppyDisk size={18} />
+                      )
+                    }
+                    onClick={handleAddUser}
+                    disabled={userLoading}
+                    sx={{ bgcolor: colors.light.primaryHex }}
+                  >
+                    Add User
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    startIcon={<ArrowClockwise size={18} />}
+                    onClick={clearUserForm}
+                  >
+                    Clear
+                  </Button>
                 </Stack>
               </Stack>
             )}
@@ -479,27 +917,84 @@ export default function Manage() {
             {userTab === 1 && (
               <Stack spacing={2}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField label='Email to Find' value={fetchEMail} onChange={(e) => setFetchEmail(e.target.value)} fullWidth />
-                  <Button variant='contained' startIcon={<MagnifyingGlass size={18} />} onClick={handleFetchUser} disabled={userLoading}
-                    sx={{ bgcolor: colors.light.primaryHex, minWidth: 120 }}>Find</Button>
+                  <TextField
+                    label='Email to Find'
+                    value={fetchEMail}
+                    onChange={e => setFetchEmail(e.target.value)}
+                    fullWidth
+                  />
+                  <Button
+                    variant='contained'
+                    startIcon={<MagnifyingGlass size={18} />}
+                    onClick={handleFetchUser}
+                    disabled={userLoading}
+                    sx={{ bgcolor: colors.light.primaryHex, minWidth: 120 }}
+                  >
+                    Find
+                  </Button>
                 </Box>
                 {userFetched && (
                   <>
-                    <TextField label='Name' value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-                    <TextField label='Email' value={mail} onChange={(e) => setMail(e.target.value)} fullWidth />
+                    <TextField
+                      label='Name'
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      label='Email'
+                      value={mail}
+                      onChange={e => setMail(e.target.value)}
+                      fullWidth
+                    />
                     <FormControl fullWidth>
                       <InputLabel>User Type</InputLabel>
-                      <Select value={userType} onChange={(e) => setUserType(e.target.value)} label='User Type'>
+                      <Select
+                        value={userType}
+                        onChange={e => setUserType(e.target.value)}
+                        label='User Type'
+                      >
                         <MenuItem value='admin'>Admin</MenuItem>
                         <MenuItem value='HOD'>HOD</MenuItem>
                         <MenuItem value='staff'>Staff</MenuItem>
                       </Select>
                     </FormControl>
-                    <FormControlLabel control={<Checkbox checked={isSuperAdmin} onChange={(e) => setIsSuperAdmin(e.target.checked)} />} label='Super Admin' />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={isSuperAdmin}
+                          onChange={e => setIsSuperAdmin(e.target.checked)}
+                        />
+                      }
+                      label='Super Admin'
+                    />
                     <Stack direction='row' spacing={2} flexWrap='wrap'>
-                      <Button variant='contained' startIcon={<FloppyDisk size={18} />} onClick={handleUpdateUser} disabled={userLoading} sx={{ bgcolor: colors.light.primaryHex }}>Update</Button>
-                      <Button variant='outlined' startIcon={<Key size={18} />} onClick={handleChangePassword} disabled={userLoading}>Reset Password</Button>
-                      <Button variant='outlined' color='error' startIcon={<Trash size={18} />} onClick={handleDeleteUser} disabled={userLoading}>Delete</Button>
+                      <Button
+                        variant='contained'
+                        startIcon={<FloppyDisk size={18} />}
+                        onClick={handleUpdateUser}
+                        disabled={userLoading}
+                        sx={{ bgcolor: colors.light.primaryHex }}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        variant='outlined'
+                        startIcon={<Key size={18} />}
+                        onClick={handleChangePassword}
+                        disabled={userLoading}
+                      >
+                        Reset Password
+                      </Button>
+                      <Button
+                        variant='outlined'
+                        color='error'
+                        startIcon={<Trash size={18} />}
+                        onClick={handleDeleteUser}
+                        disabled={userLoading}
+                      >
+                        Delete
+                      </Button>
                     </Stack>
                   </>
                 )}
@@ -511,50 +1006,201 @@ export default function Manage() {
 
       {/* =============== CONFIGURATION TAB =============== */}
       <TabPanel value={mainTab} index={1}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
-          <Tabs value={configTab} onChange={(e, v) => setConfigTab(v)} variant='scrollable' scrollButtons='auto' indicatorColor='primary'>
-            <Tab icon={<Buildings size={18} />} label='Colleges' iconPosition='start' />
-            <Tab icon={<UsersThree size={18} />} label='Departments' iconPosition='start' />
-            <Tab icon={<Users size={18} />} label='Societies' iconPosition='start' />
-            <Tab icon={<Users size={18} />} label='Clubs' iconPosition='start' />
-            <Tab icon={<MapPin size={18} />} label='Parent Blocks' iconPosition='start' />
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            mb: 2,
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Tabs
+            value={configTab}
+            onChange={(e, v) => setConfigTab(v)}
+            variant='scrollable'
+            scrollButtons='auto'
+            indicatorColor='primary'
+          >
+            <Tab
+              icon={<Buildings size={18} />}
+              label='Colleges'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<UsersThree size={18} />}
+              label='Departments'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<Users size={18} />}
+              label='Societies'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<Users size={18} />}
+              label='Clubs'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<MapPin size={18} />}
+              label='Parent Blocks'
+              iconPosition='start'
+            />
           </Tabs>
         </Box>
 
         <TabPanel value={configTab} index={0}>
-          <ConfigTable title='Colleges' data={colleges} entityName='College' loading={loadingConfig.colleges}
-            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
-            onAdd={() => openAddDialog('college')} onEdit={(item) => openEditDialog('college', item)} onDelete={(item) => handleConfigDelete('college', item)} />
+          <ConfigTable
+            title='Colleges'
+            data={colleges}
+            entityName='College'
+            loading={loadingConfig.colleges}
+            columns={[
+              { key: 'code', label: 'Code' },
+              { key: 'name', label: 'Name' },
+              {
+                key: 'isActive',
+                label: 'Status',
+                render: v => <ActiveChip isActive={v} />,
+              },
+            ]}
+            onAdd={() => openAddDialog('college')}
+            onEdit={item => openEditDialog('college', item)}
+            onDelete={item => handleConfigDelete('college', item)}
+          />
         </TabPanel>
         <TabPanel value={configTab} index={1}>
-          <ConfigTable title='Departments' data={departments} entityName='Department' loading={loadingConfig.departments}
-            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'college', label: 'College', render: (v) => <Chip size='small' label={v} /> }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
-            onAdd={() => openAddDialog('department')} onEdit={(item) => openEditDialog('department', item)} onDelete={(item) => handleConfigDelete('department', item)} />
+          <ConfigTable
+            title='Departments'
+            data={departments}
+            entityName='Department'
+            loading={loadingConfig.departments}
+            columns={[
+              { key: 'code', label: 'Code' },
+              { key: 'name', label: 'Name' },
+              {
+                key: 'college',
+                label: 'College',
+                render: v => <Chip size='small' label={v} />,
+              },
+              {
+                key: 'eventIdTemplate',
+                label: 'Template',
+                render: v =>
+                  v ? <Chip size='small' label={v} variant='outlined' /> : '-',
+              },
+              {
+                key: 'isActive',
+                label: 'Status',
+                render: v => <ActiveChip isActive={v} />,
+              },
+            ]}
+            onAdd={() => openAddDialog('department')}
+            onEdit={item => openEditDialog('department', item)}
+            onDelete={item => handleConfigDelete('department', item)}
+          />
         </TabPanel>
         <TabPanel value={configTab} index={2}>
-          <ConfigTable title='Societies' data={societies} entityName='Society' loading={loadingConfig.societies}
-            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'type', label: 'Type', render: (v) => <Chip size='small' label={v} color={v === 'ieee' ? 'primary' : 'default'} /> }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
-            onAdd={() => openAddDialog('society')} onEdit={(item) => openEditDialog('society', item)} onDelete={(item) => handleConfigDelete('society', item)} />
+          <ConfigTable
+            title='Societies'
+            data={societies}
+            entityName='Society'
+            loading={loadingConfig.societies}
+            columns={[
+              { key: 'code', label: 'Code' },
+              { key: 'name', label: 'Name' },
+              {
+                key: 'type',
+                label: 'Type',
+                render: v => (
+                  <Chip
+                    size='small'
+                    label={v}
+                    color={v === 'ieee' ? 'primary' : 'default'}
+                  />
+                ),
+              },
+              {
+                key: 'eventIdTemplate',
+                label: 'Template',
+                render: v =>
+                  v ? <Chip size='small' label={v} variant='outlined' /> : '-',
+              },
+              {
+                key: 'isActive',
+                label: 'Status',
+                render: v => <ActiveChip isActive={v} />,
+              },
+            ]}
+            onAdd={() => openAddDialog('society')}
+            onEdit={item => openEditDialog('society', item)}
+            onDelete={item => handleConfigDelete('society', item)}
+          />
         </TabPanel>
         <TabPanel value={configTab} index={3}>
-          <ConfigTable title='Clubs' data={clubs} entityName='Club' loading={loadingConfig.clubs}
-            columns={[{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'eventIdTemplate', label: 'Template', render: (v) => v ? <Chip size='small' label={v} variant='outlined' /> : '-' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
-            onAdd={() => openAddDialog('club')} onEdit={(item) => openEditDialog('club', item)} onDelete={(item) => handleConfigDelete('club', item)} />
+          <ConfigTable
+            title='Clubs'
+            data={clubs}
+            entityName='Club'
+            loading={loadingConfig.clubs}
+            columns={[
+              { key: 'code', label: 'Code' },
+              { key: 'name', label: 'Name' },
+              {
+                key: 'eventIdTemplate',
+                label: 'Template',
+                render: v =>
+                  v ? <Chip size='small' label={v} variant='outlined' /> : '-',
+              },
+              {
+                key: 'isActive',
+                label: 'Status',
+                render: v => <ActiveChip isActive={v} />,
+              },
+            ]}
+            onAdd={() => openAddDialog('club')}
+            onEdit={item => openEditDialog('club', item)}
+            onDelete={item => handleConfigDelete('club', item)}
+          />
         </TabPanel>
         <TabPanel value={configTab} index={4}>
-          <ConfigTable title='Parent Blocks' data={parentBlocks} entityName='Parent Block' loading={loadingConfig.blocks}
-            columns={[{ key: 'name', label: 'Name' }, { key: 'isActive', label: 'Status', render: (v) => <ActiveChip isActive={v} /> }]}
-            onAdd={() => openAddDialog('parentBlock')} onEdit={(item) => openEditDialog('parentBlock', item)} onDelete={(item) => handleConfigDelete('parentBlock', item)} />
+          <ConfigTable
+            title='Parent Blocks'
+            data={parentBlocks}
+            entityName='Parent Block'
+            loading={loadingConfig.blocks}
+            columns={[
+              { key: 'name', label: 'Name' },
+              {
+                key: 'isActive',
+                label: 'Status',
+                render: v => <ActiveChip isActive={v} />,
+              },
+            ]}
+            onAdd={() => openAddDialog('parentBlock')}
+            onEdit={item => openEditDialog('parentBlock', item)}
+            onDelete={item => handleConfigDelete('parentBlock', item)}
+          />
         </TabPanel>
       </TabPanel>
 
       {/* =============== ADD/EDIT DIALOG =============== */}
       <Dialog open={dialogOpen} onClose={closeDialog} maxWidth='sm' fullWidth>
-        <DialogTitle>{editingItem ? 'Edit' : 'Add'} {dialogType.replace(/([A-Z])/g, ' $1').trim()}</DialogTitle>
+        <DialogTitle>
+          {editingItem ? 'Edit' : 'Add'}{' '}
+          {dialogType.replace(/([A-Z])/g, ' $1').trim()}
+        </DialogTitle>
         <DialogContent>{renderDialogContent()}</DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={closeDialog}>Cancel</Button>
-          <Button variant='contained' onClick={handleConfigSave} disabled={submitting} sx={{ bgcolor: colors.light.primaryHex }}>
+          <Button
+            variant='contained'
+            onClick={handleConfigSave}
+            disabled={submitting}
+            sx={{ bgcolor: colors.light.primaryHex }}
+          >
             {submitting ? <CircularProgress size={20} /> : 'Save'}
           </Button>
         </DialogActions>
