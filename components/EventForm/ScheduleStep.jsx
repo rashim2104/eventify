@@ -33,10 +33,19 @@ import {
   Users,
   Building,
   Plus,
-  X
+  X,
 } from '@phosphor-icons/react';
 const { colors } = require('@/lib/colors.config.js');
-import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameDay } from 'date-fns';
+import {
+  format,
+  subMonths,
+  addMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  addDays,
+  isSameDay,
+} from 'date-fns';
 import { toast } from 'sonner';
 
 const ScheduleStep = ({
@@ -111,9 +120,11 @@ const ScheduleStep = ({
       setSelectedSessions(prev =>
         prev.filter(entry => {
           const entryDate = entry.date;
-          return !(entry.session === session &&
+          return !(
+            entry.session === session &&
             entryDate >= startFormatted &&
-            entryDate <= endFormatted);
+            entryDate <= endFormatted
+          );
         })
       );
     }
@@ -126,7 +137,9 @@ const ScheduleStep = ({
       const endTime = getValues('EndTime');
 
       if (!startTime || !endTime || selectedSessions.length === 0) {
-        toast.error('Please complete the basic information and select at least one session');
+        toast.error(
+          'Please complete the basic information and select at least one session'
+        );
         return;
       }
 
@@ -171,7 +184,7 @@ const ScheduleStep = ({
   };
 
   // Filter venues by block
-  const filterVenues = (parentBlock) => {
+  const filterVenues = parentBlock => {
     setVenues(prevState => {
       const {
         raw: { prevReservation, venueList },
@@ -296,7 +309,7 @@ const ScheduleStep = ({
   };
 
   // Helper functions
-  const isSessionSelected = (session) => {
+  const isSessionSelected = session => {
     const startTime = getValues('StartTime');
     const endTime = getValues('EndTime');
 
@@ -309,7 +322,8 @@ const ScheduleStep = ({
     const endFormatted = format(endDate, 'dd-MM-yy');
 
     return selectedSessions.some(
-      entry => entry.session === session &&
+      entry =>
+        entry.session === session &&
         entry.date >= startFormatted &&
         entry.date <= endFormatted
     );
@@ -324,7 +338,7 @@ const ScheduleStep = ({
     return [new Date(startTime), new Date(endTime)];
   };
 
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
   // Format date range for display
   const formatDateRange = () => {
@@ -352,7 +366,7 @@ const ScheduleStep = ({
           fontWeight: 600,
           display: 'flex',
           alignItems: 'center',
-          gap: 1
+          gap: 1,
         }}
       >
         <Calendar size={24} />
@@ -360,7 +374,7 @@ const ScheduleStep = ({
       </Typography>
 
       {isEventVenueOnline === 'offline' &&
-        isEventVenueOffCampus === 'On-Campus' ? (
+      isEventVenueOffCampus === 'On-Campus' ? (
         <Box sx={{ width: '100%' }}>
           <Typography
             variant='h6'
@@ -370,7 +384,7 @@ const ScheduleStep = ({
               fontWeight: 500,
               display: 'flex',
               alignItems: 'center',
-              gap: 1
+              gap: 1,
             }}
           >
             <MapPin size={20} />
@@ -381,9 +395,9 @@ const ScheduleStep = ({
           <Box sx={{ width: '100%' }}>
             {/* Mobile Stepper */}
             <MobileStepper
-              variant="progress"
+              variant='progress'
               steps={3}
-              position="static"
+              position='static'
               activeStep={venueFormStep - 1}
               sx={{ mb: 3, width: '100%' }}
             />
@@ -392,13 +406,19 @@ const ScheduleStep = ({
             {venueFormStep === 1 && (
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 3, color: colors.light.foreground }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ mb: 3, color: colors.light.foreground }}
+                  >
                     Step 1: Session Selection
                   </Typography>
 
                   {/* Event Date Range Display */}
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 2, color: colors.light.foreground }}>
+                    <Typography
+                      variant='subtitle1'
+                      sx={{ mb: 2, color: colors.light.foreground }}
+                    >
                       Event Date Range
                     </Typography>
 
@@ -408,8 +428,15 @@ const ScheduleStep = ({
 
                       if (!startTime || !endTime) {
                         return (
-                          <Typography variant="body2" sx={{ color: colors.light.mutedForeground, fontStyle: 'italic' }}>
-                            Please complete the basic information to see the event date range
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: colors.light.mutedForeground,
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            Please complete the basic information to see the
+                            event date range
                           </Typography>
                         );
                       }
@@ -419,21 +446,38 @@ const ScheduleStep = ({
                       const isSingleDay = isSameDay(startDate, endDate);
 
                       return (
-                        <Box sx={{
-                          p: 2,
-                          border: 1,
-                          borderColor: colors.light.border,
-                          borderRadius: 1,
-                          backgroundColor: colors.light.muted,
-                        }}>
-                          <Typography variant="body1" sx={{ color: colors.light.foreground, mb: 1 }}>
-                            <strong>Start:</strong> {format(startDate, 'PPP')} at {format(startDate, 'HH:mm')}
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: 1,
+                            borderColor: colors.light.border,
+                            borderRadius: 1,
+                            backgroundColor: colors.light.muted,
+                          }}
+                        >
+                          <Typography
+                            variant='body1'
+                            sx={{ color: colors.light.foreground, mb: 1 }}
+                          >
+                            <strong>Start:</strong> {format(startDate, 'PPP')}{' '}
+                            at {format(startDate, 'HH:mm')}
                           </Typography>
-                          <Typography variant="body1" sx={{ color: colors.light.foreground, mb: 1 }}>
-                            <strong>End:</strong> {format(endDate, 'PPP')} at {format(endDate, 'HH:mm')}
+                          <Typography
+                            variant='body1'
+                            sx={{ color: colors.light.foreground, mb: 1 }}
+                          >
+                            <strong>End:</strong> {format(endDate, 'PPP')} at{' '}
+                            {format(endDate, 'HH:mm')}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: colors.light.mutedForeground }}>
-                            Duration: {Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))} day{!isSingleDay ? 's' : ''}
+                          <Typography
+                            variant='body2'
+                            sx={{ color: colors.light.mutedForeground }}
+                          >
+                            Duration:{' '}
+                            {Math.ceil(
+                              (endDate - startDate) / (1000 * 60 * 60 * 24)
+                            )}{' '}
+                            day{!isSingleDay ? 's' : ''}
                           </Typography>
                         </Box>
                       );
@@ -448,8 +492,15 @@ const ScheduleStep = ({
                     if (!startTime || !endTime) {
                       return (
                         <Box sx={{ mt: 3 }}>
-                          <Typography variant="body2" sx={{ color: colors.light.mutedForeground, fontStyle: 'italic' }}>
-                            Please complete the basic information to select sessions
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: colors.light.mutedForeground,
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            Please complete the basic information to select
+                            sessions
                           </Typography>
                         </Box>
                       );
@@ -457,18 +508,35 @@ const ScheduleStep = ({
 
                     return (
                       <Box sx={{ mt: 3 }}>
-                        <Typography variant="subtitle1" sx={{ mb: 2, color: colors.light.foreground }}>
+                        <Typography
+                          variant='subtitle1'
+                          sx={{ mb: 2, color: colors.light.foreground }}
+                        >
                           Select Sessions for {formatDateRange()}
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, color: colors.light.mutedForeground }}>
+                        <Typography
+                          variant='body2'
+                          sx={{ mb: 2, color: colors.light.mutedForeground }}
+                        >
                           Sessions will be applied to all dates in your event
                         </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1,
+                          }}
+                        >
                           <FormControlLabel
                             control={
                               <Checkbox
                                 checked={isSessionSelected('forenoon')}
-                                onChange={(e) => handleSessionChange('forenoon', e.target.checked)}
+                                onChange={e =>
+                                  handleSessionChange(
+                                    'forenoon',
+                                    e.target.checked
+                                  )
+                                }
                                 sx={{
                                   color: colors.light.border,
                                   '&.Mui-checked': {
@@ -477,14 +545,19 @@ const ScheduleStep = ({
                                 }}
                               />
                             }
-                            label="Forenoon"
+                            label='Forenoon'
                             sx={{ color: colors.light.foreground }}
                           />
                           <FormControlLabel
                             control={
                               <Checkbox
                                 checked={isSessionSelected('afternoon')}
-                                onChange={(e) => handleSessionChange('afternoon', e.target.checked)}
+                                onChange={e =>
+                                  handleSessionChange(
+                                    'afternoon',
+                                    e.target.checked
+                                  )
+                                }
                                 sx={{
                                   color: colors.light.border,
                                   '&.Mui-checked': {
@@ -493,7 +566,7 @@ const ScheduleStep = ({
                                 }}
                               />
                             }
-                            label="Afternoon"
+                            label='Afternoon'
                             sx={{ color: colors.light.foreground }}
                           />
                         </Box>
@@ -501,14 +574,20 @@ const ScheduleStep = ({
                     );
                   })()}
 
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}
+                  >
                     <Button
-                      variant="contained"
+                      variant='contained'
                       onClick={handleNextStep}
                       disabled={(() => {
                         const startTime = getValues('StartTime');
                         const endTime = getValues('EndTime');
-                        return !startTime || !endTime || selectedSessions.length === 0;
+                        return (
+                          !startTime ||
+                          !endTime ||
+                          selectedSessions.length === 0
+                        );
                       })()}
                       endIcon={<ArrowRight size={20} />}
                       sx={{
@@ -531,17 +610,29 @@ const ScheduleStep = ({
             {venueFormStep === 2 && (
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 3, color: colors.light.foreground }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ mb: 3, color: colors.light.foreground }}
+                  >
                     Step 2: Venue Selection
                   </Typography>
 
                   {/* Block Selection Grid */}
-                  <Typography variant="body2" sx={{ mb: 2, color: colors.light.mutedForeground }}>
+                  <Typography
+                    variant='body2'
+                    sx={{ mb: 2, color: colors.light.mutedForeground }}
+                  >
                     Select a block to view available venues
                   </Typography>
                   <Grid container spacing={2} sx={{ mb: 3 }}>
-                    {parentBlocks.map((block) => (
-                      <Grid item xs={6} sm={4} md={3} key={block._id || block.name}>
+                    {parentBlocks.map(block => (
+                      <Grid
+                        item
+                        xs={6}
+                        sm={4}
+                        md={3}
+                        key={block._id || block.name}
+                      >
                         <Card
                           onClick={() => filterVenues(block.name)}
                           sx={{
@@ -557,8 +648,18 @@ const ScheduleStep = ({
                           }}
                         >
                           <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                            <Building size={32} color={colors.light.primary} style={{ marginBottom: 8 }} />
-                            <Typography variant="subtitle2" sx={{ color: colors.light.foreground, fontWeight: 500 }}>
+                            <Building
+                              size={32}
+                              color={colors.light.primary}
+                              style={{ marginBottom: 8 }}
+                            />
+                            <Typography
+                              variant='subtitle2'
+                              sx={{
+                                color: colors.light.foreground,
+                                fontWeight: 500,
+                              }}
+                            >
                               {block.name}
                             </Typography>
                           </CardContent>
@@ -583,8 +684,18 @@ const ScheduleStep = ({
                         }}
                       >
                         <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                          <Plus size={32} color={colors.light.mutedForeground} style={{ marginBottom: 8 }} />
-                          <Typography variant="subtitle2" sx={{ color: colors.light.mutedForeground, fontWeight: 500 }}>
+                          <Plus
+                            size={32}
+                            color={colors.light.mutedForeground}
+                            style={{ marginBottom: 8 }}
+                          />
+                          <Typography
+                            variant='subtitle2'
+                            sx={{
+                              color: colors.light.mutedForeground,
+                              fontWeight: 500,
+                            }}
+                          >
                             Other Venue
                           </Typography>
                         </CardContent>
@@ -593,33 +704,57 @@ const ScheduleStep = ({
                   </Grid>
 
                   {/* Venue Cards */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                  >
                     {venues.filtered.map(venue => (
-                      <Card key={venue.venueId} sx={{ border: 1, borderColor: colors.light.border }}>
+                      <Card
+                        key={venue.venueId}
+                        sx={{ border: 1, borderColor: colors.light.border }}
+                      >
                         <CardContent sx={{ p: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              mb: 2,
+                            }}
+                          >
                             <Box>
-                              <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 1 }}>
+                              <Typography
+                                variant='h6'
+                                sx={{ color: colors.light.foreground, mb: 1 }}
+                              >
                                 {venue.venueName}
                               </Typography>
                               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                                 <Chip
                                   label={`Capacity: ${venue.seatingCapacity}`}
-                                  size="small"
-                                  sx={{ backgroundColor: colors.light.muted, color: colors.light.foreground }}
+                                  size='small'
+                                  sx={{
+                                    backgroundColor: colors.light.muted,
+                                    color: colors.light.foreground,
+                                  }}
                                 />
                                 {venue.hasAc && (
                                   <Chip
-                                    label="AC"
-                                    size="small"
-                                    sx={{ backgroundColor: colors.light.accent, color: colors.light.foreground }}
+                                    label='AC'
+                                    size='small'
+                                    sx={{
+                                      backgroundColor: colors.light.accent,
+                                      color: colors.light.foreground,
+                                    }}
                                   />
                                 )}
                                 {venue.hasProjector && (
                                   <Chip
-                                    label="Projector"
-                                    size="small"
-                                    sx={{ backgroundColor: colors.light.accent, color: colors.light.foreground }}
+                                    label='Projector'
+                                    size='small'
+                                    sx={{
+                                      backgroundColor: colors.light.accent,
+                                      color: colors.light.foreground,
+                                    }}
                                   />
                                 )}
                               </Box>
@@ -627,18 +762,32 @@ const ScheduleStep = ({
                           </Box>
 
                           {/* Session Slots */}
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 1,
+                            }}
+                          >
                             {venue.slots.map((slot, index) => (
                               <FormControlLabel
                                 key={index}
                                 control={
                                   <Checkbox
                                     checked={tempVenues.some(
-                                      v => v.date === slot.date &&
+                                      v =>
+                                        v.date === slot.date &&
                                         v.session === slot.session &&
                                         v.venueId === venue.venueId
                                     )}
-                                    onChange={(e) => handleChange(slot, venue.venueId, e.target.checked, venue.venueName)}
+                                    onChange={e =>
+                                      handleChange(
+                                        slot,
+                                        venue.venueId,
+                                        e.target.checked,
+                                        venue.venueName
+                                      )
+                                    }
                                     disabled={slot.available === 0}
                                     sx={{
                                       color: colors.light.border,
@@ -649,16 +798,26 @@ const ScheduleStep = ({
                                   />
                                 }
                                 label={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1,
+                                    }}
+                                  >
                                     <Clock size={16} />
-                                    <Typography variant="body2" sx={{ color: colors.light.foreground }}>
-                                      {capitalize(slot.date)} - {capitalize(slot.session)}
+                                    <Typography
+                                      variant='body2'
+                                      sx={{ color: colors.light.foreground }}
+                                    >
+                                      {capitalize(slot.date)} -{' '}
+                                      {capitalize(slot.session)}
                                     </Typography>
                                     {slot.available === 0 && (
                                       <Chip
-                                        label="Booked"
-                                        size="small"
-                                        color="error"
+                                        label='Booked'
+                                        size='small'
+                                        color='error'
                                       />
                                     )}
                                   </Box>
@@ -680,19 +839,22 @@ const ScheduleStep = ({
                     <DialogContent>
                       <TextField
                         fullWidth
-                        label="Venue Name"
+                        label='Venue Name'
                         value={userVenue}
-                        onChange={(e) => setUserVenue(e.target.value)}
+                        onChange={e => setUserVenue(e.target.value)}
                         sx={{ mt: 1 }}
                       />
                     </DialogContent>
                     <DialogActions>
-                      <Button onClick={handleDialogClose} sx={{ color: colors.light.foreground }}>
+                      <Button
+                        onClick={handleDialogClose}
+                        sx={{ color: colors.light.foreground }}
+                      >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleAddVenue}
-                        variant="contained"
+                        variant='contained'
                         sx={{
                           backgroundColor: colors.light.primary,
                           color: colors.light.primaryForeground,
@@ -703,11 +865,17 @@ const ScheduleStep = ({
                     </DialogActions>
                   </Dialog>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      mt: 3,
+                    }}
+                  >
                     <Button
                       onClick={handlePreviousStep}
                       startIcon={<ArrowLeft size={20} />}
-                      variant="outlined"
+                      variant='outlined'
                       sx={{
                         color: colors.light.foreground,
                         borderColor: colors.light.border,
@@ -718,7 +886,7 @@ const ScheduleStep = ({
                     <Button
                       onClick={handleNextStep}
                       endIcon={<ArrowRight size={20} />}
-                      variant="contained"
+                      variant='contained'
                       disabled={tempVenues.length === 0}
                       sx={{
                         backgroundColor: colors.light.primary,
@@ -736,53 +904,96 @@ const ScheduleStep = ({
             {venueFormStep === 3 && (
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 3, color: colors.light.foreground }}>
+                  <Typography
+                    variant='h6'
+                    sx={{ mb: 3, color: colors.light.foreground }}
+                  >
                     Step 3: Confirm Venue Selection
                   </Typography>
 
-                  <Typography variant="body1" sx={{ mb: 2, color: colors.light.foreground }}>
+                  <Typography
+                    variant='body1'
+                    sx={{ mb: 2, color: colors.light.foreground }}
+                  >
                     Event Date Range: <strong>{formatDateRange()}</strong>
                   </Typography>
 
-                  <Typography variant="body1" sx={{ mb: 2, color: colors.light.foreground }}>
+                  <Typography
+                    variant='body1'
+                    sx={{ mb: 2, color: colors.light.foreground }}
+                  >
                     Selected Sessions:
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                     {isSessionSelected('forenoon') && (
                       <Chip
-                        label="Forenoon"
-                        sx={{ backgroundColor: colors.light.primary, color: colors.light.primaryForeground }}
+                        label='Forenoon'
+                        sx={{
+                          backgroundColor: colors.light.primary,
+                          color: colors.light.primaryForeground,
+                        }}
                       />
                     )}
                     {isSessionSelected('afternoon') && (
                       <Chip
-                        label="Afternoon"
-                        sx={{ backgroundColor: colors.light.primary, color: colors.light.primaryForeground }}
+                        label='Afternoon'
+                        sx={{
+                          backgroundColor: colors.light.primary,
+                          color: colors.light.primaryForeground,
+                        }}
                       />
                     )}
                   </Box>
 
-                  <Typography variant="body1" sx={{ mb: 3, color: colors.light.foreground }}>
+                  <Typography
+                    variant='body1'
+                    sx={{ mb: 3, color: colors.light.foreground }}
+                  >
                     Selected Venues:
                   </Typography>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                      mb: 3,
+                    }}
+                  >
                     {tempVenues.map(venue => (
-                      <Paper key={venue.venueId} sx={{ p: 2, backgroundColor: colors.light.muted }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Paper
+                        key={venue.venueId}
+                        sx={{ p: 2, backgroundColor: colors.light.muted }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <Box>
-                            <Typography variant="subtitle1" sx={{ color: colors.light.foreground }}>
+                            <Typography
+                              variant='subtitle1'
+                              sx={{ color: colors.light.foreground }}
+                            >
                               {capitalize(venue.venueName)}
                             </Typography>
-                            <Typography variant="body2" sx={{ color: colors.light.mutedForeground }}>
-                              {capitalize(venue.date)} - {capitalize(venue.session)}
+                            <Typography
+                              variant='body2'
+                              sx={{ color: colors.light.mutedForeground }}
+                            >
+                              {capitalize(venue.date)} -{' '}
+                              {capitalize(venue.session)}
                             </Typography>
                           </Box>
                           <IconButton
                             onClick={() => {
-                              setTempVenues(tempVenues.filter(v => v !== venue));
+                              setTempVenues(
+                                tempVenues.filter(v => v !== venue)
+                              );
                             }}
-                            size="small"
+                            size='small'
                             sx={{ color: colors.light.destructive }}
                           >
                             <X size={16} />
@@ -792,11 +1003,13 @@ const ScheduleStep = ({
                     ))}
                   </Box>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between' }}
+                  >
                     <Button
                       onClick={handlePreviousStep}
                       startIcon={<ArrowLeft size={20} />}
-                      variant="outlined"
+                      variant='outlined'
                       sx={{
                         color: colors.light.foreground,
                         borderColor: colors.light.border,
@@ -807,7 +1020,7 @@ const ScheduleStep = ({
                     <Button
                       onClick={handleNextStep}
                       endIcon={<CheckCircle size={20} />}
-                      variant="contained"
+                      variant='contained'
                       sx={{
                         backgroundColor: colors.light.primary,
                         color: colors.light.primaryForeground,
@@ -831,7 +1044,7 @@ const ScheduleStep = ({
               fontWeight: 500,
               display: 'flex',
               alignItems: 'center',
-              gap: 1
+              gap: 1,
             }}
           >
             <MapPin size={20} />

@@ -33,7 +33,14 @@ import {
   FormLabel,
   FormControl,
 } from '@mui/material';
-import { Pencil, Calendar, CheckCircle, XCircle, Plus, CalendarPlus } from '@phosphor-icons/react';
+import {
+  Pencil,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Plus,
+  CalendarPlus,
+} from '@phosphor-icons/react';
 import { colors } from '@/lib/colors.config.js';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -64,7 +71,7 @@ export default function Venues() {
     startDate: null,
     endDate: null,
     sessions: ['forenoon', 'afternoon'],
-    reason: ''
+    reason: '',
   });
 
   // Fetch parent blocks from API
@@ -195,7 +202,12 @@ export default function Venues() {
   };
 
   const handleBlockVenue = async () => {
-    if (!blockData.venueId || !blockData.startDate || !blockData.endDate || blockData.sessions.length === 0) {
+    if (
+      !blockData.venueId ||
+      !blockData.startDate ||
+      !blockData.endDate ||
+      blockData.sessions.length === 0
+    ) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -215,7 +227,7 @@ export default function Venues() {
         body: JSON.stringify({
           ...blockData,
           startDate: blockData.startDate.toISOString(),
-          endDate: blockData.endDate.toISOString()
+          endDate: blockData.endDate.toISOString(),
         }),
       });
 
@@ -230,7 +242,7 @@ export default function Venues() {
           startDate: null,
           endDate: null,
           sessions: ['forenoon', 'afternoon'],
-          reason: ''
+          reason: '',
         });
       } else {
         toast.error(result.message || 'Error blocking venue');
@@ -325,7 +337,7 @@ export default function Venues() {
           {isAdmin && (
             <>
               <IconButton
-                title="Add New Venue"
+                title='Add New Venue'
                 sx={{
                   bgcolor: colors.light.primaryHex,
                   color: colors.light.primaryForegroundHex,
@@ -339,7 +351,7 @@ export default function Venues() {
                 <Plus size={24} color={colors.light.backgroundHex} />
               </IconButton>
               <IconButton
-                title="Reserve Venue"
+                title='Reserve Venue'
                 sx={{
                   bgcolor: colors.light.primaryHex,
                   color: colors.light.primaryForegroundHex,
@@ -650,11 +662,13 @@ export default function Venues() {
               label='Parent Block'
               fullWidth
               value={newVenue.parentBlock}
-              onChange={e => handleNewVenueChange('parentBlock', e.target.value)}
+              onChange={e =>
+                handleNewVenueChange('parentBlock', e.target.value)
+              }
               required
               helperText='Select the building or block'
             >
-              {parentBlocks.map((block) => (
+              {parentBlocks.map(block => (
                 <MenuItem key={block._id || block.name} value={block.name}>
                   {block.name}
                 </MenuItem>
@@ -665,14 +679,21 @@ export default function Venues() {
               type='number'
               fullWidth
               value={newVenue.seatingCapacity}
-              onChange={e => handleNewVenueChange('seatingCapacity', parseInt(e.target.value) || 0)}
+              onChange={e =>
+                handleNewVenueChange(
+                  'seatingCapacity',
+                  parseInt(e.target.value) || 0
+                )
+              }
               required
             />
             <FormControlLabel
               control={
                 <Switch
                   checked={newVenue.hasAc}
-                  onChange={e => handleNewVenueChange('hasAc', e.target.checked)}
+                  onChange={e =>
+                    handleNewVenueChange('hasAc', e.target.checked)
+                  }
                   color='primary'
                 />
               }
@@ -682,7 +703,9 @@ export default function Venues() {
               control={
                 <Switch
                   checked={newVenue.hasProjector}
-                  onChange={e => handleNewVenueChange('hasProjector', e.target.checked)}
+                  onChange={e =>
+                    handleNewVenueChange('hasProjector', e.target.checked)
+                  }
                   color='primary'
                 />
               }
@@ -692,7 +715,9 @@ export default function Venues() {
               control={
                 <Switch
                   checked={newVenue.isAvailable}
-                  onChange={e => handleNewVenueChange('isAvailable', e.target.checked)}
+                  onChange={e =>
+                    handleNewVenueChange('isAvailable', e.target.checked)
+                  }
                   color='primary'
                 />
               }
@@ -735,7 +760,9 @@ export default function Venues() {
         maxWidth='sm'
         fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Reserve Venue (Block)</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>
+          Reserve Venue (Block)
+        </DialogTitle>
         <DialogContent>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Stack spacing={3} sx={{ mt: 1 }}>
@@ -744,37 +771,43 @@ export default function Venues() {
                 label='Venue'
                 fullWidth
                 value={blockData.venueId}
-                onChange={e => setBlockData({ ...blockData, venueId: e.target.value })}
+                onChange={e =>
+                  setBlockData({ ...blockData, venueId: e.target.value })
+                }
                 required
               >
-                {venues.map((venue) => (
+                {venues.map(venue => (
                   <MenuItem key={venue.venueId} value={venue.venueId}>
                     {venue.venueName}
                   </MenuItem>
                 ))}
               </TextField>
               <DatePicker
-                label="Start Date"
+                label='Start Date'
                 value={blockData.startDate}
-                onChange={(newValue) => setBlockData({ ...blockData, startDate: newValue })}
+                onChange={newValue =>
+                  setBlockData({ ...blockData, startDate: newValue })
+                }
                 slotProps={{ textField: { fullWidth: true, required: true } }}
                 disablePast
               />
               <DatePicker
-                label="End Date"
+                label='End Date'
                 value={blockData.endDate}
-                onChange={(newValue) => setBlockData({ ...blockData, endDate: newValue })}
+                onChange={newValue =>
+                  setBlockData({ ...blockData, endDate: newValue })
+                }
                 slotProps={{ textField: { fullWidth: true, required: true } }}
                 minDate={blockData.startDate}
               />
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Sessions</FormLabel>
+              <FormControl component='fieldset'>
+                <FormLabel component='legend'>Sessions</FormLabel>
                 <FormGroup row>
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={blockData.sessions.includes('forenoon')}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newSessions = e.target.checked
                             ? [...blockData.sessions, 'forenoon']
                             : blockData.sessions.filter(s => s !== 'forenoon');
@@ -782,13 +815,13 @@ export default function Venues() {
                         }}
                       />
                     }
-                    label="Forenoon"
+                    label='Forenoon'
                   />
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={blockData.sessions.includes('afternoon')}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newSessions = e.target.checked
                             ? [...blockData.sessions, 'afternoon']
                             : blockData.sessions.filter(s => s !== 'afternoon');
@@ -796,18 +829,20 @@ export default function Venues() {
                         }}
                       />
                     }
-                    label="Afternoon"
+                    label='Afternoon'
                   />
                 </FormGroup>
               </FormControl>
               <TextField
-                label="Reason"
+                label='Reason'
                 fullWidth
                 multiline
                 rows={3}
                 value={blockData.reason}
-                onChange={e => setBlockData({ ...blockData, reason: e.target.value })}
-                placeholder="e.g., Maintenance, Holiday, etc."
+                onChange={e =>
+                  setBlockData({ ...blockData, reason: e.target.value })
+                }
+                placeholder='e.g., Maintenance, Holiday, etc.'
               />
             </Stack>
           </LocalizationProvider>

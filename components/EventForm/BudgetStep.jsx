@@ -100,15 +100,28 @@ const BudgetStep = ({
                           const { checked } = e.target;
                           const optionValue = option.value;
                           const currentValue = watch('eventStakeholders') || [];
-                          console.log('Checkbox onChange:', { checked, optionValue, currentValue });
+                          console.log('Checkbox onChange:', {
+                            checked,
+                            optionValue,
+                            currentValue,
+                          });
 
                           if (checked) {
-                            setValue('eventStakeholders', [...currentValue, optionValue]);
+                            setValue('eventStakeholders', [
+                              ...currentValue,
+                              optionValue,
+                            ]);
                           } else {
-                            setValue('eventStakeholders', currentValue.filter(val => val !== optionValue));
+                            setValue(
+                              'eventStakeholders',
+                              currentValue.filter(val => val !== optionValue)
+                            );
                           }
 
-                          console.log('Updated eventStakeholders:', watch('eventStakeholders'));
+                          console.log(
+                            'Updated eventStakeholders:',
+                            watch('eventStakeholders')
+                          );
                         }}
                         sx={{
                           color: colors.light.border,
@@ -123,12 +136,14 @@ const BudgetStep = ({
                   />
                 );
               })}
-            </Box>            {(errors.eventStakeholders ||
+            </Box>{' '}
+            {(errors.eventStakeholders ||
               validationErrors?.eventStakeholders) && (
-                <FormHelperText sx={{ color: colors.light.destructive }}>
-                  {errors.eventStakeholders?.message || validationErrors.eventStakeholders}
-                </FormHelperText>
-              )}
+              <FormHelperText sx={{ color: colors.light.destructive }}>
+                {errors.eventStakeholders?.message ||
+                  validationErrors.eventStakeholders}
+              </FormHelperText>
+            )}
           </FormControl>
 
           {/* Is Sponsored */}
@@ -139,14 +154,14 @@ const BudgetStep = ({
               Is the event sponsored? *
             </FormLabel>
             <Controller
-              name="isSponsored"
+              name='isSponsored'
               control={control}
               rules={{ required: 'Please specify if the event is sponsored' }}
               render={({ field }) => (
                 <RadioGroup
                   {...field}
                   value={field.value || ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     field.onChange(e.target.value);
                   }}
                   sx={{ gap: 1 }}
@@ -226,7 +241,10 @@ const BudgetStep = ({
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
               >
                 {sponsorfield.map((sponsor, index) => (
-                  <Paper key={index} sx={{ borderRadius: 2, boxShadow: 'none' }}>
+                  <Paper
+                    key={index}
+                    sx={{ borderRadius: 2, boxShadow: 'none' }}
+                  >
                     <Typography
                       variant='h6'
                       sx={{ color: colors.light.mutedForeground, mb: 2 }}
@@ -251,8 +269,8 @@ const BudgetStep = ({
                             errors.eventSponsors?.[index]?.name
                               ? errors.eventSponsors[index].name.message
                               : validationErrors?.[
-                              `eventSponsors.${index}.name`
-                              ]
+                                  `eventSponsors.${index}.name`
+                                ]
                           }
                           InputProps={{
                             sx: {
@@ -278,15 +296,15 @@ const BudgetStep = ({
                           error={
                             !!errors.eventSponsors?.[index]?.address ||
                             !!validationErrors?.[
-                            `eventSponsors.${index}.address`
+                              `eventSponsors.${index}.address`
                             ]
                           }
                           helperText={
                             errors.eventSponsors?.[index]?.address
                               ? errors.eventSponsors[index].address.message
                               : validationErrors?.[
-                              `eventSponsors.${index}.address`
-                              ]
+                                  `eventSponsors.${index}.address`
+                                ]
                           }
                           InputProps={{
                             sx: {

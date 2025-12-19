@@ -142,7 +142,11 @@ export const validateStep4 = (watch, fileUrl, isSponsored) => {
     errors.eventStakeholders = 'Please select at least one stakeholder';
   }
 
-  if (watch('isSponsored') === undefined || watch('isSponsored') === null || watch('isSponsored') === '') {
+  if (
+    watch('isSponsored') === undefined ||
+    watch('isSponsored') === null ||
+    watch('isSponsored') === ''
+  ) {
     errors.isSponsored = 'Please specify if the event is sponsored';
   }
 
