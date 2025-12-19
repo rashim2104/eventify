@@ -1,7 +1,5 @@
-import { Providers } from './Providers';
+import { ThemeProviders } from './Providers';
 import '@/styles/globals.css';
-import Navbar from '@/components/Navbar/navbar';
-import Sidebar from '@/components/Sidebar/sidebar';
 import { Toaster } from 'sonner';
 import Script from 'next/script';
 import { GeistSans } from 'geist/font/sans';
@@ -62,9 +60,9 @@ export default function RootLayout({ children }) {
         className={`${GeistSans.className} ${GeistMono.variable} antialiased`}
       >
         <Toaster richColors position='top-right' closeButton />
-        <Providers>
+        <ThemeProviders>
           <LayoutContent>{children}</LayoutContent>
-        </Providers>
+        </ThemeProviders>
       </body>
     </html>
   );
