@@ -1,5 +1,8 @@
 'use client';
 
+// Import global styles in client component to ensure CSS is bundled for all pages
+import '@/styles/globals.css';
+
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
