@@ -1,9 +1,5 @@
 'use client';
-import {
-  Box,
-  Typography,
-  TextField,
-} from '@mui/material';
+import { Box, Typography, TextField } from '@mui/material';
 import { Users, Calendar, Clock, MapPin } from '@phosphor-icons/react';
 const { colors } = require('@/lib/colors.config.js');
 
@@ -14,7 +10,7 @@ const BasicInfoViewStep = ({
   renderMedia,
 }) => {
   // Helper function to get organizer label
-  const getOrganizerLabel = (value) => {
+  const getOrganizerLabel = value => {
     const valueMap = {
       1: 'Department',
       2: 'Professional Societies (IEEE,ISTE,EDS)',
@@ -26,7 +22,7 @@ const BasicInfoViewStep = ({
   };
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleString('en-GB', {
@@ -46,8 +42,9 @@ const BasicInfoViewStep = ({
   const getOrganizerDisplay = () => {
     const organizer = getOrganizerLabel(eventData?.EventOrganizer);
     if (eventData?.EventOrganizer == 2 && eventData?.eventSociety) {
-      return `${organizer} - ${eventData.eventSociety}${eventData.currSoc ? ` (${eventData.currSoc})` : ''
-        }`;
+      return `${organizer} - ${eventData.eventSociety}${
+        eventData.currSoc ? ` (${eventData.currSoc})` : ''
+      }`;
     }
     if (eventData?.EventOrganizer == 3 && eventData?.eventSociety) {
       return `${organizer} - ${eventData.eventSociety}`;
@@ -139,7 +136,7 @@ const BasicInfoViewStep = ({
           label='Event Type'
           value={
             eventData?.EventType?.eventType === 'other' &&
-              eventData?.EventType?.eventTypeOtherOption
+            eventData?.EventType?.eventTypeOtherOption
               ? `${eventData.EventType.eventType} - ${eventData.EventType.eventTypeOtherOption}`
               : eventData?.EventType?.eventType || 'N/A'
           }
@@ -355,4 +352,3 @@ const BasicInfoViewStep = ({
 };
 
 export default BasicInfoViewStep;
-

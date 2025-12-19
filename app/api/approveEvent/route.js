@@ -92,9 +92,7 @@ export async function POST(req) {
     } else if (userType === 'admin') {
       switch (action) {
         case 'Approve':
-          const eventId =
-            customEventId ||
-            (await IdGen(eventDetails));
+          const eventId = customEventId || (await IdGen(eventDetails));
           userEvents = await Events.updateOne(
             { _id: event_id },
             {

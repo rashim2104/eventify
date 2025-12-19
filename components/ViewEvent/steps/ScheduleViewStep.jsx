@@ -1,31 +1,22 @@
 'use client';
-import {
-  Box,
-  Typography,
-  TextField,
-  Chip,
-} from '@mui/material';
+import { Box, Typography, TextField, Chip } from '@mui/material';
 import { MapPin, Calendar, Clock } from '@phosphor-icons/react';
 const { colors } = require('@/lib/colors.config.js');
 import { format } from 'date-fns';
 
-const ScheduleViewStep = ({
-  eventData,
-  venueList,
-  eventVenueAddInfo,
-}) => {
+const ScheduleViewStep = ({ eventData, venueList, eventVenueAddInfo }) => {
   const isEventOnline = eventData?.EventVenue === 'online';
   const isEventOnCampus = eventData?.eventLocation === 'On-Campus';
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return format(date, 'dd-MM-yy');
   };
 
   // Format date time
-  const formatDateTime = (dateString) => {
+  const formatDateTime = dateString => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return format(date, 'PPP p');
@@ -144,8 +135,13 @@ const ScheduleViewStep = ({
                   InputProps={{
                     readOnly: true,
                     startAdornment: (
-                      <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                        <MapPin size={20} color={colors.light.mutedForeground} />
+                      <Box
+                        sx={{ mr: 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <MapPin
+                          size={20}
+                          color={colors.light.mutedForeground}
+                        />
                       </Box>
                     ),
                     endAdornment: (
@@ -216,4 +212,3 @@ const ScheduleViewStep = ({
 };
 
 export default ScheduleViewStep;
-

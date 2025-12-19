@@ -24,7 +24,10 @@ export default function LayoutContent({ children }) {
 
   if (isAuthLikePage) {
     return (
-      <Box component='main' sx={{ minHeight: '100vh', backgroundColor: colors.light.sidebar }}>
+      <Box
+        component='main'
+        sx={{ minHeight: '100vh', backgroundColor: colors.light.sidebar }}
+      >
         {children}
       </Box>
     );

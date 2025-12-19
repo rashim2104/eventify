@@ -98,23 +98,23 @@ export default function Calendar(props) {
                     className={classNames(
                       isEqual(day, selectedDay) && 'text-white',
                       !isEqual(day, selectedDay) &&
-                      isToday(day) &&
-                      'text-red-500',
+                        isToday(day) &&
+                        'text-red-500',
                       !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      isSameMonth(day, firstDayCurrentMonth) &&
-                      'text-gray-900',
+                        !isToday(day) &&
+                        isSameMonth(day, firstDayCurrentMonth) &&
+                        'text-gray-900',
                       !isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      !isSameMonth(day, firstDayCurrentMonth) &&
-                      'text-gray-400',
+                        !isToday(day) &&
+                        !isSameMonth(day, firstDayCurrentMonth) &&
+                        'text-gray-400',
                       isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
                       isEqual(day, selectedDay) &&
-                      !isToday(day) &&
-                      'bg-gray-900',
+                        !isToday(day) &&
+                        'bg-gray-900',
                       !isEqual(day, selectedDay) && 'hover:bg-gray-200',
                       (isEqual(day, selectedDay) || isToday(day)) &&
-                      'font-semibold',
+                        'font-semibold',
                       'mx-auto flex h-8 w-8 items-center justify-center rounded-full'
                     )}
                   >
@@ -127,8 +127,8 @@ export default function Calendar(props) {
                     {meetings.some(meeting =>
                       isSameDay(parseISO(meeting.eventData.StartTime), day)
                     ) && (
-                        <div className='w-1 h-1 rounded-full bg-sky-500'></div>
-                      )}
+                      <div className='w-1 h-1 rounded-full bg-sky-500'></div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -40,7 +40,9 @@ All colors are defined in the `:root` pseudo-class for light mode and `.dark` cl
 To ensure these variables work seamlessly across our tech stack:
 
 ### A. Tailwind CSS (`tailwind.config.js`)
+
 We map Tailwind utility classes to these CSS variables.
+
 - Usage: `bg-background`, `text-primary`, `border-sidebar-border`.
 
 ```javascript
@@ -60,6 +62,7 @@ theme: {
 ```
 
 ### B. JavaScript/MUI (`lib/colors.config.js` & `lib/mui-theme.js`)
+
 For Material UI components that require JS objects, we import the configuration.
 **Crucially**, `colors.config.js` mirrors the hex values to ensure server-side rendering and MUI consistency.
 
@@ -77,12 +80,15 @@ When creating or modifying components (Sidebar, Navbar, Cards):
 4.  **Borders**: Use `border-border` or `borderColor: 'divider'`.
 
 ### Example: Sidebar Item
+
 ❌ **Bad (Hardcoded)**:
+
 ```jsx
 <Box sx={{ bgcolor: '#c96442', color: 'white' }}> ... </Box>
 ```
 
 ✅ **Good (Themed)**:
+
 ```jsx
 <Box sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}> ... </Box>
 // OR
@@ -94,9 +100,9 @@ When creating or modifying components (Sidebar, Navbar, Cards):
 ## 4. Maintenance
 
 - **Changing the Color Scheme**:
-    1.  Open `app/globals.css`.
-    2.  Modify the Hex codes in `:root`.
-    3.  (Optional) Update `lib/colors.config.js` if you need the raw hex values in JS logic.
-    4.  Verify the app; all components will reflect the new colors instantly.
+  1.  Open `app/globals.css`.
+  2.  Modify the Hex codes in `:root`.
+  3.  (Optional) Update `lib/colors.config.js` if you need the raw hex values in JS logic.
+  4.  Verify the app; all components will reflect the new colors instantly.
 
 This architecture ensures Eventify remains visually consistent and easily themeable.
