@@ -3,6 +3,8 @@ import Calendar from '../Calendar/calendar';
 import EventCard from '../EventCard';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { Box, Container } from '@mui/material';
+
 export default function Main() {
   const { status } = useSession();
   const [events, setEvents] = useState([]);
@@ -18,7 +20,6 @@ export default function Main() {
       .then(data => {
         if (data.message && data.message.length > 0) {
           setEvents(data.message.reverse());
-          // console.log(data.message);
           setMessage('');
         } else {
           setMessage('No Events.');
@@ -43,9 +44,9 @@ export default function Main() {
       <div>
         <Calendar meetings={events} />
       </div>
-      <main>
-        <EventCard events={events} message={message} grouped={false} />
-      </main>
+      <Box component="main" sx={{ width: '100%', px: { xs: 2, sm: 3 }, py: 3 }}>
+        <EventCard events={events} message={message} grouped={true} />
+      </Box>
     </>
   );
 }
