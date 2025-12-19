@@ -126,58 +126,64 @@ const ScheduleViewStep = ({ eventData, venueList, eventVenueAddInfo }) => {
               Venue Reservations
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {venueList.map((venue, index) => (
-                <TextField
-                  key={index}
-                  fullWidth
-                  label={`Venue Reservation ${index + 1}`}
-                  value={`${venue.reservationDate || 'N/A'} - ${venue.reservationSession || 'N/A'} (Venue ID: ${venue.venueId || 'N/A'})`}
-                  InputProps={{
-                    readOnly: true,
-                    startAdornment: (
-                      <Box
-                        sx={{ mr: 1, display: 'flex', alignItems: 'center' }}
-                      >
-                        <MapPin
-                          size={20}
-                          color={colors.light.mutedForeground}
-                        />
-                      </Box>
-                    ),
-                    endAdornment: (
-                      <Box sx={{ ml: 1, display: 'flex', gap: 0.5 }}>
-                        <Chip
-                          label={venue.reservationDate || 'N/A'}
-                          size='small'
-                          sx={{
-                            backgroundColor: colors.light.primary,
-                            color: colors.light.primaryForeground,
-                          }}
-                        />
-                        <Chip
-                          label={venue.reservationSession || 'N/A'}
-                          size='small'
-                          sx={{
-                            backgroundColor: colors.light.accent,
-                            color: colors.light.foreground,
-                          }}
-                        />
-                      </Box>
-                    ),
-                    sx: {
-                      color: colors.light.foreground,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: colors.light.border,
+              {venueList.map((venue, index) => {
+                // Helper to capitalize first letter
+                const capitalize = str => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : 'N/A';
+                const sessionDisplay = capitalize(venue.reservationSession);
+
+                return (
+                  <TextField
+                    key={venue._id || index}
+                    fullWidth
+                    label={`Venue Reservation ${index + 1}`}
+                    value={`${venue.venueName || 'N/A'} - ${venue.reservationDate || 'N/A'} (${sessionDisplay})`}
+                    InputProps={{
+                      readOnly: true,
+                      startAdornment: (
+                        <Box
+                          sx={{ mr: 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <MapPin
+                            size={20}
+                            color={colors.light.mutedForeground}
+                          />
+                        </Box>
+                      ),
+                      endAdornment: (
+                        <Box sx={{ ml: 1, display: 'flex', gap: 0.5 }}>
+                          <Chip
+                            label={venue.reservationDate || 'N/A'}
+                            size='small'
+                            sx={{
+                              backgroundColor: colors.light.primary,
+                              color: colors.light.primaryForeground,
+                            }}
+                          />
+                          <Chip
+                            label={sessionDisplay}
+                            size='small'
+                            sx={{
+                              backgroundColor: colors.light.accent,
+                              color: colors.light.foreground,
+                            }}
+                          />
+                        </Box>
+                      ),
+                      sx: {
+                        color: colors.light.foreground,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: colors.light.border,
+                        },
                       },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      color: colors.light.mutedForeground,
-                    },
-                  }}
-                />
-              ))}
+                    }}
+                    InputLabelProps={{
+                      sx: {
+                        color: colors.light.mutedForeground,
+                      },
+                    }}
+                  />
+                );
+              })}
             </Box>
           </Box>
         ) : (

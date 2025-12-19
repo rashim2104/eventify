@@ -34,6 +34,9 @@ jobs:
             # Pull the latest changes from the main branch
             git pull origin main
 
+            # Remove lock files to ensure fresh install
+            rm -f bun.lockb package-lock.json yarn.lock pnpm-lock.yaml
+
             # Install dependencies
             bun install
 
