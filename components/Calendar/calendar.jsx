@@ -1,7 +1,5 @@
 'use client';
 import Image from 'next/image';
-import { Menu, Transition } from '@headlessui/react';
-import { DotsVerticalIcon } from '@heroicons/react/outline';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import {
   add,
@@ -17,7 +15,7 @@ import {
   parseISO,
   startOfToday,
 } from 'date-fns';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -100,23 +98,23 @@ export default function Calendar(props) {
                     className={classNames(
                       isEqual(day, selectedDay) && 'text-white',
                       !isEqual(day, selectedDay) &&
-                        isToday(day) &&
-                        'text-red-500',
+                      isToday(day) &&
+                      'text-red-500',
                       !isEqual(day, selectedDay) &&
-                        !isToday(day) &&
-                        isSameMonth(day, firstDayCurrentMonth) &&
-                        'text-gray-900',
+                      !isToday(day) &&
+                      isSameMonth(day, firstDayCurrentMonth) &&
+                      'text-gray-900',
                       !isEqual(day, selectedDay) &&
-                        !isToday(day) &&
-                        !isSameMonth(day, firstDayCurrentMonth) &&
-                        'text-gray-400',
+                      !isToday(day) &&
+                      !isSameMonth(day, firstDayCurrentMonth) &&
+                      'text-gray-400',
                       isEqual(day, selectedDay) && isToday(day) && 'bg-red-500',
                       isEqual(day, selectedDay) &&
-                        !isToday(day) &&
-                        'bg-gray-900',
+                      !isToday(day) &&
+                      'bg-gray-900',
                       !isEqual(day, selectedDay) && 'hover:bg-gray-200',
                       (isEqual(day, selectedDay) || isToday(day)) &&
-                        'font-semibold',
+                      'font-semibold',
                       'mx-auto flex h-8 w-8 items-center justify-center rounded-full'
                     )}
                   >
@@ -129,8 +127,8 @@ export default function Calendar(props) {
                     {meetings.some(meeting =>
                       isSameDay(parseISO(meeting.eventData.StartTime), day)
                     ) && (
-                      <div className='w-1 h-1 rounded-full bg-sky-500'></div>
-                    )}
+                        <div className='w-1 h-1 rounded-full bg-sky-500'></div>
+                      )}
                   </div>
                 </div>
               ))}
@@ -187,58 +185,6 @@ function Meeting({ meeting }) {
           </time>
         </p>
       </div>
-      <Menu
-        as='div'
-        className='relative opacity-0 focus-within:opacity-100 group-hover:opacity-100'
-      >
-        <div>
-          <Menu.Button className='-m-2 flex items-center rounded-full p-1.5 text-gray-500 hover:text-gray-600'>
-            <span className='sr-only'>Open options</span>
-            <DotsVerticalIcon className='w-6 h-6' aria-hidden='true' />
-          </Menu.Button>
-        </div>
-
-        <Transition
-          as={Fragment}
-          enter='transition ease-out duration-100'
-          enterFrom='transform opacity-0 scale-95'
-          enterTo='transform opacity-100 scale-100'
-          leave='transition ease-in duration-75'
-          leaveFrom='transform opacity-100 scale-100'
-          leaveTo='transform opacity-0 scale-95'
-        >
-          <Menu.Items className='absolute right-0 z-10 mt-2 origin-top-right bg-white rounded-md shadow-lg w-36 ring-1 ring-black ring-opacity-5 focus:outline-none'>
-            <div className='py-1'>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    href='#'
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    Edit
-                  </a>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    href='#'
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    Cancel
-                  </a>
-                )}
-              </Menu.Item>
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
     </li>
   );
 }
