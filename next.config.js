@@ -4,6 +4,7 @@ const nextConfig = {
   // pdfkit needs to run as a native Node.js package to find its bundled font data
   experimental: {
     serverComponentsExternalPackages: ['pdfkit'],
+    optimizeCss: false, // Disable critters CSS optimization that causes CSS issues in production
   },
 
   // Image configuration
