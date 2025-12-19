@@ -62,8 +62,12 @@ export async function POST(req) {
     // Read custom font files as buffers for better typography
     const fs = await import('fs');
     const fontsDir = path.join(process.cwd(), 'public', 'fonts');
-    const interRegularBuffer = fs.readFileSync(path.join(fontsDir, 'Inter-Regular.ttf'));
-    const interBoldBuffer = fs.readFileSync(path.join(fontsDir, 'Inter-Bold.ttf'));
+    const interRegularBuffer = fs.readFileSync(
+      path.join(fontsDir, 'Inter-Regular.ttf')
+    );
+    const interBoldBuffer = fs.readFileSync(
+      path.join(fontsDir, 'Inter-Bold.ttf')
+    );
 
     // Create PDF document
     doc = new PDFDocument({
@@ -78,7 +82,7 @@ export async function POST(req) {
     // Collect PDF data in a buffer
     const chunks = [];
     doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => { }); // Buffer collection handled by promise
+    doc.on('end', () => {}); // Buffer collection handled by promise
 
     const pdfBufferPromise = new Promise((resolve, reject) => {
       doc.on('end', () => {
@@ -139,9 +143,9 @@ export async function POST(req) {
         doc.image(
           logoBuffer,
           doc.page.margins.left +
-          (doc.page.width - doc.page.margins.left - doc.page.margins.right) /
-          2 -
-          150,
+            (doc.page.width - doc.page.margins.left - doc.page.margins.right) /
+              2 -
+            150,
           yPosition,
           {
             fit: [300, 100],
@@ -352,7 +356,7 @@ export async function POST(req) {
         eventData.eventData.fileUrl.poster
       );
       if (posterBuffer) {
-          try {
+        try {
           if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
             addPageWithFooter();
             yPosition = doc.page.margins.top;
@@ -360,11 +364,11 @@ export async function POST(req) {
           doc.image(
             posterBuffer,
             doc.page.margins.left +
-            (doc.page.width -
-              doc.page.margins.left -
-              doc.page.margins.right) /
-            2 -
-            200,
+              (doc.page.width -
+                doc.page.margins.left -
+                doc.page.margins.right) /
+                2 -
+              200,
             yPosition,
             {
               fit: [400, 200],
@@ -400,11 +404,11 @@ export async function POST(req) {
               doc.image(
                 photoBuffer,
                 doc.page.margins.left +
-                (doc.page.width -
-                  doc.page.margins.left -
-                  doc.page.margins.right) /
-                2 -
-                200,
+                  (doc.page.width -
+                    doc.page.margins.left -
+                    doc.page.margins.right) /
+                    2 -
+                  200,
                 yPosition,
                 {
                   fit: [400, 200],
@@ -424,7 +428,7 @@ export async function POST(req) {
         const reportUrl = eventData.postEventData.fileUrl.report;
         const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(reportUrl);
         const isPDF = /\.pdf$/i.test(reportUrl);
-        
+
         if (isImage) {
           yPosition += addHeading('Report', yPosition, 3);
           const reportBuffer = await downloadImage(reportUrl);
@@ -437,11 +441,11 @@ export async function POST(req) {
               doc.image(
                 reportBuffer,
                 doc.page.margins.left +
-                (doc.page.width -
-                  doc.page.margins.left -
-                  doc.page.margins.right) /
-                2 -
-                200,
+                  (doc.page.width -
+                    doc.page.margins.left -
+                    doc.page.margins.right) /
+                    2 -
+                  200,
                 yPosition,
                 {
                   fit: [400, 200],
@@ -458,14 +462,9 @@ export async function POST(req) {
               doc.text('Report: ', doc.page.margins.left, yPosition);
               doc.font('Inter');
               doc.fillColor('#0066cc');
-              doc.text(
-                reportUrl,
-                doc.page.margins.left + 50,
-                yPosition,
-                {
-                  link: reportUrl,
-                }
-              );
+              doc.text(reportUrl, doc.page.margins.left + 50, yPosition, {
+                link: reportUrl,
+              });
               yPosition += 20;
             }
           } else {
@@ -476,14 +475,9 @@ export async function POST(req) {
             doc.text('Report: ', doc.page.margins.left, yPosition);
             doc.font('Inter');
             doc.fillColor('#0066cc');
-            doc.text(
-              reportUrl,
-              doc.page.margins.left + 50,
-              yPosition,
-              {
-                link: reportUrl,
-              }
-            );
+            doc.text(reportUrl, doc.page.margins.left + 50, yPosition, {
+              link: reportUrl,
+            });
             yPosition += 20;
           }
         } else if (isPDF) {
@@ -507,7 +501,11 @@ export async function POST(req) {
             doc.fontSize(11);
             doc.fillColor('#2c3e50');
             doc.font('Inter');
-            doc.text('Report PDF attached at the end', doc.page.margins.left, yPosition);
+            doc.text(
+              'Report PDF attached at the end',
+              doc.page.margins.left,
+              yPosition
+            );
             yPosition += 20;
           } else {
             // Fallback to link if download fails
@@ -517,14 +515,9 @@ export async function POST(req) {
             doc.text('Report: ', doc.page.margins.left, yPosition);
             doc.font('Inter');
             doc.fillColor('#0066cc');
-            doc.text(
-              reportUrl,
-              doc.page.margins.left + 50,
-              yPosition,
-              {
-                link: reportUrl,
-              }
-            );
+            doc.text(reportUrl, doc.page.margins.left + 50, yPosition, {
+              link: reportUrl,
+            });
             yPosition += 20;
           }
         } else {
@@ -535,24 +528,20 @@ export async function POST(req) {
           doc.text('Report: ', doc.page.margins.left, yPosition);
           doc.font('Inter');
           doc.fillColor('#0066cc');
-          doc.text(
-            reportUrl,
-            doc.page.margins.left + 50,
-            yPosition,
-            {
-              link: reportUrl,
-            }
-          );
+          doc.text(reportUrl, doc.page.margins.left + 50, yPosition, {
+            link: reportUrl,
+          });
           yPosition += 20;
         }
       }
 
       // Financial Documents - render as image if JPEG/PNG, append if PDF, otherwise as link
       if (eventData.postEventData.fileUrl?.financialCommitments) {
-        const financialUrl = eventData.postEventData.fileUrl.financialCommitments;
+        const financialUrl =
+          eventData.postEventData.fileUrl.financialCommitments;
         const isImage = /\.(png|jpe?g|gif|webp|bmp)$/i.test(financialUrl);
         const isPDF = /\.pdf$/i.test(financialUrl);
-        
+
         if (isImage) {
           yPosition += addHeading('Financial Documents', yPosition, 3);
           const financialBuffer = await downloadImage(financialUrl);
@@ -565,11 +554,11 @@ export async function POST(req) {
               doc.image(
                 financialBuffer,
                 doc.page.margins.left +
-                (doc.page.width -
-                  doc.page.margins.left -
-                  doc.page.margins.right) /
-                2 -
-                200,
+                  (doc.page.width -
+                    doc.page.margins.left -
+                    doc.page.margins.right) /
+                    2 -
+                  200,
                 yPosition,
                 {
                   fit: [400, 200],
@@ -583,17 +572,16 @@ export async function POST(req) {
               doc.fontSize(11);
               doc.fillColor('#2c3e50');
               doc.font('Inter-Bold');
-              doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
+              doc.text(
+                'Financial Documents: ',
+                doc.page.margins.left,
+                yPosition
+              );
               doc.font('Inter');
               doc.fillColor('#0066cc');
-              doc.text(
-                financialUrl,
-                doc.page.margins.left + 130,
-                yPosition,
-                {
-                  link: financialUrl,
-                }
-              );
+              doc.text(financialUrl, doc.page.margins.left + 130, yPosition, {
+                link: financialUrl,
+              });
               yPosition += 20;
             }
           } else {
@@ -604,14 +592,9 @@ export async function POST(req) {
             doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
             doc.font('Inter');
             doc.fillColor('#0066cc');
-            doc.text(
-              financialUrl,
-              doc.page.margins.left + 130,
-              yPosition,
-              {
-                link: financialUrl,
-              }
-            );
+            doc.text(financialUrl, doc.page.margins.left + 130, yPosition, {
+              link: financialUrl,
+            });
             yPosition += 20;
           }
         } else if (isPDF) {
@@ -629,13 +612,21 @@ export async function POST(req) {
               yPosition = doc.page.margins.top;
             }
             // Add heading
-            const headingHeight = addHeading('Financial Documents', yPosition, 3);
+            const headingHeight = addHeading(
+              'Financial Documents',
+              yPosition,
+              3
+            );
             yPosition += headingHeight;
             // Add placeholder text right after heading
             doc.fontSize(11);
             doc.fillColor('#2c3e50');
             doc.font('Inter');
-            doc.text('Financial Documents PDF attached at the end', doc.page.margins.left, yPosition);
+            doc.text(
+              'Financial Documents PDF attached at the end',
+              doc.page.margins.left,
+              yPosition
+            );
             yPosition += 20;
           } else {
             // Fallback to link if download fails
@@ -645,14 +636,9 @@ export async function POST(req) {
             doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
             doc.font('Inter');
             doc.fillColor('#0066cc');
-            doc.text(
-              financialUrl,
-              doc.page.margins.left + 130,
-              yPosition,
-              {
-                link: financialUrl,
-              }
-            );
+            doc.text(financialUrl, doc.page.margins.left + 130, yPosition, {
+              link: financialUrl,
+            });
             yPosition += 20;
           }
         } else {
@@ -663,14 +649,9 @@ export async function POST(req) {
           doc.text('Financial Documents: ', doc.page.margins.left, yPosition);
           doc.font('Inter');
           doc.fillColor('#0066cc');
-          doc.text(
-            financialUrl,
-            doc.page.margins.left + 130,
-            yPosition,
-            {
-              link: financialUrl,
-            }
-          );
+          doc.text(financialUrl, doc.page.margins.left + 130, yPosition, {
+            link: financialUrl,
+          });
           yPosition += 20;
         }
       }
@@ -687,26 +668,26 @@ export async function POST(req) {
     if (pdfsToAppend.length > 0) {
       try {
         const { PDFDocument } = await import('pdf-lib');
-        
+
         // Load the main PDF
         const mainPdfDoc = await PDFDocument.load(pdfBuffer);
-        
+
         // Process each PDF to append
         for (const pdfInfo of pdfsToAppend) {
           try {
             // Load the external PDF
             const externalPdfDoc = await PDFDocument.load(pdfInfo.buffer);
-            
+
             // Copy all pages from the external PDF
             const externalPageIndices = externalPdfDoc.getPageIndices();
             const externalPages = await mainPdfDoc.copyPages(
               externalPdfDoc,
               externalPageIndices
             );
-            
+
             // Append all pages from the external PDF directly
             // No separate heading page needed as placeholder text already indicates what's appended
-            externalPages.forEach((externalPage) => {
+            externalPages.forEach(externalPage => {
               mainPdfDoc.addPage(externalPage);
             });
           } catch (err) {
@@ -714,7 +695,7 @@ export async function POST(req) {
             // Continue with other PDFs even if one fails
           }
         }
-        
+
         // Save the merged PDF
         pdfBuffer = Buffer.from(await mainPdfDoc.save());
       } catch (err) {

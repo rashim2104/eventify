@@ -50,10 +50,11 @@ export default function TabBar(props) {
               className='hidden'
             />
             <span
-              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${selectedTab === 'all'
+              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${
+                selectedTab === 'all'
                   ? 'bg-orange-200 text-orange-500 border-orange-500 font-bold'
                   : ''
-                }`}
+              }`}
             >
               All
             </span>
@@ -68,10 +69,11 @@ export default function TabBar(props) {
               className='hidden'
             />
             <span
-              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${selectedTab === 'hodApproved'
+              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${
+                selectedTab === 'hodApproved'
                   ? 'bg-orange-200 text-orange-500 border-orange-500 font-bold'
                   : ''
-                }`}
+              }`}
             >
               HoD Approved
             </span>
@@ -86,10 +88,11 @@ export default function TabBar(props) {
               className='hidden'
             />
             <span
-              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${selectedTab === 'markedForChange'
+              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${
+                selectedTab === 'markedForChange'
                   ? 'bg-orange-200 text-orange-500 border-orange-500 font-bold'
                   : ''
-                }`}
+              }`}
             >
               Marked for Change
             </span>
@@ -104,10 +107,11 @@ export default function TabBar(props) {
               className='hidden'
             />
             <span
-              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${selectedTab === 'approved'
+              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${
+                selectedTab === 'approved'
                   ? 'bg-orange-200 text-orange-500 border-orange-500 font-bold'
                   : ''
-                }`}
+              }`}
             >
               Approved
             </span>
@@ -122,18 +126,23 @@ export default function TabBar(props) {
               className='hidden'
             />
             <span
-              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${selectedTab === 'rejected'
+              className={`p-2 px-4 border-2 border-gray-600 border-solid rounded-3xl hover:bg-orange-100 ${
+                selectedTab === 'rejected'
                   ? 'bg-orange-200 text-orange-500 border-orange-500 font-bold'
                   : ''
-                }`}
+              }`}
             >
               Rejected
             </span>
           </label>
         </li>
       </ul>
-      <div className="p-3">
-        <EventCard events={filteredArray} message={props.message} grouped={false} />
+      <div className='p-3'>
+        <EventCard
+          events={filteredArray}
+          message={props.message}
+          grouped={false}
+        />
       </div>
     </>
   );

@@ -42,8 +42,12 @@ function Form() {
         const societiesData = await societiesRes.json();
         const clubsData = await clubsRes.json();
         const allSocieties = societiesData.societies || [];
-        setSocieties(allSocieties.filter(s => s.type === 'professional').map(s => s.code));
-        setIeeeSocieties(allSocieties.filter(s => s.type === 'ieee').map(s => s.code));
+        setSocieties(
+          allSocieties.filter(s => s.type === 'professional').map(s => s.code)
+        );
+        setIeeeSocieties(
+          allSocieties.filter(s => s.type === 'ieee').map(s => s.code)
+        );
         setClubs((clubsData.clubs || []).map(c => c.code));
       } catch (error) {
         console.error('Failed to fetch config data:', error);
@@ -1120,7 +1124,7 @@ function Form() {
           <section>
             <div>
               {isEventVenueOnline === 'offline' &&
-                isEventVenueOffCampus === 'On-Campus' ? (
+              isEventVenueOffCampus === 'On-Campus' ? (
                 <Calven
                   handleVenueChange={handleVenueChange}
                   startDate={getValues('StartTime')}

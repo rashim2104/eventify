@@ -167,7 +167,7 @@ const BasicInfoStep = ({
                   Select a Department
                 </span>
               </MenuItem>
-              {departments.map((dept) => (
+              {departments.map(dept => (
                 <MenuItem key={dept.code || dept._id} value={dept.code}>
                   {dept.name}
                 </MenuItem>
@@ -218,8 +218,11 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {societies.map((society) => (
-                <MenuItem key={society.code || society} value={society.code || society}>
+              {societies.map(society => (
+                <MenuItem
+                  key={society.code || society}
+                  value={society.code || society}
+                >
                   {society.name || society}
                 </MenuItem>
               ))}
@@ -266,8 +269,11 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {ieeeSocieties.map((society) => (
-                <MenuItem key={society.code || society} value={society.code || society}>
+              {ieeeSocieties.map(society => (
+                <MenuItem
+                  key={society.code || society}
+                  value={society.code || society}
+                >
                   {society.name || society}
                 </MenuItem>
               ))}
@@ -310,7 +316,7 @@ const BasicInfoStep = ({
                   Select an Option
                 </span>
               </MenuItem>
-              {clubs.map((club) => (
+              {clubs.map(club => (
                 <MenuItem key={club.code || club} value={club.code || club}>
                   {club.name || club}
                 </MenuItem>
@@ -425,13 +431,13 @@ const BasicInfoStep = ({
           />
           {(errors.EventType?.eventType ||
             validationErrors?.['EventType.eventType']) && (
-              <FormHelperText
-                sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
-              >
-                {errors.EventType?.eventType?.message ||
-                  validationErrors?.['EventType.eventType']}
-              </FormHelperText>
-            )}
+            <FormHelperText
+              sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
+            >
+              {errors.EventType?.eventType?.message ||
+                validationErrors?.['EventType.eventType']}
+            </FormHelperText>
+          )}
         </FormControl>
 
         {/* Event Type Other Option */}

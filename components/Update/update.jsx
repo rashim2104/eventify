@@ -65,7 +65,10 @@ export default function Update() {
   });
   const [eventNames, setEventNames] = useState([]);
   const [displayForm, setDisplayForm] = useState(true);
-  const [viewerState, setViewerState] = useState({ visible: false, activeImage: null });
+  const [viewerState, setViewerState] = useState({
+    visible: false,
+    activeImage: null,
+  });
 
   const {
     handleSubmit,
@@ -77,7 +80,7 @@ export default function Update() {
   const handleFileChange = (e, action) => {
     e.preventDefault();
     const files = e.target.files;
-    
+
     if (!files || files.length === 0) return;
 
     setFile(prev => ({ ...prev, [action]: null }));
@@ -88,7 +91,9 @@ export default function Update() {
       if (allValid) {
         setFile(prev => ({ ...prev, geoPhotos: files }));
       } else {
-        toast.error('Invalid file(s). Please upload image files under 5MB each.');
+        toast.error(
+          'Invalid file(s). Please upload image files under 5MB each.'
+        );
       }
     } else {
       // Single file upload (images or PDF)
@@ -129,7 +134,7 @@ export default function Update() {
       } else {
         setFileUrl(prev => ({ ...prev, [action]: urls[0] || '' }));
       }
-      
+
       toast.success('File uploaded successfully!');
     } catch (error) {
       console.error('Upload error:', error);
@@ -141,7 +146,7 @@ export default function Update() {
 
   const handleDelete = async (e, action) => {
     e.preventDefault();
-    
+
     const deleteFromS3 = async url => {
       const fileName = url.replace(S3_BASE_URL, '');
       const formData = new FormData();
@@ -170,8 +175,21 @@ export default function Update() {
 
     if (url.endsWith('.pdf')) {
       return (
-        <Box sx={{ width: '100%', height: 300, border: 1, borderColor: colors.light.borderHex, borderRadius: 1, overflow: 'hidden' }}>
-          <iframe src={url} style={{ width: '100%', height: '100%', border: 'none' }} title={`${type} document`} />
+        <Box
+          sx={{
+            width: '100%',
+            height: 300,
+            border: 1,
+            borderColor: colors.light.borderHex,
+            borderRadius: 1,
+            overflow: 'hidden',
+          }}
+        >
+          <iframe
+            src={url}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title={`${type} document`}
+          />
         </Box>
       );
     }
@@ -190,23 +208,33 @@ export default function Update() {
         }}
         onClick={() => setViewerState({ visible: true, activeImage: url })}
       >
-        <img src={url} alt={`${type} preview`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        <img
+          src={url}
+          alt={`${type} preview`}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
       </Box>
     );
   };
 
   const FileUploadSection = ({ type, label, accept, multiple = false }) => {
-    const isUploaded = type === 'geoPhotos' ? fileUrl.geoPhotos.length > 0 : fileUrl[type] !== '';
+    const isUploaded =
+      type === 'geoPhotos'
+        ? fileUrl.geoPhotos.length > 0
+        : fileUrl[type] !== '';
 
     return (
       <Box sx={{ mt: 2 }}>
-        <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>
+        <Typography variant='h6' sx={{ color: colors.light.foreground, mb: 2 }}>
           {label}
         </Typography>
-        
+
         {isUploaded ? (
           <>
-            <Typography variant="body2" sx={{ color: colors.light.foreground, mb: 2 }}>
+            <Typography
+              variant='body2'
+              sx={{ color: colors.light.foreground, mb: 2 }}
+            >
               File Uploaded Successfully!
             </Typography>
             {type === 'geoPhotos' ? (
@@ -221,7 +249,7 @@ export default function Update() {
               <Box sx={{ mb: 2 }}>{renderMedia(fileUrl[type], label)}</Box>
             )}
             <Button
-              variant="outlined"
+              variant='outlined'
               onClick={e => handleDelete(e, type)}
               sx={{
                 color: colors.light.destructive,
@@ -237,12 +265,24 @@ export default function Update() {
           </>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="body2" sx={{ color: colors.light.mutedForeground }}>
-              {type === 'geoPhotos' ? 'Accepted formats: Images only • Max size: 5MB' : 'Accepted formats: Images or PDF • Max size: 5MB'}
+            <Typography
+              variant='body2'
+              sx={{ color: colors.light.mutedForeground }}
+            >
+              {type === 'geoPhotos'
+                ? 'Accepted formats: Images only • Max size: 5MB'
+                : 'Accepted formats: Images or PDF • Max size: 5MB'}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
               <input
-                type="file"
+                type='file'
                 accept={accept}
                 multiple={multiple}
                 onChange={e => handleFileChange(e, type)}
@@ -251,8 +291,8 @@ export default function Update() {
               />
               <label htmlFor={`${type}-upload`}>
                 <Button
-                  variant="outlined"
-                  component="span"
+                  variant='outlined'
+                  component='span'
                   sx={{
                     color: colors.light.foreground,
                     borderColor: colors.light.border,
@@ -267,18 +307,21 @@ export default function Update() {
                 </Button>
               </label>
               {file[type] && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   {file[type].length} file(s) selected
                 </Typography>
               )}
               <Button
-                variant="contained"
+                variant='contained'
                 disabled={!file[type] || uploading[type]}
                 onClick={e => handleUpload(e, type)}
                 sx={{
                   backgroundColor: colors.light.primary,
                   color: colors.light.primaryForeground,
-                  '&:hover': { backgroundColor: colors.light.primary, opacity: 0.9 },
+                  '&:hover': {
+                    backgroundColor: colors.light.primary,
+                    opacity: 0.9,
+                  },
                 }}
               >
                 {uploading[type] ? 'Uploading...' : 'Upload'}
@@ -302,7 +345,9 @@ export default function Update() {
           body: JSON.stringify({ id: user_id, dept, userType, college }),
         });
         const data = await response.json();
-        setEventNames(data.eventNames.map(({ id, eventName }) => ({ id, eventName })));
+        setEventNames(
+          data.eventNames.map(({ id, eventName }) => ({ id, eventName }))
+        );
       } catch (error) {
         console.error('Error fetching event names:', error);
       }
@@ -313,7 +358,14 @@ export default function Update() {
 
   if (status === 'loading') {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -322,8 +374,15 @@ export default function Update() {
   const currUser = session?.user?.userType;
   if (currUser === 'student' || currUser === 'admin') {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Typography variant="h3" color="error" fontWeight="bold">
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
+        <Typography variant='h3' color='error' fontWeight='bold'>
           Not Authorized!
         </Typography>
       </Box>
@@ -373,16 +432,34 @@ export default function Update() {
 
   if (!displayForm) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth='md' sx={{ py: 4 }}>
         <Card sx={{ borderRadius: 2 }}>
           <CardContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, py: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 3,
+                py: 4,
+              }}
+            >
               <CheckCircle size={64} color={colors.light.primary} />
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ color: colors.light.foreground, fontWeight: 600, mb: 2 }}>
+                <Typography
+                  variant='h4'
+                  sx={{
+                    color: colors.light.foreground,
+                    fontWeight: 600,
+                    mb: 2,
+                  }}
+                >
                   Congratulations!
                 </Typography>
-                <Typography variant="h6" sx={{ color: colors.light.mutedForeground }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: colors.light.mutedForeground }}
+                >
                   Event details have been updated successfully.
                 </Typography>
               </Box>
@@ -393,95 +470,174 @@ export default function Update() {
     );
   }
 
-  const isFormComplete = fileUrl.geoPhotos.length > 0 && fileUrl.financialCommitments && fileUrl.report && watch('videoLinks') && watch('amountSpent');
+  const isFormComplete =
+    fileUrl.geoPhotos.length > 0 &&
+    fileUrl.financialCommitments &&
+    fileUrl.report &&
+    watch('videoLinks') &&
+    watch('amountSpent');
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth='lg' sx={{ py: 3 }}>
       <Card sx={{ borderRadius: 2 }}>
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ p: 3, borderBottom: 1, borderColor: colors.light.borderHex }}>
-            <Typography variant="h5" fontWeight="bold">
+          <Box
+            sx={{ p: 3, borderBottom: 1, borderColor: colors.light.borderHex }}
+          >
+            <Typography variant='h5' fontWeight='bold'>
               Post Event Form
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
               Update your event with photos, reports, and financial details
             </Typography>
           </Box>
 
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Paper elevation={0} sx={{ p: 3, border: 1, borderColor: colors.light.borderHex, borderRadius: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+            <Box
+              sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  border: 1,
+                  borderColor: colors.light.borderHex,
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant='subtitle1' fontWeight={600} sx={{ mb: 2 }}>
                   Select Event
                 </Typography>
                 <FormControl fullWidth error={!!errors.selectedEvent}>
-                  <InputLabel id="event-select-label">Choose an event</InputLabel>
+                  <InputLabel id='event-select-label'>
+                    Choose an event
+                  </InputLabel>
                   <Select
-                    labelId="event-select-label"
-                    label="Choose an event"
-                    defaultValue=""
-                    {...register('selectedEvent', { required: 'Please select an event' })}
+                    labelId='event-select-label'
+                    label='Choose an event'
+                    defaultValue=''
+                    {...register('selectedEvent', {
+                      required: 'Please select an event',
+                    })}
                   >
-                    <MenuItem value="" disabled>-- Select Event --</MenuItem>
+                    <MenuItem value='' disabled>
+                      -- Select Event --
+                    </MenuItem>
                     {eventNames.map(({ id, eventName }) => (
-                      <MenuItem key={id} value={id}>{eventName}</MenuItem>
+                      <MenuItem key={id} value={id}>
+                        {eventName}
+                      </MenuItem>
                     ))}
                   </Select>
-                  {errors.selectedEvent && <FormHelperText>{errors.selectedEvent.message}</FormHelperText>}
+                  {errors.selectedEvent && (
+                    <FormHelperText>
+                      {errors.selectedEvent.message}
+                    </FormHelperText>
+                  )}
                 </FormControl>
               </Paper>
 
               {watch('selectedEvent') && (
                 <>
                   <Divider sx={{ my: 1 }}>
-                    <Typography variant="overline" color="text.secondary">Media & Documents</Typography>
+                    <Typography variant='overline' color='text.secondary'>
+                      Media & Documents
+                    </Typography>
                   </Divider>
 
-                  <FileUploadSection type="geoPhotos" label="Geo Tagged Photos" accept="image/*" multiple />
-                  <FileUploadSection type="eventPoster" label="Event Poster" accept="image/*,application/pdf" />
-                  <FileUploadSection type="financialCommitments" label="Financial Commitments" accept="image/*,application/pdf" />
-                  <FileUploadSection type="report" label="Event Report" accept="image/*,application/pdf" />
+                  <FileUploadSection
+                    type='geoPhotos'
+                    label='Geo Tagged Photos'
+                    accept='image/*'
+                    multiple
+                  />
+                  <FileUploadSection
+                    type='eventPoster'
+                    label='Event Poster'
+                    accept='image/*,application/pdf'
+                  />
+                  <FileUploadSection
+                    type='financialCommitments'
+                    label='Financial Commitments'
+                    accept='image/*,application/pdf'
+                  />
+                  <FileUploadSection
+                    type='report'
+                    label='Event Report'
+                    accept='image/*,application/pdf'
+                  />
 
                   <Divider sx={{ my: 1 }}>
-                    <Typography variant="overline" color="text.secondary">Additional Details</Typography>
+                    <Typography variant='overline' color='text.secondary'>
+                      Additional Details
+                    </Typography>
                   </Divider>
 
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>Video Links</Typography>
+                    <Typography
+                      variant='h6'
+                      sx={{ color: colors.light.foreground, mb: 2 }}
+                    >
+                      Video Links
+                    </Typography>
                     <TextField
                       fullWidth
                       placeholder="Enter video links (type 'none' if there are no videos)"
-                      {...register('videoLinks', { required: 'This field is required' })}
+                      {...register('videoLinks', {
+                        required: 'This field is required',
+                      })}
                       error={!!errors.videoLinks}
                       helperText={errors.videoLinks?.message}
                     />
                   </Box>
 
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="h6" sx={{ color: colors.light.foreground, mb: 2 }}>Amount Spent (Rs.)</Typography>
+                    <Typography
+                      variant='h6'
+                      sx={{ color: colors.light.foreground, mb: 2 }}
+                    >
+                      Amount Spent (Rs.)
+                    </Typography>
                     <TextField
                       fullWidth
-                      type="number"
-                      placeholder="Enter the amount spent"
-                      InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                      type='number'
+                      placeholder='Enter the amount spent'
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position='start'>₹</InputAdornment>
+                        ),
+                      }}
                       {...register('amountSpent', { required: true, min: 1 })}
                       error={!!errors.amountSpent}
-                      helperText={errors.amountSpent && 'Please enter a valid amount'}
+                      helperText={
+                        errors.amountSpent && 'Please enter a valid amount'
+                      }
                     />
                   </Box>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2, borderTop: 1, borderColor: colors.light.borderHex }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      pt: 2,
+                      borderTop: 1,
+                      borderColor: colors.light.borderHex,
+                    }}
+                  >
                     <Button
-                      type="submit"
-                      variant="contained"
-                      size="large"
+                      type='submit'
+                      variant='contained'
+                      size='large'
                       disabled={!isFormComplete}
                       sx={{
                         backgroundColor: colors.light.primary,
                         color: colors.light.primaryForeground,
                         px: 4,
                         py: 1.5,
-                        '&:hover': { backgroundColor: colors.light.primary, opacity: 0.9 },
+                        '&:hover': {
+                          backgroundColor: colors.light.primary,
+                          opacity: 0.9,
+                        },
                       }}
                     >
                       Submit
