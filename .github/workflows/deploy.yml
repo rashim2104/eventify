@@ -10,22 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # Step 3: Install Dependencies
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      # Step 4: Build the Project
       - name: Build
         run: npm run build
         env:
@@ -40,17 +36,14 @@ jobs:
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
-      # Step 5: Set up SSH
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Step 6: Add EC2 host to known_hosts
       - name: Add EC2 to known hosts
         run: ssh-keyscan -H 13.232.47.245 >> ~/.ssh/known_hosts
 
-      # Step 7: Sync built files to EC2
       - name: Deploy to EC2
         run: |
           rsync -avz --delete \
@@ -58,49 +51,17 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.env' \
-            --exclude '.env.local' \
             --exclude '*.md' \
             ./ ubuntu@13.232.47.245:/home/ubuntu/eventify/
 
-      # Step 8: Create .env file on server from secrets
-      - name: Create .env file
-        run: |
-          ssh ubuntu@13.232.47.245 "cat > /home/ubuntu/eventify/.env << 'EOF'
-          MONGODB_URI=${{ secrets.MONGODB_URI }}
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
-          DEFAULT_PASSWORD=${{ secrets.DEFAULT_PASSWORD }}
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION=${{ secrets.AWS_REGION }}
-          AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
-          SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-          EOF"
-
-      # Step 9: Install production dependencies and restart on EC2
       - name: Install and Restart on EC2
         run: |
           ssh ubuntu@13.232.47.245 << 'EOF'
             cd /home/ubuntu/eventify
-
-            # Install only production dependencies
             npm install --legacy-peer-deps --omit=dev
-
-            # Restart the application using PM2
-            if pm2 list | grep -q 'eventify'; then
-              pm2 restart eventify
-            else
-              pm2 start npm --name "eventify" -- start
-            fi
-
-            # Save PM2 process list
+            pm2 restart eventify || pm2 start npm --name "eventify" -- start
             pm2 save
           EOF
 
-      # Step 10: Restart Nginx
       - name: Restart Nginx
-        run: |
-          ssh ubuntu@13.232.47.245 << 'EOF'
-            sudo systemctl restart nginx
-          EOF
+        run: ssh ubuntu@13.232.47.245 "sudo systemctl restart nginx"
