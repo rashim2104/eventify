@@ -53,16 +53,32 @@ jobs:
       # Step 7: Sync built files to EC2
       - name: Deploy to EC2
         run: |
-          # Create deployment package (exclude dev files)
           rsync -avz --delete \
             --exclude 'node_modules' \
             --exclude '.git' \
             --exclude '.github' \
+            --exclude '.env' \
             --exclude '.env.local' \
             --exclude '*.md' \
             ./ ubuntu@13.232.47.245:/home/ubuntu/eventify/
 
-      # Step 8: Install production dependencies and restart on EC2
+      # Step 8: Create .env file on server from secrets
+      - name: Create .env file
+        run: |
+          ssh ubuntu@13.232.47.245 "cat > /home/ubuntu/eventify/.env << 'EOF'
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
+          DEFAULT_PASSWORD=${{ secrets.DEFAULT_PASSWORD }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
+          SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          EOF"
+
+      # Step 9: Install production dependencies and restart on EC2
       - name: Install and Restart on EC2
         run: |
           ssh ubuntu@13.232.47.245 << 'EOF'
@@ -82,7 +98,7 @@ jobs:
             pm2 save
           EOF
 
-      # Step 9: Restart Nginx
+      # Step 10: Restart Nginx
       - name: Restart Nginx
         run: |
           ssh ubuntu@13.232.47.245 << 'EOF'
