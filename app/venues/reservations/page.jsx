@@ -297,7 +297,15 @@ export default function Reservations() {
             >
               <Button
                 variant='contained'
-                sx={{ py: 1.25, minWidth: { xs: '60%', md: 160 } }}
+                sx={{
+                  py: 1.25,
+                  minWidth: { xs: '60%', md: 160 },
+                  bgcolor: appColors?.light?.primaryHex || '#c96442',
+                  color: appColors?.light?.primaryForegroundHex || '#ffffff',
+                  '&:hover': {
+                    bgcolor: appColors?.light?.chart1 || '#b05730',
+                  },
+                }}
                 onClick={fetchEventsGrouped}
               >
                 Apply Filters
@@ -369,7 +377,7 @@ export default function Reservations() {
                       <TableCell>
                         {first?.reservationSession
                           ? first.reservationSession.charAt(0).toUpperCase() +
-                            first.reservationSession.slice(1)
+                          first.reservationSession.slice(1)
                           : '-'}
                       </TableCell>
                       <TableCell>
@@ -389,7 +397,7 @@ export default function Reservations() {
                           <TableCell>
                             {r?.reservationSession
                               ? r.reservationSession.charAt(0).toUpperCase() +
-                                r.reservationSession.slice(1)
+                              r.reservationSession.slice(1)
                               : '-'}
                           </TableCell>
                           <TableCell>

@@ -324,6 +324,11 @@ export default function Report() {
                   alignSelf: 'center',
                   minWidth: { xs: '60%', md: 160 },
                   mt: { xs: 1, md: 0 },
+                  bgcolor: appColors?.light?.primaryHex || '#c96442',
+                  color: appColors?.light?.primaryForegroundHex || '#ffffff',
+                  '&:hover': {
+                    bgcolor: appColors?.light?.chart1 || '#b05730',
+                  },
                 }}
               >
                 Apply Filters
@@ -370,7 +375,17 @@ export default function Report() {
                     </Grid>
                   )}
                   <Grid item xs={12} md='auto'>
-                    <Button variant='contained' onClick={handleBulkDownload}>
+                    <Button
+                      variant='contained'
+                      onClick={handleBulkDownload}
+                      sx={{
+                        bgcolor: appColors?.light?.primaryHex || '#c96442',
+                        color: appColors?.light?.primaryForegroundHex || '#ffffff',
+                        '&:hover': {
+                          bgcolor: appColors?.light?.chart1 || '#b05730',
+                        },
+                      }}
+                    >
                       Download Reports
                     </Button>
                   </Grid>
