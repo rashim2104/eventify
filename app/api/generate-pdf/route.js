@@ -6,6 +6,7 @@ import path from 'path';
 
 // Helper function to download image from URL
 async function downloadImage(url) {
+  if (!url) return null;
   try {
     const response = await fetch(url);
     if (!response.ok) {
