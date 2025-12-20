@@ -29,19 +29,7 @@ import {
   Eye,
   EyeSlash,
 } from '@phosphor-icons/react';
-// Temporary hardcoded colors for debugging
-const colors = {
-  light: {
-    primaryHex: '#0f172a',
-    primaryForegroundHex: '#ffffff',
-    backgroundHex: '#ffffff',
-    cardHex: '#ffffff',
-    secondaryHex: '#f8fafc',
-    mutedHex: '#f8fafc',
-    mutedForegroundHex: '#64748b',
-    destructiveHex: '#ef4444',
-  },
-};
+import { colors } from '@/lib/colors.config.js';
 
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
