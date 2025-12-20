@@ -69,10 +69,10 @@ export async function POST(req) {
       path.join(fontsDir, 'Inter-Bold.ttf')
     );
 
-    // Create PDF document
+    // Create PDF document with larger margins for formal look
     doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 36, bottom: 36, left: 36, right: 36 }, // 0.5in = 36pt
+      margins: { top: 50, bottom: 50, left: 50, right: 50 }, // Larger margins for formal report
     });
 
     // Register custom fonts for use throughout the document
@@ -82,7 +82,7 @@ export async function POST(req) {
     // Collect PDF data in a buffer
     const chunks = [];
     doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => {}); // Buffer collection handled by promise
+    doc.on('end', () => { }); // Buffer collection handled by promise
 
     const pdfBufferPromise = new Promise((resolve, reject) => {
       doc.on('end', () => {
@@ -91,17 +91,35 @@ export async function POST(req) {
       doc.on('error', reject);
     });
 
-    // Helper function to add heading
+    // Helper function to add heading with formal styling
     function addHeading(text, y, level = 2) {
-      const fontSize = level === 1 ? 16 : level === 2 ? 13 : 12;
+      const fontSize = level === 1 ? 18 : level === 2 ? 14 : 12;
+      const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
       doc.fontSize(fontSize);
-      doc.fillColor('#2c3e50');
+      doc.fillColor(level === 1 ? '#1a365d' : '#2c3e50');
       doc.font('Inter-Bold');
-      const height = doc.heightOfString(text);
-      doc.text(text, doc.page.margins.left, y, {
-        align: level === 1 ? 'center' : 'left',
-      });
-      return height + 8;
+      const height = doc.heightOfString(text, { width: contentWidth });
+
+      if (level === 1) {
+        // Title - centered with larger text
+        doc.text(text, doc.page.margins.left, y, {
+          align: 'center',
+          width: contentWidth,
+        });
+      } else {
+        // Section heading with underline
+        doc.text(text, doc.page.margins.left, y);
+        if (level === 2) {
+          // Draw underline for section headings
+          doc.moveTo(doc.page.margins.left, y + height + 2)
+            .lineTo(doc.page.margins.left + contentWidth, y + height + 2)
+            .strokeColor('#c96442')
+            .lineWidth(1.5)
+            .stroke();
+        }
+      }
+      return height + (level === 2 ? 15 : 10);
     }
 
     // Add footer to current page
@@ -129,30 +147,24 @@ export async function POST(req) {
 
     let yPosition = doc.page.margins.top;
 
-    // Header Logo
+    // Header Logo - Always use SEC Header Logo
     const logoUrl =
-      eventData.college === 'SIT'
-        ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SIT+WORDING+1.png'
-        : eventData.college === 'SEC'
-          ? 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+LOGO.png'
-          : 'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+and+SIT+WORDING+1.png';
+      'https://eventifys3.s3.ap-south-1.amazonaws.com/SEC+Header+LOGO.jpg';
 
     const logoBuffer = await downloadImage(logoUrl);
     if (logoBuffer) {
       try {
+        const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
         doc.image(
           logoBuffer,
-          doc.page.margins.left +
-            (doc.page.width - doc.page.margins.left - doc.page.margins.right) /
-              2 -
-            150,
+          doc.page.margins.left + (contentWidth / 2) - 225,
           yPosition,
           {
-            fit: [300, 100],
+            fit: [450, 100],
             align: 'center',
           }
         );
-        yPosition += 120;
+        yPosition += 80;
       } catch (err) {
         console.warn('Failed to add logo:', err);
         yPosition += 20;
@@ -177,10 +189,52 @@ export async function POST(req) {
       20;
     let infoY = yPosition;
 
+    // Helper function to get venue display (matching EventCard logic)
+    const getVenueDisplay = async () => {
+      const eventVenue = eventData.eventData.EventVenue;
+      const venueList = eventData.eventData.venueList;
+      const eventVenueAddInfo = eventData.eventData.eventVenueAddInfo;
+
+      // Check if event is online
+      if (eventVenue === 'online') {
+        return eventVenueAddInfo || 'Online';
+      }
+
+      // For offline events, check for venue list first (on-campus)
+      if (venueList && venueList.length > 0) {
+        try {
+          // Import Reservation model (venueList contains Reservation IDs, not Venue IDs)
+          const Reservation = (await import('@/models/reservation')).default;
+
+          // Lookup reservation details from the database
+          const reservationIds = venueList.map(id => id.toString());
+          const reservations = await Reservation.find({ _id: { $in: reservationIds } }).select('venueName');
+
+          const uniqueVenueNames = [
+            ...new Set(reservations.map(r => r.venueName).filter(Boolean)),
+          ];
+
+          if (uniqueVenueNames.length > 0) {
+            return uniqueVenueNames.join(', ');
+          }
+        } catch (error) {
+          console.error('Error fetching venue names:', error);
+        }
+      }
+
+      // Check for off-campus or additional venue info
+      if (eventVenueAddInfo) {
+        return eventVenueAddInfo;
+      }
+
+      // Fallback
+      return eventVenue === 'offline' ? 'Offline' : 'N/A';
+    };
+
     const eventInfo = [
       ['Event ID:', eventData.ins_id || 'N/A'],
       ['Department:', eventData.dept],
-      ['Venue:', eventData.eventData.EventVenue],
+      ['Venue:', await getVenueDisplay()],
       ['Duration:', `${eventData.eventData.EventDuration} hours`],
       [
         'Start:',
@@ -288,13 +342,15 @@ export async function POST(req) {
       yPosition += 15;
     }
 
-    // Resource Persons
-    if (
-      eventData.eventData.eventResourcePerson &&
-      eventData.eventData.eventResourcePerson.length > 0
-    ) {
+    // Resource Persons - only show if isResourcePerson is true and has valid data
+    const hasResourcePersons = eventData.eventData.isResourcePerson === true || eventData.eventData.isResourcePerson === 'true';
+    const resourcePersons = eventData.eventData.eventResourcePerson?.filter(
+      person => person.ResourcePersonName && person.ResourcePersonName.trim() !== ''
+    ) || [];
+
+    if (hasResourcePersons && resourcePersons.length > 0) {
       yPosition += addHeading('Resource Persons', yPosition);
-      eventData.eventData.eventResourcePerson.forEach(person => {
+      resourcePersons.forEach(person => {
         if (yPosition > doc.page.height - doc.page.margins.bottom - 100) {
           addPageWithFooter();
           yPosition = doc.page.margins.top;
@@ -308,21 +364,27 @@ export async function POST(req) {
         doc.fillColor('#2c3e50');
         doc.font('Inter-Bold');
         doc.text(
-          `${person.ResourcePersonName} (${person.ResourcePersonDesgn})`,
+          `${person.ResourcePersonName}${person.ResourcePersonDesgn ? ` (${person.ResourcePersonDesgn})` : ''}`,
           personX,
           personY
         );
         doc.font('Inter');
-        doc.text(person.ResourcePersonMail, personX, personY + 15);
-        doc.text(person.ResourcePersonPhone, personX, personY + 30);
-        const addressHeight = doc.heightOfString(person.ResourcePersonAddr, {
+        if (person.ResourcePersonMail) {
+          doc.text(person.ResourcePersonMail, personX, personY + 15);
+        }
+        if (person.ResourcePersonPhone) {
+          doc.text(person.ResourcePersonPhone, personX, personY + 30);
+        }
+        const addressHeight = person.ResourcePersonAddr ? doc.heightOfString(person.ResourcePersonAddr, {
           width:
             doc.page.width - doc.page.margins.left - doc.page.margins.right,
-        });
-        doc.text(person.ResourcePersonAddr, personX, personY + 45, {
-          width:
-            doc.page.width - doc.page.margins.left - doc.page.margins.right,
-        });
+        }) : 0;
+        if (person.ResourcePersonAddr) {
+          doc.text(person.ResourcePersonAddr, personX, personY + 45, {
+            width:
+              doc.page.width - doc.page.margins.left - doc.page.margins.right,
+          });
+        }
 
         // Move to next resource person position (one below)
         yPosition += 60 + addressHeight;
@@ -346,36 +408,33 @@ export async function POST(req) {
       yPosition += 20;
     }
 
-    // Event Poster
+    // Event Permission Letter
     if (
       eventData.eventData.fileUrl?.poster &&
       /\.(png|jpe?g)$/i.test(eventData.eventData.fileUrl.poster)
     ) {
-      yPosition += addHeading('Event Poster', yPosition);
+      yPosition += addHeading('Event Permission Letter', yPosition);
       const posterBuffer = await downloadImage(
         eventData.eventData.fileUrl.poster
       );
       if (posterBuffer) {
         try {
-          if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
+          // Check if we need a new page for the image
+          if (yPosition > doc.page.height - doc.page.margins.bottom - 400) {
             addPageWithFooter();
             yPosition = doc.page.margins.top;
           }
+          const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
           doc.image(
             posterBuffer,
-            doc.page.margins.left +
-              (doc.page.width -
-                doc.page.margins.left -
-                doc.page.margins.right) /
-                2 -
-              200,
+            doc.page.margins.left,
             yPosition,
             {
-              fit: [400, 200],
+              fit: [contentWidth, 500],
               align: 'center',
             }
           );
-          yPosition += 220;
+          yPosition += 420;
         } catch (err) {
           console.warn('Failed to add poster:', err);
           yPosition += 20;
@@ -393,29 +452,30 @@ export async function POST(req) {
         eventData.postEventData.fileUrl.geoPhotos.length > 0
       ) {
         yPosition += addHeading('Event Photos', yPosition, 3);
+        let isFirstPhoto = true;
+
         for (const photoUrl of eventData.postEventData.fileUrl.geoPhotos) {
-          if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
-            addPageWithFooter();
-            yPosition = doc.page.margins.top;
-          }
           const photoBuffer = await downloadImage(photoUrl);
           if (photoBuffer) {
             try {
+              // For first photo, check if we need a new page; for subsequent photos, always new page
+              if (!isFirstPhoto || yPosition > doc.page.height - doc.page.margins.bottom - 400) {
+                addPageWithFooter();
+                yPosition = doc.page.margins.top;
+              }
+
+              const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
               doc.image(
                 photoBuffer,
-                doc.page.margins.left +
-                  (doc.page.width -
-                    doc.page.margins.left -
-                    doc.page.margins.right) /
-                    2 -
-                  200,
+                doc.page.margins.left,
                 yPosition,
                 {
-                  fit: [400, 200],
+                  fit: [contentWidth, 650],
                   align: 'center',
                 }
               );
-              yPosition += 220;
+              yPosition += 500;
+              isFirstPhoto = false;
             } catch (err) {
               console.warn('Failed to add photo:', err);
             }
@@ -434,25 +494,21 @@ export async function POST(req) {
           const reportBuffer = await downloadImage(reportUrl);
           if (reportBuffer) {
             try {
-              if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
-                addPageWithFooter();
-                yPosition = doc.page.margins.top;
-              }
+              // Start on new page for large image
+              addPageWithFooter();
+              yPosition = doc.page.margins.top;
+
+              const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
               doc.image(
                 reportBuffer,
-                doc.page.margins.left +
-                  (doc.page.width -
-                    doc.page.margins.left -
-                    doc.page.margins.right) /
-                    2 -
-                  200,
+                doc.page.margins.left,
                 yPosition,
                 {
-                  fit: [400, 200],
+                  fit: [contentWidth, 650],
                   align: 'center',
                 }
               );
-              yPosition += 220;
+              yPosition += 500;
             } catch (err) {
               console.warn('Failed to add report image:', err);
               // Fallback to link if image fails
@@ -547,25 +603,21 @@ export async function POST(req) {
           const financialBuffer = await downloadImage(financialUrl);
           if (financialBuffer) {
             try {
-              if (yPosition > doc.page.height - doc.page.margins.bottom - 200) {
-                addPageWithFooter();
-                yPosition = doc.page.margins.top;
-              }
+              // Start on new page for large image
+              addPageWithFooter();
+              yPosition = doc.page.margins.top;
+
+              const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
               doc.image(
                 financialBuffer,
-                doc.page.margins.left +
-                  (doc.page.width -
-                    doc.page.margins.left -
-                    doc.page.margins.right) /
-                    2 -
-                  200,
+                doc.page.margins.left,
                 yPosition,
                 {
-                  fit: [400, 200],
+                  fit: [contentWidth, 650],
                   align: 'center',
                 }
               );
-              yPosition += 220;
+              yPosition += 500;
             } catch (err) {
               console.warn('Failed to add financial documents image:', err);
               // Fallback to link if image fails
