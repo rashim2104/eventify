@@ -359,14 +359,9 @@ export async function POST(req) {
         createdEvent._id
       );
     } else if (userType === 'HOD') {
-      const rcvusers = await User.find({
-        userType: 'admin',
-        college: eventCollege,
-      });
-
-      const rcvmail = rcvusers ? rcvusers.map(user => user.email) : [];
+      // Send notification only to IQAC for level 2 processing
       sendMail(
-        rcvmail,
+        'iqacsec@sairam.edu.in',
         'create',
         crtuser.name,
         eventData.EventName,

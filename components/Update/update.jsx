@@ -217,7 +217,7 @@ export default function Update() {
     );
   };
 
-  const FileUploadSection = ({ type, label, accept, multiple = false }) => {
+  const FileUploadSection = ({ type, label, accept, multiple = false, required = false }) => {
     const isUploaded =
       type === 'geoPhotos'
         ? fileUrl.geoPhotos.length > 0
@@ -227,6 +227,7 @@ export default function Update() {
       <Box sx={{ mt: 2 }}>
         <Typography variant='h6' sx={{ color: colors.light.foreground, mb: 2 }}>
           {label}
+          {required && <span style={{ color: colors.light.destructive }}> *</span>}
         </Typography>
 
         {isUploaded ? (
@@ -395,6 +396,7 @@ export default function Update() {
     if (fileUrl.geoPhotos.length === 0) missing.push('Geo Tagged Photos');
     if (!fileUrl.financialCommitments) missing.push('Financial Commitments');
     if (!fileUrl.report) missing.push('Event Report');
+    if (!data.feedback || data.feedback.trim() === '') missing.push('Feedback');
     if (!data.videoLinks) missing.push('Video Links');
     if (!data.amountSpent) missing.push('Amount Spent');
 
@@ -411,6 +413,7 @@ export default function Update() {
           user_id: session?.user?._id,
           jsonData: {
             selectedEvent: data.selectedEvent,
+            feedback: data.feedback,
             videoLinks: data.videoLinks,
             amountSpent: data.amountSpent,
             fileUrl,
@@ -474,6 +477,7 @@ export default function Update() {
     fileUrl.geoPhotos.length > 0 &&
     fileUrl.financialCommitments &&
     fileUrl.report &&
+    watch('feedback') &&
     watch('videoLinks') &&
     watch('amountSpent');
 
@@ -550,6 +554,7 @@ export default function Update() {
                     label='Geo Tagged Photos'
                     accept='image/*'
                     multiple
+                    required
                   />
                   <FileUploadSection
                     type='eventPoster'
@@ -565,11 +570,12 @@ export default function Update() {
                     type='report'
                     label='Event Report'
                     accept='image/*,application/pdf'
+                    required
                   />
 
                   <Divider sx={{ my: 1 }}>
                     <Typography variant='overline' color='text.secondary'>
-                      Additional Details
+                      Feedback & Additional Details
                     </Typography>
                   </Divider>
 
@@ -578,7 +584,27 @@ export default function Update() {
                       variant='h6'
                       sx={{ color: colors.light.foreground, mb: 2 }}
                     >
-                      Video Links
+                      Analysis of the feedback collected after the event<span style={{ color: colors.light.destructive }}> *</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={4}
+                      placeholder='Summarize the feedback collected from students (e.g., key takeaways, satisfaction levels, suggestions received)'
+                      {...register('feedback', {
+                        required: 'Feedback is required',
+                      })}
+                      error={!!errors.feedback}
+                      helperText={errors.feedback?.message}
+                    />
+                  </Box>
+
+                  <Box sx={{ mt: 2 }}>
+                    <Typography
+                      variant='h6'
+                      sx={{ color: colors.light.foreground, mb: 2 }}
+                    >
+                      Video Links<span style={{ color: colors.light.destructive }}> *</span>
                     </Typography>
                     <TextField
                       fullWidth
@@ -596,7 +622,7 @@ export default function Update() {
                       variant='h6'
                       sx={{ color: colors.light.foreground, mb: 2 }}
                     >
-                      Amount Spent (Rs.)
+                      Amount Spent (Rs.)<span style={{ color: colors.light.destructive }}> *</span>
                     </Typography>
                     <TextField
                       fullWidth
