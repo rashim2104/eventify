@@ -397,8 +397,6 @@ export default function Update() {
     if (!fileUrl.financialCommitments) missing.push('Financial Commitments');
     if (!fileUrl.report) missing.push('Event Report');
     if (!data.feedback || data.feedback.trim() === '') missing.push('Feedback');
-    if (!data.videoLinks) missing.push('Video Links');
-    if (!data.amountSpent) missing.push('Amount Spent');
 
     if (missing.length > 0) {
       toast.error(`Please complete: ${missing.join(', ')}`);
@@ -477,9 +475,7 @@ export default function Update() {
     fileUrl.geoPhotos.length > 0 &&
     fileUrl.financialCommitments &&
     fileUrl.report &&
-    watch('feedback') &&
-    watch('videoLinks') &&
-    watch('amountSpent');
+    watch('feedback');
 
   return (
     <Container maxWidth='lg' sx={{ py: 3 }}>
@@ -604,16 +600,12 @@ export default function Update() {
                       variant='h6'
                       sx={{ color: colors.light.foreground, mb: 2 }}
                     >
-                      Video Links<span style={{ color: colors.light.destructive }}> *</span>
+                      Video Links
                     </Typography>
                     <TextField
                       fullWidth
-                      placeholder="Enter video links (type 'none' if there are no videos)"
-                      {...register('videoLinks', {
-                        required: 'This field is required',
-                      })}
-                      error={!!errors.videoLinks}
-                      helperText={errors.videoLinks?.message}
+                      placeholder='Enter video links (optional)'
+                      {...register('videoLinks')}
                     />
                   </Box>
 
@@ -622,22 +614,18 @@ export default function Update() {
                       variant='h6'
                       sx={{ color: colors.light.foreground, mb: 2 }}
                     >
-                      Amount Spent (Rs.)<span style={{ color: colors.light.destructive }}> *</span>
+                      Amount Spent (Rs.)
                     </Typography>
                     <TextField
                       fullWidth
                       type='number'
-                      placeholder='Enter the amount spent'
+                      placeholder='Enter the amount spent (optional)'
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position='start'>₹</InputAdornment>
                         ),
                       }}
-                      {...register('amountSpent', { required: true, min: 1 })}
-                      error={!!errors.amountSpent}
-                      helperText={
-                        errors.amountSpent && 'Please enter a valid amount'
-                      }
+                      {...register('amountSpent', { min: 0 })}
                     />
                   </Box>
 
