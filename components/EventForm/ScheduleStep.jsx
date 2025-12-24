@@ -374,7 +374,7 @@ const ScheduleStep = ({
       </Typography>
 
       {isEventVenueOnline === 'offline' &&
-      isEventVenueOffCampus === 'On-Campus' ? (
+        isEventVenueOffCampus === 'On-Campus' ? (
         <Box sx={{ width: '100%' }}>
           <Typography
             variant='h6'
@@ -518,7 +518,7 @@ const ScheduleStep = ({
                           variant='body2'
                           sx={{ mb: 2, color: colors.light.mutedForeground }}
                         >
-                          Sessions will be applied to all dates in your event
+                          Sessions will be applied to selected sessions in selected dates.
                         </Typography>
                         <Box
                           sx={{
