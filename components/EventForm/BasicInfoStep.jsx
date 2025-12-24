@@ -131,7 +131,7 @@ const BasicInfoStep = ({
         </FormControl>
 
         {/* Department Selection for Admins */}
-        {watch('EventOrganizer') == 1 && userType === 'admin' && (
+        {watch('EventOrganizer') == 1 && (
           <FormControl fullWidth error={!!validationErrors?.eventSociety}>
             <FormLabel sx={{ color: colors.light.foreground, mb: 1 }}>
               Department *
@@ -425,19 +425,24 @@ const BasicInfoStep = ({
                 <MenuItem value='FDP'>FDP</MenuItem>
                 <MenuItem value='Bootcamp'>BootCamp</MenuItem>
                 <MenuItem value='Conference'>Conference</MenuItem>
+                <MenuItem value='Skill Development Program'>
+                  Skill Development Program
+                </MenuItem>
+                <MenuItem value='Seminar'>Seminar</MenuItem>
+                <MenuItem value='CME'>CME</MenuItem>
                 <MenuItem value='other'>Other</MenuItem>
               </Select>
             )}
           />
           {(errors.EventType?.eventType ||
             validationErrors?.['EventType.eventType']) && (
-            <FormHelperText
-              sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
-            >
-              {errors.EventType?.eventType?.message ||
-                validationErrors?.['EventType.eventType']}
-            </FormHelperText>
-          )}
+              <FormHelperText
+                sx={{ color: colors.light.destructive, fontSize: '0.75rem' }}
+              >
+                {errors.EventType?.eventType?.message ||
+                  validationErrors?.['EventType.eventType']}
+              </FormHelperText>
+            )}
         </FormControl>
 
         {/* Event Type Other Option */}

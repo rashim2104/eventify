@@ -347,7 +347,11 @@ export default function Update() {
         });
         const data = await response.json();
         setEventNames(
-          data.eventNames.map(({ id, eventName }) => ({ id, eventName }))
+          data.eventNames.map(({ id, eventName, isSponsored }) => ({
+            id,
+            eventName,
+            isSponsored,
+          }))
         );
       } catch (error) {
         console.error('Error fetching event names:', error);
@@ -609,25 +613,39 @@ export default function Update() {
                     />
                   </Box>
 
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant='h6'
-                      sx={{ color: colors.light.foreground, mb: 2 }}
-                    >
-                      Amount Spent (Rs.)
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      type='number'
-                      placeholder='Enter the amount spent (optional)'
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position='start'>₹</InputAdornment>
-                        ),
-                      }}
-                      {...register('amountSpent', { min: 0 })}
-                    />
-                  </Box>
+                  {(() => {
+                    const selectedEventId = watch('selectedEvent');
+                    const selectedEventData = eventNames.find(
+                      e => e.id === selectedEventId
+                    );
+                    const isSponsored =
+                      selectedEventData?.isSponsored === 'true' ||
+                      selectedEventData?.isSponsored === true;
+
+                    return (
+                      isSponsored && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography
+                            variant='h6'
+                            sx={{ color: colors.light.foreground, mb: 2 }}
+                          >
+                            Amount Spent (Rs.)
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            type='number'
+                            placeholder='Enter the amount spent (optional)'
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position='start'>₹</InputAdornment>
+                              ),
+                            }}
+                            {...register('amountSpent', { min: 0 })}
+                          />
+                        </Box>
+                      )
+                    );
+                  })()}
 
                   <Box
                     sx={{
