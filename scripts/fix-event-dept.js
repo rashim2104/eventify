@@ -1,6 +1,9 @@
 /**
- * Script to extract dept codes from ins_id for all events
- * Run this first to verify the mappings before applying fixes.
+ * Script to check event dept codes against the event ID mappings
+ * Fetches all events from DB and compares their dept field with what
+ * the JSON mapping says it should be based on the ins_id.
+ *
+ * READ ONLY - Does not modify any data in the database.
  *
  * Usage:
  *   node scripts/fix-event-dept.js
@@ -10,34 +13,144 @@ const { MongoClient } = require('mongodb');
 const fs = require('fs');
 const path = require('path');
 
-// Load .env.local manually
+// Load .env manually
 function loadEnv() {
     const envPath = path.join(__dirname, '..', '.env');
     const envContent = fs.readFileSync(envPath, 'utf8');
     const lines = envContent.split('\n');
     for (const line of lines) {
         const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-            const [key, ...valueParts] = trimmed.split('=');
-            const value = valueParts.join('=').replace(/^["']|["']$/g, '');
-            process.env[key] = value;
+        // Skip comments (# or ;) and empty lines
+        if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith(';')) {
+            const eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+                const key = trimmed.slice(0, eqIndex).trim();
+                const value = trimmed.slice(eqIndex + 1).trim().replace(/^["']|["']$/g, '');
+                process.env[key] = value;
+            }
         }
     }
 }
 
 loadEnv();
 
+// Load the event ID mappings from JSON
+function loadEventIdMappings() {
+    const jsonPath = path.join(__dirname, '..', 'public', 'data', 'updatedEEventId.json');
+    const jsonContent = fs.readFileSync(jsonPath, 'utf8');
+    return JSON.parse(jsonContent);
+}
+
+// Build a reverse lookup from event ID code to department info
+// New JSON structure: each entry has { code: "XX", template: "..." }
+function buildReverseLookup(mappings) {
+    const lookup = {};
+
+    // Process campuses (Campus 1 and Campus 2)
+    for (const [campusName, departments] of Object.entries(mappings.campuses)) {
+        for (const [deptName, deptInfo] of Object.entries(departments)) {
+            // New structure: deptInfo = { code: "AI", template: "SECC126MMDAIYY" }
+            // Extract the event ID code from template (e.g., "AI" from "SECC126MMDAIYY")
+            const codeMatch = deptInfo.template.match(/MMD(.+?)YY$/);
+            if (codeMatch) {
+                const eventIdCode = codeMatch[1]; // Code in event ID (e.g., "AI")
+                lookup[eventIdCode] = {
+                    name: deptName,
+                    shortCode: deptInfo.code, // Short code stored in DB (e.g., "AI")
+                    category: 'Academic Department',
+                    campus: campusName,
+                    template: deptInfo.template
+                };
+            }
+        }
+    }
+
+    // Process non-academic departments
+    for (const [deptName, deptInfo] of Object.entries(mappings.non_academic_departments)) {
+        const codeMatch = deptInfo.template.match(/MM(.+?)YY$/);
+        if (codeMatch) {
+            const eventIdCode = codeMatch[1];
+            lookup[eventIdCode] = {
+                name: deptName,
+                shortCode: deptInfo.code,
+                category: 'Non-Academic Department',
+                template: deptInfo.template
+            };
+        }
+    }
+
+    // Process other entities
+    for (const [entityName, entityInfo] of Object.entries(mappings.other)) {
+        const codeMatch = entityInfo.template.match(/MM(.+?)YY$/);
+        if (codeMatch) {
+            const eventIdCode = codeMatch[1];
+            lookup[eventIdCode] = {
+                name: entityName,
+                shortCode: entityInfo.code,
+                category: 'Other Entity',
+                template: entityInfo.template
+            };
+        }
+    }
+
+    // Process clubs & cells
+    for (const [clubName, clubInfo] of Object.entries(mappings.clubs_cells)) {
+        const codeMatch = clubInfo.template.match(/MM(.+?)YY$/);
+        if (codeMatch) {
+            const eventIdCode = codeMatch[1];
+            lookup[eventIdCode] = {
+                name: clubName,
+                shortCode: clubInfo.code,
+                category: 'Club/Cell',
+                template: clubInfo.template
+            };
+        }
+    }
+
+    // Process professional societies
+    for (const [societyName, societyInfo] of Object.entries(mappings.professional_societies)) {
+        const codeMatch = societyInfo.template.match(/MM(.+?)YY$/);
+        if (codeMatch) {
+            const eventIdCode = codeMatch[1];
+            lookup[eventIdCode] = {
+                name: societyName,
+                shortCode: societyInfo.code,
+                category: 'Professional Society',
+                template: societyInfo.template
+            };
+        }
+    }
+
+    // Process IEEE societies
+    if (mappings.ieee_societies) {
+        for (const [societyName, societyInfo] of Object.entries(mappings.ieee_societies)) {
+            const codeMatch = societyInfo.template.match(/MM(.+?)YY$/);
+            if (codeMatch) {
+                const eventIdCode = codeMatch[1];
+                lookup[eventIdCode] = {
+                    name: societyName,
+                    shortCode: societyInfo.code,
+                    category: 'IEEE Society',
+                    template: societyInfo.template
+                };
+            }
+        }
+    }
+
+    return lookup;
+}
+
 /**
  * Extract the entity code from an event ID (ins_id)
- * Format: CLG(3) + YEAR(4) + MM(2) + CODE(variable) + SEQ(2)
  * 
- * Examples:
- * - SEC202501DEC01 -> DEC (Department ECE)
- * - SEC202504IEEESPS01 -> IEEESPS (IEEE Signal Processing)
- * - SEC202503CLE01 -> CLE (Club - Leo)
- * - SEC202504NSS05 -> NSS
+ * Event ID Format Examples:
+ * - SEC202501CAM01 -> CAM (Automobile Club)
+ * - SEC202501DEC01 -> EC (after removing D prefix for departments)
+ * - SECC126MMDAIYY format becomes SEC202501DAI01 in actual use
+ * 
+ * Format: CLG(3) + YEAR(4) + MM(2) + CODE(variable) + SEQ(2)
  */
-function extractEntityFromInsId(insId) {
+function extractEntityCodeFromInsId(insId) {
     if (!insId) return null;
 
     // Handle compound IDs like "SIT202501DEI01 / SEC202501DEI01"
@@ -51,76 +164,40 @@ function extractEntityFromInsId(insId) {
 }
 
 /**
- * Derive the correct dept code from the extracted entity
- * Returns { correctDept, entityType }
+ * Determine the correct department SHORT CODE based on the entity code
+ * using the reverse lookup from the JSON mappings
+ * Returns the shortCode that should be stored in DB
  */
-function deriveCorrectDept(entityCode) {
-    if (!entityCode) return { correctDept: null, entityType: 'Unknown' };
+function getCorrectDeptFromCode(entityCode, reverseLookup) {
+    if (!entityCode) return { correctDept: null, category: 'Unknown', found: false };
 
-    // Special department code mappings (event ID code -> actual dept code)
-    const deptCodeMappings = {
-        'PY': 'PH',  // Physics
-        'TA': 'TA',  // Training & Placement
-    };
-
-    // Department pattern: D + 2-char code (e.g., DEC -> EC, DPY -> PH)
-    if (entityCode.startsWith('D') && entityCode.length === 3) {
-        const rawDept = entityCode.slice(1); // Remove 'D' prefix
-        const correctDept = deptCodeMappings[rawDept] || rawDept;
-        return { correctDept, entityType: 'Department' };
+    // Check if the code starts with 'D' (department prefix in event IDs)
+    // e.g., DEC -> EC, DCS -> CS
+    if (entityCode.startsWith('D') && entityCode.length >= 3) {
+        const deptCode = entityCode.slice(1); // Remove 'D' prefix
+        if (reverseLookup[deptCode]) {
+            return {
+                correctDept: reverseLookup[deptCode].shortCode, // Use shortCode for DB comparison
+                name: reverseLookup[deptCode].name,
+                category: reverseLookup[deptCode].category,
+                campus: reverseLookup[deptCode].campus,
+                found: true
+            };
+        }
     }
 
-    // IEEE Society: starts with IEEE
-    if (entityCode.startsWith('IEEE')) {
-        return { correctDept: entityCode, entityType: 'IEEE Society' };
+    // Check direct match (for clubs, societies, etc.)
+    if (reverseLookup[entityCode]) {
+        return {
+            correctDept: reverseLookup[entityCode].shortCode, // Use shortCode for DB comparison
+            name: reverseLookup[entityCode].name,
+            category: reverseLookup[entityCode].category,
+            found: true
+        };
     }
 
-    // MBA special case
-    if (entityCode === 'MBA') {
-        return { correctDept: 'MB', entityType: 'Department (MBA)' };
-    }
-
-    // MAT -> MA (Mathematics)
-    if (entityCode === 'MAT') {
-        return { correctDept: 'MA', entityType: 'Department (Math)' };
-    }
-
-    // Club pattern: C + 2-char code (e.g., CLE, CTC, CMA)
-    if (entityCode.startsWith('C') && entityCode.length === 3) {
-        return { correctDept: entityCode, entityType: 'Club' };
-    }
-
-    // Professional Society: S + 2-char code
-    if (entityCode.startsWith('S') && entityCode.length === 3) {
-        return { correctDept: entityCode, entityType: 'Prof Society' };
-    }
-
-    // Known standalone entities with their correct dept codes
-    const standaloneEntities = {
-        'NSS': 'NSS',
-        'NCC': 'NCC',
-        'YRC': 'YRC',
-        'IPR': 'IPR',
-        'UBA': 'UBA',
-        'BIS': 'BIS',
-        'INN': 'INN',
-        'IIC': 'IIC',
-        'CNL': 'CNL',  // Central Library -> should be OF?
-        'PED': 'PED',
-        'LIB': 'OF',   // Library -> OF (Office)
-        'TAP': 'TAP',
-        'OOO': 'OF',   // Other -> OF
-        'ATLS': 'ATLS',
-        'EST': 'EST',  // EPICS/SIGHT
-        'YUC': 'YUC',  // YUVA Club
-    };
-
-    if (standaloneEntities[entityCode]) {
-        return { correctDept: standaloneEntities[entityCode], entityType: 'Other Entity' };
-    }
-
-    // Unknown - return as-is for review
-    return { correctDept: entityCode, entityType: 'Unknown' };
+    // Not found in mappings
+    return { correctDept: entityCode, category: 'Unknown', found: false };
 }
 
 async function main() {
@@ -130,66 +207,267 @@ async function main() {
         process.exit(1);
     }
 
+    console.log('Loading event ID mappings from updatedEEventId.json...');
+    const mappings = loadEventIdMappings();
+    const reverseLookup = buildReverseLookup(mappings);
+    console.log(`Loaded ${Object.keys(reverseLookup).length} mappings\n`);
+
     const client = new MongoClient(mongoUri);
 
     try {
         await client.connect();
-        console.log('Connected to MongoDB\n');
+        console.log('Connected to MongoDB (READ ONLY)\n');
 
         const db = client.db();
         const eventsCollection = db.collection('events');
+        const clubsCollection = db.collection('clubs');
+        const departmentsCollection = db.collection('departments');
+        const societiesCollection = db.collection('societies');
+
+        // Fetch all clubs, departments, and societies to build valid codes lookup
+        const clubs = await clubsCollection.find({}).toArray();
+        const departments = await departmentsCollection.find({}).toArray();
+        const societies = await societiesCollection.find({}).toArray();
+
+        console.log(`Found ${clubs.length} clubs, ${departments.length} departments, and ${societies.length} societies in DB`);
+
+        // Build a lookup of valid codes that exist in the DB
+        const validCodes = new Map();
+
+        clubs.forEach(club => {
+            validCodes.set(club.code, {
+                type: 'Club',
+                name: club.name,
+                code: club.code
+            });
+        });
+
+        departments.forEach(dept => {
+            validCodes.set(dept.code, {
+                type: 'Department',
+                name: dept.name,
+                code: dept.code,
+                college: dept.college
+            });
+        });
+
+        societies.forEach(society => {
+            validCodes.set(society.code, {
+                type: 'Society',
+                name: society.name,
+                code: society.code,
+                societyType: society.type
+            });
+        });
+
+        console.log(`Valid codes in DB: ${validCodes.size}\n`);
 
         // Find all events with an ins_id
         const events = await eventsCollection
             .find({
                 ins_id: { $ne: null, $exists: true },
             })
-            .sort({ 'eventData.StartTime': 1 })
+            .sort({ createdAt: -1 })
             .toArray();
 
         console.log(`Found ${events.length} events with ins_id`);
-        console.log('Showing only MISMATCHED events:\n');
-        console.log('='.repeat(140));
-        console.log(
-            'No'.padEnd(4) +
-            'ins_id'.padEnd(32) +
-            'Entity Code'.padEnd(16) +
-            'Correct Dept'.padEnd(16) +
-            'Current Dept'.padEnd(16) +
-            'Entity Type'.padEnd(20) +
-            'Event Name'
-        );
-        console.log('='.repeat(140));
 
-        let mismatchCount = 0;
+        // Process all events and categorize them
+        const matches = [];
+        const mismatches = [];
+        const unknowns = [];
 
-        events.forEach((event, index) => {
+        events.forEach((event) => {
             const insId = event.ins_id;
             const currentDept = event.dept || '';
-            const entityCode = extractEntityFromInsId(insId);
-            const { correctDept, entityType } = deriveCorrectDept(entityCode);
-            const isMatch = correctDept === currentDept;
+            const entityCode = extractEntityCodeFromInsId(insId);
+            const { correctDept, name, category, campus, found } = getCorrectDeptFromCode(entityCode, reverseLookup);
+            const isMatch = currentDept === correctDept;
 
-            if (!isMatch) {
-                mismatchCount++;
-                const eventName = (event.eventData?.EventName || 'Unknown').slice(0, 30);
+            // Check if the expected dept code exists in DB
+            const expectedCodeInfo = validCodes.get(correctDept);
+            const expectedCodeExistsInDB = !!expectedCodeInfo;
 
-                console.log(
-                    String(mismatchCount).padEnd(4) +
-                    insId.slice(0, 30).padEnd(32) +
-                    (entityCode || '').padEnd(16) +
-                    (correctDept || '???').padEnd(16) +
-                    currentDept.padEnd(16) +
-                    entityType.padEnd(20) +
-                    eventName
-                );
+            const eventData = {
+                insId,
+                entityCode,
+                currentDept,
+                correctDept,
+                correctDeptName: name,
+                category,
+                campus,
+                eventName: event.eventData?.EventName || 'Unknown',
+                found,
+                isMatch,
+                expectedCodeExistsInDB,
+                expectedCodeType: expectedCodeInfo?.type || null,
+                expectedCodeDBName: expectedCodeInfo?.name || null
+            };
+
+            if (!found) {
+                unknowns.push(eventData);
+            } else if (isMatch) {
+                matches.push(eventData);
+            } else {
+                mismatches.push(eventData);
             }
         });
 
-        console.log('='.repeat(140));
-        console.log(`\nTotal events: ${events.length}`);
-        console.log(`Mismatches to fix: ${mismatchCount}`);
-        console.log('\nThe "Correct Dept" column shows what the dept should be based on the event ID.');
+        // Print sorted results: Matches first, then Unknowns, then Mismatches
+        console.log('='.repeat(150));
+        console.log('RESULTS SORTED BY MATCH STATUS');
+        console.log('='.repeat(150));
+        console.log(
+            'No'.padEnd(5) +
+            'ins_id'.padEnd(28) +
+            'Entity Code'.padEnd(14) +
+            'Current Dept (DB)'.padEnd(35) +
+            'Expected Dept (JSON)'.padEnd(45) +
+            'Category'.padEnd(22) +
+            'Status'
+        );
+        console.log('-'.repeat(150));
+
+        let rowNum = 0;
+
+        // Print Matches
+        if (matches.length > 0) {
+            console.log('\n--- ✅ MATCHES (' + matches.length + ') ---');
+            matches.forEach((e) => {
+                rowNum++;
+                const campusInfo = e.campus ? ` (${e.campus})` : '';
+                console.log(
+                    String(rowNum).padEnd(5) +
+                    (e.insId || '').slice(0, 26).padEnd(28) +
+                    (e.entityCode || '').padEnd(14) +
+                    e.currentDept.slice(0, 33).padEnd(35) +
+                    ((e.correctDept || '???') + campusInfo).slice(0, 43).padEnd(45) +
+                    e.category.padEnd(22) +
+                    '✅ MATCH'
+                );
+            });
+        }
+
+        // Print Unknowns
+        if (unknowns.length > 0) {
+            console.log('\n--- ❓ UNKNOWN CODES (' + unknowns.length + ') ---');
+            unknowns.forEach((e) => {
+                rowNum++;
+                console.log(
+                    String(rowNum).padEnd(5) +
+                    (e.insId || '').slice(0, 26).padEnd(28) +
+                    (e.entityCode || '').padEnd(14) +
+                    e.currentDept.slice(0, 33).padEnd(35) +
+                    (e.correctDept || '???').slice(0, 43).padEnd(45) +
+                    e.category.padEnd(22) +
+                    '❓ UNKNOWN'
+                );
+            });
+        }
+
+        // Print Mismatches
+        if (mismatches.length > 0) {
+            console.log('\n--- ❌ MISMATCHES (' + mismatches.length + ') ---');
+            mismatches.forEach((e) => {
+                rowNum++;
+                const campusInfo = e.campus ? ` (${e.campus})` : '';
+                console.log(
+                    String(rowNum).padEnd(5) +
+                    (e.insId || '').slice(0, 26).padEnd(28) +
+                    (e.entityCode || '').padEnd(14) +
+                    e.currentDept.slice(0, 33).padEnd(35) +
+                    ((e.correctDept || '???') + campusInfo).slice(0, 43).padEnd(45) +
+                    e.category.padEnd(22) +
+                    '❌ MISMATCH'
+                );
+            });
+        }
+
+        console.log('\n' + '='.repeat(150));
+        console.log('SUMMARY');
+        console.log('='.repeat(50));
+        console.log(`Total events with ins_id: ${events.length}`);
+        console.log(`✅ Matching: ${matches.length}`);
+        console.log(`❌ Mismatches: ${mismatches.length}`);
+        console.log(`❓ Unknown codes: ${unknowns.length}`);
+
+        if (mismatches.length > 0) {
+            console.log('\n' + '='.repeat(150));
+            console.log('MISMATCHES DETAIL (Events that need dept correction)');
+            console.log('='.repeat(150));
+
+            // Count how many can be fixed (expected code exists in DB)
+            const fixable = mismatches.filter(m => m.expectedCodeExistsInDB).length;
+            console.log(`\n⚠️  ${fixable} of ${mismatches.length} mismatches can be fixed (expected code exists in DB)\n`);
+
+            mismatches.forEach((m, i) => {
+                console.log(`\n${i + 1}. Event ID: ${m.insId}`);
+                console.log(`   Event Name: ${m.eventName}`);
+                console.log(`   Entity Code: ${m.entityCode}`);
+                console.log(`   Current Dept (DB): "${m.currentDept}"`);
+                console.log(`   Expected Dept (JSON): "${m.correctDept}"${m.campus ? ` (${m.campus})` : ''}`);
+                console.log(`   Category: ${m.category}`);
+
+                // Show if the expected code exists in DB
+                if (m.expectedCodeExistsInDB) {
+                    console.log(`   ✅ CAN FIX: Expected code "${m.correctDept}" exists in DB as ${m.expectedCodeType} (${m.expectedCodeDBName})`);
+                } else {
+                    console.log(`   ❌ CANNOT FIX: Expected code "${m.correctDept}" does NOT exist in DB clubs/departments`);
+                }
+            });
+
+            // Ask user if they want to fix the mismatches
+            const fixableEvents = mismatches.filter(m => m.expectedCodeExistsInDB);
+            if (fixableEvents.length > 0) {
+                const readline = require('readline');
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+
+                const answer = await new Promise(resolve => {
+                    rl.question(`\n🔧 Do you want to fix ${fixableEvents.length} events? (yes/no): `, resolve);
+                });
+                rl.close();
+
+                if (answer.toLowerCase() === 'yes' || answer.toLowerCase() === 'y') {
+                    console.log('\n' + '='.repeat(80));
+                    console.log('FIXING EVENTS...');
+                    console.log('='.repeat(80));
+
+                    let fixed = 0;
+                    let failed = 0;
+
+                    for (const m of fixableEvents) {
+                        try {
+                            // Find the event by ins_id and update its dept
+                            const result = await eventsCollection.updateMany(
+                                { ins_id: m.insId.split(' / ')[0].trim() },
+                                { $set: { dept: m.correctDept } }
+                            );
+
+                            if (result.modifiedCount > 0) {
+                                console.log(`✅ Fixed: ${m.insId} -> dept: "${m.correctDept}"`);
+                                fixed += result.modifiedCount;
+                            } else {
+                                console.log(`⏭️  No change: ${m.insId}`);
+                            }
+                        } catch (err) {
+                            console.log(`❌ Failed: ${m.insId} - ${err.message}`);
+                            failed++;
+                        }
+                    }
+
+                    console.log('\n' + '='.repeat(50));
+                    console.log('FIX SUMMARY');
+                    console.log('='.repeat(50));
+                    console.log(`✅ Fixed: ${fixed} events`);
+                    console.log(`❌ Failed: ${failed} events`);
+                } else {
+                    console.log('\n⏹️  Fix cancelled by user.');
+                }
+            }
+        }
 
     } catch (error) {
         console.error('Error:', error);
