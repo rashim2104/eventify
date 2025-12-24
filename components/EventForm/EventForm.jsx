@@ -307,6 +307,7 @@ const EventForm = () => {
   // Form submission
   const submitForm = async eventData => {
     setIsSubmitting(true);
+    const toastId = toast.loading('Submitting event...');
 
     // Remove unwanted fields from eventCoordinators
     const filteredEventCoordinators = eventData.eventCoordinators.map(
@@ -377,12 +378,14 @@ const EventForm = () => {
     });
 
     if (status.ok) {
+      toast.dismiss(toastId);
       setFormStep(5); // Move to success step
       toast.success('Event Created Successfully!');
       setTimeout(() => {
         router.replace('/create');
       }, 2000);
     } else {
+      toast.dismiss(toastId);
       const data = await status.json();
       toast.error(
         data.message || 'An error occurred while creating the event.'

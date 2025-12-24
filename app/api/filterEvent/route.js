@@ -65,7 +65,11 @@ export async function POST(req) {
 
     // Add society/department filter if specified
     if (filters.dept) {
-      query.dept = filters.dept;
+      if (Array.isArray(filters.dept) && filters.dept.length > 0) {
+        query.dept = { $in: filters.dept };
+      } else if (typeof filters.dept === 'string') {
+        query.dept = filters.dept;
+      }
     }
 
     // Admin specific logic

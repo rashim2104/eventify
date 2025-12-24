@@ -63,7 +63,7 @@ async function fetchUserEvents(user) {
         { updateStatus: 0 },
         { $or: [{ eventCollege: college }, { eventCollege: 'common' }] },
       ],
-    }).select({ 'eventData.EventName': 1, _id: 1 });
+    }).select({ 'eventData.EventName': 1, _id: 1, isSponsored: 1 });
   } else if (userType === 'HOD') {
     userEvents = await Events.find({
       $and: [
@@ -73,7 +73,7 @@ async function fetchUserEvents(user) {
         { dept: dept },
         { eventCollege: college },
       ],
-    }).select({ 'eventData.EventName': 1, _id: 1 });
+    }).select({ 'eventData.EventName': 1, _id: 1, isSponsored: 1 });
   } else if (userType === 'staff') {
     userEvents = await Events.find({
       $and: [
@@ -82,12 +82,13 @@ async function fetchUserEvents(user) {
         { updateStatus: 0 },
         { user_id: _id },
       ],
-    }).select({ 'eventData.EventName': 1, _id: 1 });
+    }).select({ 'eventData.EventName': 1, _id: 1, isSponsored: 1 });
   }
 
   const userEventNames = userEvents.map(event => ({
     id: event._id,
     eventName: event.eventData.EventName,
+    isSponsored: event.isSponsored,
   }));
 
   await logger(
