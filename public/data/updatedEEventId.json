@@ -1,0 +1,614 @@
+{
+    "campuses": {
+        "Campus 1": {
+            "AIDS": {
+                "code": "AD",
+                "template": "SECC126MMDAIYY"
+            },
+            "CSE (AIML)": {
+                "code": "AM",
+                "template": "SECC126MMDAMYY"
+            },
+            "CIVIL": {
+                "code": "CE",
+                "template": "SECC126MMDCEYY"
+            },
+            "CCE": {
+                "code": "CO",
+                "template": "SECC126MMDCOYY"
+            },
+            "CSBS": {
+                "code": "CB",
+                "template": "SECC126MMDCBYY"
+            },
+            "CSE": {
+                "code": "CS",
+                "template": "SECC126MMDCSYY"
+            },
+            "ECE": {
+                "code": "EC",
+                "template": "SECC126MMDECYY"
+            },
+            "EEE": {
+                "code": "EE",
+                "template": "SECC126MMDEEYY"
+            },
+            "EIE": {
+                "code": "EI",
+                "template": "SECC126MMDEIYY"
+            },
+            "EICE": {
+                "code": "IC",
+                "template": "SECC126MMDICYY"
+            },
+            "CSE (IoT)": {
+                "code": "CI",
+                "template": "SECC126MMDCIYY"
+            },
+            "SC": {
+                "code": "SC",
+                "template": "SECC126MMDSCYY"
+            },
+            "IT": {
+                "code": "IT",
+                "template": "SECC126MMDITYY"
+            },
+            "M.Tech.(CSE)": {
+                "code": "CJ",
+                "template": "SECC126MMDCJYY"
+            },
+            "MBA": {
+                "code": "MB",
+                "template": "SECC126MMMBAYY"
+            },
+            "Mech.": {
+                "code": "ME",
+                "template": "SECC126MMDMEYY"
+            },
+            "MZ": {
+                "code": "MZ",
+                "template": "SECC126MMDMZYY"
+            },
+            "Mech.&Auto.": {
+                "code": "MU",
+                "template": "SECC126MMDMUYY"
+            },
+            "H&S": {
+                "code": "HS",
+                "template": "SECC126MMDHSYY"
+            },
+            "Tamil": {
+                "code": "TA",
+                "template": "SECC126MMDTAYY"
+            },
+            "English": {
+                "code": "EN",
+                "template": "SECC126MMDENYY"
+            },
+            "Maths.": {
+                "code": "MA",
+                "template": "SECC126MMDMAYY"
+            },
+            "Physics": {
+                "code": "PH",
+                "template": "SECC126MMDPYYY"
+            },
+            "Chemistry": {
+                "code": "CH",
+                "template": "SECC126MMDCHYY"
+            }
+        },
+        "Campus 2": {
+            "AIDS": {
+                "code": "AD",
+                "template": "SECC226MMDAIYY"
+            },
+            "CCE": {
+                "code": "CO",
+                "template": "SECC226MMDCOYY"
+            },
+            "CSE": {
+                "code": "CS",
+                "template": "SECC226MMDCSYY"
+            },
+            "ECE": {
+                "code": "EC",
+                "template": "SECC226MMDECYY"
+            },
+            "EEE": {
+                "code": "EE",
+                "template": "SECC226MMDEEYY"
+            },
+            "SC": {
+                "code": "SC",
+                "template": "SECC226MMDSCYY"
+            },
+            "IT": {
+                "code": "IT",
+                "template": "SECC226MMDITYY"
+            },
+            "MBA": {
+                "code": "MB",
+                "template": "SECC226MMMBAYY"
+            },
+            "Mech.": {
+                "code": "ME",
+                "template": "SECC226MMDMEYY"
+            },
+            "H&S": {
+                "code": "HS",
+                "template": "SECC226MMDHSYY"
+            },
+            "Tamil": {
+                "code": "TA",
+                "template": "SECC226MMDTAYY"
+            },
+            "English": {
+                "code": "EN",
+                "template": "SECC226MMDENYY"
+            },
+            "Maths.": {
+                "code": "MA",
+                "template": "SECC226MMDMAYY"
+            },
+            "Physics": {
+                "code": "PH",
+                "template": "SECC226MMDPYYY"
+            },
+            "Chemistry": {
+                "code": "CH",
+                "template": "SECC226MMDCHYY"
+            }
+        }
+    },
+    "non_academic_departments": {
+        "Library": {
+            "code": "OF",
+            "template": "SEC2026MMLIBYY"
+        },
+        "TAP Cell": {
+            "code": "TAP",
+            "template": "SEC2026MMTAPYY"
+        },
+        "IQAC": {
+            "code": "IQA",
+            "template": "SEC2026MMIQAYY"
+        },
+        "PED": {
+            "code": "PED",
+            "template": "SEC2026MMPEDYY"
+        },
+        "UBA": {
+            "code": "UBA",
+            "template": "SEC2026MMUBAYY"
+        },
+        "Innovation": {
+            "code": "Innovation",
+            "template": "SEC2026MMINNYY"
+        },
+        "Research & Development (R&D)": {
+            "code": "DRD",
+            "template": "SEC2026MMDRDYY"
+        },
+        "Training and Placement (TAP)": {
+            "code": "TAP",
+            "template": "SEC2026MMTAPYY"
+        }
+    },
+    "other": {
+        "NSS": {
+            "code": "NSS",
+            "template": "SEC2026MMNSSYY"
+        },
+        "NCC": {
+            "code": "NCC",
+            "template": "SEC2026MMNCCYY"
+        },
+        "YRC": {
+            "code": "YRC",
+            "template": "SEC2026MMYRCYY"
+        },
+        "IPR": {
+            "code": "IPR",
+            "template": "SEC2026MMIPRYY"
+        },
+        "UBA": {
+            "code": "UBA",
+            "template": "SEC2026MMUBAYY"
+        },
+        "BIS": {
+            "code": "BIS",
+            "template": "SEC2026MMBISYY"
+        },
+        "Institution Innovation Council (IIC)": {
+            "code": "Institution Innovation Council (IIC)",
+            "template": "SEC2026MMIICYY"
+        },
+        "National Digital Library of India (NDLI)": {
+            "code": "OF",
+            "template": "SEC2026MMCNLYY"
+        },
+        "Nehru Yuva Kendra (NYK)": {
+            "code": "NYK",
+            "template": "SEC2026MMNYKYY"
+        },
+        "Youth United Council of India (YUCI)": {
+            "code": "Youth United Council of India (YUCI)",
+            "template": "SEC2026MMYUCYY"
+        },
+        "Scouts": {
+            "code": "Scouts",
+            "template": "SEC2026MMSCOYY"
+        },
+        "Leo Club": {
+            "code": "Leo Club",
+            "template": "SEC2026MMCLEYY"
+        },
+        "Universal Human Values (UHV)": {
+            "code": "UHV",
+            "template": "SEC2026MMUHVYY"
+        },
+        "Internal Complaint Committee (ICC)": {
+            "code": "ICC",
+            "template": "SEC2026MMICCYY"
+        },
+        "Junior Chamber International (JCI)": {
+            "code": "CJC",
+            "template": "SEC2026MMCJCYY"
+        },
+        "ATL SARTHI": {
+            "code": "ATL SARTHI",
+            "template": "SEC2026MMATLSYY"
+        },
+        "PanIIT Alumni Leadership Series (PALS)": {
+            "code": "PAL",
+            "template": "SEC2026MMPALYY"
+        },
+        "Indian Knowledge System Cell (IKS)": {
+            "code": "IKS",
+            "template": "SEC2026MMIKSYY"
+        }
+    },
+    "clubs_cells": {
+        "Technoculture Club": {
+            "code": "Technoculture Club",
+            "template": "CLGYEARMMCTCYY"
+        },
+        "Automobile Club": {
+            "code": "Automobile Club",
+            "template": "CLGYEARMMCAMYY"
+        },
+        "Code Club": {
+            "code": "Code Club",
+            "template": "CLGYEARMMCCDYY"
+        },
+        "Cyber Club": {
+            "code": "Cyber Club",
+            "template": "CLGYEARMMCCYYY"
+        },
+        "Disaster Management & Safety Club": {
+            "code": "Disaster Management & Safety Club",
+            "template": "CLGYEARMMCDSYY"
+        },
+        "ECO and Swacch Bharat": {
+            "code": "Eco and Swacch Bharat",
+            "template": "CLGYEARMMCESYY"
+        },
+        "ENSAV Club": {
+            "code": "ENSAV Club",
+            "template": "CLGYEARMMCENYY"
+        },
+        "English Language & Literature club": {
+            "code": "English Literary Club",
+            "template": "CLGYEARMMCELYY"
+        },
+        "Foreign Language Club": {
+            "code": "Foreign Language Club",
+            "template": "CLGYEARMMCFLYY"
+        },
+        "Fine arts Association": {
+            "code": "Fine Arts Association",
+            "template": "CLGYEARMMCFAYY"
+        },
+        "Health & Yoga Club": {
+            "code": "Health & Yoga Club",
+            "template": "CLGYEARMMCHYYY"
+        },
+        "M-apps Club": {
+            "code": "M-apps Club",
+            "template": "CLGYEARMMCMAYY"
+        },
+        "Maths Club": {
+            "code": "Maths Club",
+            "template": "CLGYEARMMCMTYY"
+        },
+        "Photography Club": {
+            "code": "Photography Club",
+            "template": "CLGYEARMMCPHYY"
+        },
+        "Robotics Club": {
+            "code": "Robotics Club",
+            "template": "CLGYEARMMCRBYY"
+        },
+        "Rotaract Club": {
+            "code": "Rotaract Club",
+            "template": "CLGYEARMMCRTYY"
+        },
+        "Science club": {
+            "code": "Science club",
+            "template": "CLGYEARMMCSCYY"
+        },
+        "Skill development Club": {
+            "code": "Skill development Club",
+            "template": "CLGYEARMMCSDYY"
+        },
+        "Sai Muthamizh Mandram": {
+            "code": "Sai Muthamizh Mandram",
+            "template": "CLGYEARMMCMMYY"
+        },
+        "Young Indians Club(YUVA)": {
+            "code": "Young Indians Club",
+            "template": "CLGYEARMMCYUYY"
+        },
+        "Red Ribbon Club": {
+            "code": "Red Ribbon Club",
+            "template": "CLGYEARMMCRRYY"
+        },
+        "Game Development Club": {
+            "code": "Game Development Club",
+            "template": "CLGYEARMMCGDYY"
+        },
+        "Artificial Intelligence and Machine Learning Club": {
+            "code": "Artificial Intelligence and Machine Learning Club",
+            "template": "CLGYEARMMCMLYY"
+        },
+        "Entrepreneurship Cell": {
+            "code": "Entrepreneurship Cell",
+            "template": "CLGYEARMMCECYY"
+        },
+        "Higher Education Cell": {
+            "code": "Higher Education Cell",
+            "template": "CLGYEARMMCHEYY"
+        },
+        "Women Empowerment Cell (WOWWW)": {
+            "code": "Wowww",
+            "template": "CLGYEARMMCWEYY"
+        },
+        "Google Developer club": {
+            "code": "GDSC",
+            "template": "CLGYEARMMCGOYY"
+        }
+    },
+    "professional_societies": {
+        "Indian Concrete Institute(ICI)": {
+            "code": "ICI",
+            "template": "CLGYEARMMSICYY"
+        },
+        "Computer Society of India (CSI)": {
+            "code": "CSI",
+            "template": "CLGYEARMMSCSYY"
+        },
+        "Information Theory Society (ITS)": {
+            "code": "ITS",
+            "template": "CLGYEARMMSITYY"
+        },
+        "Indian Green Building Council (IGB)": {
+            "code": "IGB",
+            "template": "CLGYEARMMSGBYY"
+        },
+        "Marine Technology (MTS)": {
+            "code": "MTS",
+            "template": "CLGYEARMMSMTYY"
+        },
+        "Indian Society of Heating, Refrigerating and Air Conditioning Engineers (ISHRAE)": {
+            "code": "ISHRAE",
+            "template": "CLGYEARMMSHRYY"
+        },
+        "Indian society for Technical Education (ISTE)": {
+            "code": "ISTE",
+            "template": "CLGYEARMMSTEYY"
+        },
+        "Indian Welding Society (IWS)": {
+            "code": "IWS",
+            "template": "CLGYEARMMSIWYY"
+        },
+        "Institution of Engineers (India (IEI))": {
+            "code": "IEI",
+            "template": "CLGYEARMMSIEYY"
+        },
+        "Analytics society of India (ASI)": {
+            "code": "ASI",
+            "template": "CLGYEARMMSASYY"
+        },
+        "Madras Management Associations (MMA)": {
+            "code": "MMA",
+            "template": "CLGYEARMMSMAYY"
+        },
+        "Associations of Indian Management Schools (AIMS)": {
+            "code": "AIMS",
+            "template": "CLGYEARMMSIMYY"
+        },
+        "Institution of Electronics and Telecommunication Engineers (IETE)": {
+            "code": "IETE",
+            "template": "CLGYEARMMSETYY"
+        }
+    },
+    "ieee_societies": {
+        "Aerospace and Electronic Systems Society": {
+            "code": "Aerospace and Electronic Systems Society",
+            "template": "SEC2026MMIEEEAESSYY"
+        },
+        "Antennas and Propagation Society": {
+            "code": "Antennas and Propagation Society",
+            "template": "SEC2026MMIEEEAPSYY"
+        },
+        "Broadcast Technology Society": {
+            "code": "Broadcast Technology Society",
+            "template": "SEC2026MMIEEEBSYY"
+        },
+        "Circuits and Systems Society": {
+            "code": "Circuits and Systems Society",
+            "template": "SEC2026MMIEEECASYY"
+        },
+        "Communications Society": {
+            "code": "Communications Society",
+            "template": "SEC2026MMIEEECMMYY"
+        },
+        "Microwave Theory and Technology Society": {
+            "code": "Microwave Theory and Technology Society",
+            "template": "SEC2026MMIEEEMTYY"
+        },
+        "Computer Society": {
+            "code": "Computer Society",
+            "template": "SEC2026MMIEEECoSYY"
+        },
+        "Computational Intelligence Society": {
+            "code": "Computational Intelligence Society",
+            "template": "SEC2026MMIEEECISYY"
+        },
+        "Consumer Technology Society": {
+            "code": "Consumer Technology Society",
+            "template": "SEC2026MMIEEECTSYY"
+        },
+        "Control Systems Society": {
+            "code": "Control Systems Society",
+            "template": "SEC2026MMIEEECSSYY"
+        },
+        "Dielectrics and Electrical Insulation Society": {
+            "code": "Dielectrics and Electrical Insulation Society",
+            "template": "SEC2026MMIEEEDEIYY"
+        },
+        "Education Society": {
+            "code": "Education Society",
+            "template": "SEC2026MMIEEEESSYY"
+        },
+        "Electromagnetic Compatibility Society": {
+            "code": "Electromagnetic Compatibility Society",
+            "template": "SEC2026MMIEEEEMSYY"
+        },
+        "Electron Devices Society": {
+            "code": "Electron Devices Society",
+            "template": "SEC2026MMIEEEEDSYY"
+        },
+        "Electronics Packaging Society": {
+            "code": "Electronics Packaging Society",
+            "template": "SEC2026MMIEEEEPSYY"
+        },
+        "Engineering in Medicine and Biology Society": {
+            "code": "Engineering in Medicine and Biology Society",
+            "template": "SEC2026MMIEEEEMBYY"
+        },
+        "Geoscience and Remote Sensing Society": {
+            "code": "Geoscience and Remote Sensing Society",
+            "template": "SEC2026MMIEEEGRYY"
+        },
+        "Industrial Electronics Society": {
+            "code": "Industrial Electronics Society",
+            "template": "SEC2026MMIEEEIESYY"
+        },
+        "Industry Applications Society": {
+            "code": "Industry Applications Society",
+            "template": "SEC2026MMIEEEIASYY"
+        },
+        "Information Theory Society": {
+            "code": "Information Theory Society",
+            "template": "SEC2026MMIEEEITSYY"
+        },
+        "Instrumentation and Measurement Society": {
+            "code": "Instrumentation and Measurement Society",
+            "template": "SEC2026MMIEEEIAMYY"
+        },
+        "Intelligent Transportation Systems Society": {
+            "code": "Intelligent Transportation Systems Society",
+            "template": "SEC2026MMIEEEITSSYY"
+        },
+        "Magnetics Society": {
+            "code": "Magnetics Society",
+            "template": "SEC2026MMIEEEMSYY"
+        },
+        "NanoTechnology Council": {
+            "code": "NanoTechnology Council",
+            "template": "SEC2026MMIEEENTCYY"
+        },
+        "Nuclear and Plasma Sciences Society": {
+            "code": "Nuclear and Plasma Sciences Society",
+            "template": "SEC2026MMIEEENPYY"
+        },
+        "Oceanic Engineering Society": {
+            "code": "Oceanic Engineering Society",
+            "template": "SEC2026MMIEEEOESYY"
+        },
+        "Photonics Society": {
+            "code": "Photonics Society",
+            "template": "SEC2026MMIEEEPSYY"
+        },
+        "Power & Energy Society": {
+            "code": "Power & Energy Society",
+            "template": "SEC2026MMIEEEPESYY"
+        },
+        "Power Electronics Society": {
+            "code": "Power Electronics Society",
+            "template": "SEC2026MMIEEEPELSYY"
+        },
+        "Product Safety Engineering Society": {
+            "code": "Product Safety Engineering Society",
+            "template": "SEC2026MMIEEEPSESYY"
+        },
+        "Professional Communication Society": {
+            "code": "Professional Communication Society",
+            "template": "SEC2026MMIEEEPCYY"
+        },
+        "Reliability Society": {
+            "code": "Reliability Society",
+            "template": "SEC2026MMIEEERLSYY"
+        },
+        "Robotics and Automation Society": {
+            "code": "Robotics and Automation Society",
+            "template": "SEC2026MMIEEERAYY"
+        },
+        "SIGHT": {
+            "code": "SIGHT",
+            "template": "SEC2026MMIEEESTYY"
+        },
+        "Signal Processing Society": {
+            "code": "Signal Processing Society",
+            "template": "SEC2026MMIEEESPSYY"
+        },
+        "Society on Social Implications of Technology": {
+            "code": "Society on Social Implications of Technology",
+            "template": "SEC2026MMIEEESSYY"
+        },
+        "Solid-State Circuits Society": {
+            "code": "Solid-State Circuits Society",
+            "template": "SEC2026MMIEEESSCYY"
+        },
+        "Systems, Man, and Cybernetics Society": {
+            "code": "Systems, Man, and Cybernetics Society",
+            "template": "SEC2026MMIEEESMCYY"
+        },
+        "Technology and Engineering Management Society": {
+            "code": "Technology and Engineering Management Society",
+            "template": "SEC2026MMIEEETEMYY"
+        },
+        "Ultrasonics, Ferroelectrics, and Frequency Control Society": {
+            "code": "Ultrasonics, Ferroelectrics, and Frequency Control Society",
+            "template": "SEC2026MMIEEEUFFCYY"
+        },
+        "Vehicular Technology Society": {
+            "code": "Vehicular Technology Society",
+            "template": "SEC2026MMIEEEVTSYY"
+        },
+        "Women in Engineering": {
+            "code": "Women in Engineering",
+            "template": "SEC2026MMIEEEWIEYY"
+        },
+        "Smart Village Community": {
+            "code": "Smart Village Community",
+            "template": "SEC2026MMIEEESVCYY"
+        },
+        "Eta Kappa Nu (HKN)": {
+            "code": "Eta Kappa Nu (HKN)",
+            "template": "SEC2026MMIEEEHKNYY"
+        }
+    }
+}
