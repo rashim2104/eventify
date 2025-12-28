@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { format } from 'date-fns';
 
 // Material UI imports
@@ -118,13 +119,13 @@ const ViewEvent = props => {
   // Format date as "Mon 1st Aug 2024, 12:25 PM"
   const formattedDate = appliedDate
     ? (() => {
-        const day = appliedDate.getDate();
-        const dayName = format(appliedDate, 'EEE');
-        const month = format(appliedDate, 'MMM');
-        const year = format(appliedDate, 'yyyy');
-        const time = format(appliedDate, 'h:mm a');
-        return `${dayName} ${day}${getOrdinalSuffix(day)} ${month} ${year}, ${time}`;
-      })()
+      const day = appliedDate.getDate();
+      const dayName = format(appliedDate, 'EEE');
+      const month = format(appliedDate, 'MMM');
+      const year = format(appliedDate, 'yyyy');
+      const time = format(appliedDate, 'h:mm a');
+      return `${dayName} ${day}${getOrdinalSuffix(day)} ${month} ${year}, ${time}`;
+    })()
     : null;
 
   // Status labels
@@ -289,12 +290,12 @@ const ViewEvent = props => {
         }}
         onClick={() => handleImageView(url)}
       >
-        <img
+        <Image
           src={url}
           alt={`${type} preview`}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           style={{
-            width: '100%',
-            height: '100%',
             objectFit: 'contain',
           }}
         />

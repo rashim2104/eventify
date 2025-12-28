@@ -154,6 +154,7 @@ export default function Reservations() {
 
   useEffect(() => {
     fetchEventsGrouped();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (status === 'loading') {

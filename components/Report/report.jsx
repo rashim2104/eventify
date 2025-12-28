@@ -313,6 +313,7 @@ export default function Report() {
   useEffect(() => {
     const { startDate: s, endDate: e } = getCurrentYearRange();
     fetchEvents(s, e);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onDateChange = e => {

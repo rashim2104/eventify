@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import {
@@ -217,22 +217,9 @@ export default function Manage() {
   const [submitting, setSubmitting] = useState(false);
 
   // ---- Fetch Config Data on Mount ----
-  useEffect(() => {
-    // Fetch all config on mount so that User Management dropdowns act correctly
-    // or we could split it. But simpler to just fetch all on mount or when tab changes if we want to be conservative.
-    // Given the user report, we need colleges/departments for User tab.
-    fetchAllConfig();
-  }, []);
+  // ---- Fetch Config Data on Mount ----
 
-  const fetchAllConfig = () => {
-    fetchColleges();
-    fetchDepartments();
-    fetchSocieties();
-    fetchClubs();
-    fetchParentBlocks();
-  };
-
-  const fetchColleges = async () => {
+  const fetchColleges = useCallback(async () => {
     try {
       const res = await fetch('/api/config/colleges?active=false');
       const data = await res.json();
@@ -242,9 +229,9 @@ export default function Manage() {
     } finally {
       setLoadingConfig(prev => ({ ...prev, colleges: false }));
     }
-  };
+  }, []);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await fetch('/api/config/departments?active=false');
       const data = await res.json();
@@ -254,9 +241,9 @@ export default function Manage() {
     } finally {
       setLoadingConfig(prev => ({ ...prev, departments: false }));
     }
-  };
+  }, []);
 
-  const fetchSocieties = async () => {
+  const fetchSocieties = useCallback(async () => {
     try {
       const res = await fetch('/api/config/societies?active=false');
       const data = await res.json();
@@ -266,9 +253,9 @@ export default function Manage() {
     } finally {
       setLoadingConfig(prev => ({ ...prev, societies: false }));
     }
-  };
+  }, []);
 
-  const fetchClubs = async () => {
+  const fetchClubs = useCallback(async () => {
     try {
       const res = await fetch('/api/config/clubs?active=false');
       const data = await res.json();
@@ -278,9 +265,9 @@ export default function Manage() {
     } finally {
       setLoadingConfig(prev => ({ ...prev, clubs: false }));
     }
-  };
+  }, []);
 
-  const fetchParentBlocks = async () => {
+  const fetchParentBlocks = useCallback(async () => {
     try {
       const res = await fetch('/api/config/parent-blocks?active=false');
       const data = await res.json();
@@ -290,7 +277,19 @@ export default function Manage() {
     } finally {
       setLoadingConfig(prev => ({ ...prev, blocks: false }));
     }
-  };
+  }, []);
+
+  const fetchAllConfig = useCallback(() => {
+    fetchColleges();
+    fetchDepartments();
+    fetchSocieties();
+    fetchClubs();
+    fetchParentBlocks();
+  }, [fetchColleges, fetchDepartments, fetchSocieties, fetchClubs, fetchParentBlocks]);
+
+  useEffect(() => {
+    fetchAllConfig();
+  }, [fetchAllConfig]);
 
   // ---- User Management Functions ----
   const clearUserForm = () => {
