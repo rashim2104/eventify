@@ -592,11 +592,12 @@ function Form() {
   };
   const eventVenueAddInfo = watch('eventVenueAddInfo');
 
+  const showInfo = watch('eventVenueAddInfo');
   useEffect(() => {
-    if (watch('eventVenueAddInfo')) {
+    if (showInfo) {
       getValues('eventVenueAddInfo');
     }
-  }, [watch('eventVenueAddInfo'), getValues]);
+  }, [showInfo, getValues]);
 
   useEffect(() => {
     const subscription = watch((value, { name }) => {
@@ -605,7 +606,7 @@ function Form() {
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, setEventOrigin]);
 
   const [hasResourcePersons, setHasResourcePersons] = useState(null);
 
@@ -1124,7 +1125,7 @@ function Form() {
           <section>
             <div>
               {isEventVenueOnline === 'offline' &&
-              isEventVenueOffCampus === 'On-Campus' ? (
+                isEventVenueOffCampus === 'On-Campus' ? (
                 <Calven
                   handleVenueChange={handleVenueChange}
                   startDate={getValues('StartTime')}

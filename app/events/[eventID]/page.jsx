@@ -155,7 +155,7 @@ export default function EventInfo({ params }) {
     };
 
     fetchData();
-  }, [status, redirectStatus]);
+  }, [status, redirectStatus, params.eventID, router, session?.user?.userType]);
 
   if (status === 'loading') {
     return (
@@ -220,71 +220,71 @@ export default function EventInfo({ params }) {
                 )}
               {((userType === 'HOD' && eventDetails[0].status == 0) ||
                 (userType === 'admin' && eventDetails[0].status == 1)) && (
-                <Container maxWidth='lg' sx={{ mt: 3 }}>
-                  <Card sx={{ borderRadius: 2 }}>
-                    <CardContent
-                      sx={{
-                        p: 3,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: 2,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <Button
-                        variant='contained'
-                        startIcon={<CheckCircle />}
-                        onClick={() => {
-                          if (userType === 'admin') {
-                            handlePrincipalApprovalCheck();
-                          } else {
-                            handleChange(eventDetails[0]._id, 'Approve');
+                  <Container maxWidth='lg' sx={{ mt: 3 }}>
+                    <Card sx={{ borderRadius: 2 }}>
+                      <CardContent
+                        sx={{
+                          p: 3,
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: 2,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <Button
+                          variant='contained'
+                          startIcon={<CheckCircle />}
+                          onClick={() => {
+                            if (userType === 'admin') {
+                              handlePrincipalApprovalCheck();
+                            } else {
+                              handleChange(eventDetails[0]._id, 'Approve');
+                            }
+                          }}
+                          sx={{
+                            backgroundColor: '#10b981',
+                            color: '#ffffff',
+                            '&:hover': {
+                              backgroundColor: '#059669',
+                            },
+                          }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant='contained'
+                          startIcon={<Cancel />}
+                          onClick={() =>
+                            handleChange(eventDetails[0]._id, 'Reject')
                           }
-                        }}
-                        sx={{
-                          backgroundColor: '#10b981',
-                          color: '#ffffff',
-                          '&:hover': {
-                            backgroundColor: '#059669',
-                          },
-                        }}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant='contained'
-                        startIcon={<Cancel />}
-                        onClick={() =>
-                          handleChange(eventDetails[0]._id, 'Reject')
-                        }
-                        sx={{
-                          backgroundColor: '#ef4444',
-                          color: '#ffffff',
-                          '&:hover': {
-                            backgroundColor: '#dc2626',
-                          },
-                        }}
-                      >
-                        Reject
-                      </Button>
-                      <Button
-                        variant='contained'
-                        startIcon={<Edit />}
-                        onClick={() => setShowModal(true)}
-                        sx={{
-                          backgroundColor: '#f59e0b',
-                          color: '#ffffff',
-                          '&:hover': {
-                            backgroundColor: '#d97706',
-                          },
-                        }}
-                      >
-                        Mark for Change
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Container>
-              )}
+                          sx={{
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                            '&:hover': {
+                              backgroundColor: '#dc2626',
+                            },
+                          }}
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          variant='contained'
+                          startIcon={<Edit />}
+                          onClick={() => setShowModal(true)}
+                          sx={{
+                            backgroundColor: '#f59e0b',
+                            color: '#ffffff',
+                            '&:hover': {
+                              backgroundColor: '#d97706',
+                            },
+                          }}
+                        >
+                          Mark for Change
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Container>
+                )}
             </div>
           ) : (
             <p>No event details available.</p>

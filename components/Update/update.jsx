@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 // Material UI imports
 import {
@@ -200,6 +201,7 @@ export default function Update() {
     return (
       <Box
         sx={{
+          position: 'relative',
           width: '100%',
           height: 250,
           border: 1,
@@ -211,10 +213,12 @@ export default function Update() {
         }}
         onClick={() => setViewerState({ visible: true, activeImage: url })}
       >
-        <img
+        <Image
           src={url}
           alt={`${type} preview`}
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          style={{ objectFit: 'contain' }}
         />
       </Box>
     );
@@ -420,7 +424,6 @@ export default function Update() {
           user_id: session?.user?._id,
           jsonData: {
             selectedEvent: data.selectedEvent,
-            // feedback: data.feedback, // Removed text feedback
             videoLinks: data.videoLinks,
             amountSpent: data.amountSpent,
             fileUrl,
@@ -652,7 +655,6 @@ export default function Update() {
                     <Button
                       type='submit'
                       variant='contained'
-                      size='large'
                       size='large'
                       disabled={Object.values(uploading).some(Boolean)}
                       sx={{

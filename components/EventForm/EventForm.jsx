@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 // Material UI imports
 import {
@@ -483,12 +484,12 @@ const EventForm = () => {
         }}
         onClick={() => handleImageView(url)}
       >
-        <img
+        <Image
           src={url}
           alt={`${type} preview`}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           style={{
-            width: '100%',
-            height: '100%',
             objectFit: 'contain',
           }}
         />
