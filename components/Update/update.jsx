@@ -50,18 +50,21 @@ export default function Update() {
     financialCommitments: null,
     report: null,
     eventPoster: null,
+    feedback: null,
   });
   const [fileUrl, setFileUrl] = useState({
     geoPhotos: [],
     financialCommitments: '',
     report: '',
     eventPoster: '',
+    feedback: '',
   });
   const [uploading, setUploading] = useState({
     geoPhotos: false,
     financialCommitments: false,
     report: false,
     eventPoster: false,
+    feedback: false,
   });
   const [eventNames, setEventNames] = useState([]);
   const [displayForm, setDisplayForm] = useState(true);
@@ -272,7 +275,9 @@ export default function Update() {
             >
               {type === 'geoPhotos'
                 ? 'Accepted formats: Images only • Max size: 5MB'
-                : 'Accepted formats: Images or PDF • Max size: 5MB'}
+                : type === 'feedback'
+                  ? 'Accepted formats: PDF only • Max size: 5MB'
+                  : 'Accepted formats: Images or PDF • Max size: 5MB'}
             </Typography>
             <Box
               sx={{
@@ -400,7 +405,7 @@ export default function Update() {
     if (fileUrl.geoPhotos.length === 0) missing.push('Geo Tagged Photos');
     if (!fileUrl.financialCommitments) missing.push('Financial Commitments');
     if (!fileUrl.report) missing.push('Event Report');
-    if (!data.feedback || data.feedback.trim() === '') missing.push('Feedback');
+    if (!fileUrl.feedback) missing.push('Feedback (Student Responses)');
 
     if (missing.length > 0) {
       toast.error(`Please complete: ${missing.join(', ')}`);
@@ -415,7 +420,7 @@ export default function Update() {
           user_id: session?.user?._id,
           jsonData: {
             selectedEvent: data.selectedEvent,
-            feedback: data.feedback,
+            // feedback: data.feedback, // Removed text feedback
             videoLinks: data.videoLinks,
             amountSpent: data.amountSpent,
             fileUrl,
@@ -476,10 +481,10 @@ export default function Update() {
   }
 
   const isFormComplete =
-    fileUrl.geoPhotos.length > 0 &&
-    fileUrl.financialCommitments &&
-    fileUrl.report &&
-    watch('feedback');
+    // fileUrl.financialCommitments && // Validated on submit
+    // fileUrl.report && // Validated on submit
+    // fileUrl.feedback; // Validated on submit
+    true; // Always enable to show validation errors
 
   return (
     <Container maxWidth='lg' sx={{ py: 3 }}>
@@ -565,6 +570,7 @@ export default function Update() {
                     type='financialCommitments'
                     label='Financial Commitments'
                     accept='image/*,application/pdf'
+                    required
                   />
                   <FileUploadSection
                     type='report'
@@ -579,25 +585,12 @@ export default function Update() {
                     </Typography>
                   </Divider>
 
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant='h6'
-                      sx={{ color: colors.light.foreground, mb: 2 }}
-                    >
-                      Analysis of the feedback collected after the event<span style={{ color: colors.light.destructive }}> *</span>
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={4}
-                      placeholder='Summarize the feedback collected from students (e.g., key takeaways, satisfaction levels, suggestions received)'
-                      {...register('feedback', {
-                        required: 'Feedback is required',
-                      })}
-                      error={!!errors.feedback}
-                      helperText={errors.feedback?.message}
-                    />
-                  </Box>
+                  <FileUploadSection
+                    type='feedback'
+                    label='Feedback (PDF of student responses from Google Form)'
+                    accept='application/pdf'
+                    required
+                  />
 
                   <Box sx={{ mt: 2 }}>
                     <Typography
@@ -660,7 +653,8 @@ export default function Update() {
                       type='submit'
                       variant='contained'
                       size='large'
-                      disabled={!isFormComplete}
+                      size='large'
+                      disabled={Object.values(uploading).some(Boolean)}
                       sx={{
                         backgroundColor: colors.light.primary,
                         color: colors.light.primaryForeground,
@@ -696,6 +690,6 @@ export default function Update() {
         changeable={false}
         zIndex={1001}
       />
-    </Container>
+    </Container >
   );
 }
