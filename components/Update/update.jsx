@@ -36,11 +36,21 @@ const S3_BASE_URL = 'https://eventifys3.s3.ap-south-1.amazonaws.com/';
 const MAX_FILE_SIZE = 5000000; // 5MB
 
 // File validation helper
-const validateFile = (file, allowPdf = true) => {
+const validateFile = (file, fileType = 'any') => {
   if (!file) return false;
   const isImage = file.type.startsWith('image/');
   const isPdf = file.type === 'application/pdf';
-  const isValidType = allowPdf ? isImage || isPdf : isImage;
+
+  let isValidType;
+  if (fileType === 'pdf-only') {
+    isValidType = isPdf;
+  } else if (fileType === 'image-only') {
+    isValidType = isImage;
+  } else {
+    // 'any' - allows both images and PDFs
+    isValidType = isImage || isPdf;
+  }
+
   return isValidType && file.size <= MAX_FILE_SIZE;
 };
 
@@ -91,7 +101,7 @@ export default function Update() {
 
     if (action === 'geoPhotos') {
       // Validate all files for multiple upload (images only)
-      const allValid = Array.from(files).every(f => validateFile(f, false));
+      const allValid = Array.from(files).every(f => validateFile(f, 'image-only'));
       if (allValid) {
         setFile(prev => ({ ...prev, geoPhotos: files }));
       } else {
@@ -100,11 +110,15 @@ export default function Update() {
         );
       }
     } else {
-      // Single file upload (images or PDF)
-      if (validateFile(files[0], true)) {
+      // Single file upload
+      const fileType = action === 'feedback' ? 'pdf-only' : 'any';
+      if (validateFile(files[0], fileType)) {
         setFile(prev => ({ ...prev, [action]: files }));
       } else {
-        toast.error('Invalid file. Please upload an image or PDF under 5MB.');
+        const errorMsg = action === 'feedback'
+          ? 'Invalid file. Please upload a PDF file under 5MB.'
+          : 'Invalid file. Please upload an image or PDF under 5MB.';
+        toast.error(errorMsg);
       }
     }
   };
@@ -117,32 +131,70 @@ export default function Update() {
     setUploading(prev => ({ ...prev, [action]: true }));
 
     try {
-      const uploadPromises = Array.from(currFile).map(async f => {
+      const uploadPromises = Array.from(currFile).map(async (f, index) => {
         const formData = new FormData();
         formData.append('file', f);
-        const response = await fetch('/api/s3-upload', {
-          method: 'POST',
-          body: formData,
-        });
-        if (response.ok) {
-          const data = await response.json();
-          return data.message;
+
+        try {
+          const response = await fetch('/api/s3-upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            return { success: true, url: data.message, fileName: f.name };
+          } else {
+            // API returned an error status
+            const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+            return { success: false, error: errorData.message, fileName: f.name };
+          }
+        } catch (fetchError) {
+          // Network error or other exception
+          return { success: false, error: 'Network error', fileName: f.name };
         }
-        return null;
       });
 
-      const urls = (await Promise.all(uploadPromises)).filter(Boolean);
+      const results = await Promise.all(uploadPromises);
+      const successfulUploads = results.filter(r => r.success);
+      const failedUploads = results.filter(r => !r.success);
 
-      if (action === 'geoPhotos') {
-        setFileUrl(prev => ({ ...prev, geoPhotos: urls }));
-      } else {
-        setFileUrl(prev => ({ ...prev, [action]: urls[0] || '' }));
+      // Only update state with successful uploads
+      if (successfulUploads.length > 0) {
+        const successUrls = successfulUploads.map(r => r.url);
+
+        if (action === 'geoPhotos') {
+          setFileUrl(prev => ({ ...prev, geoPhotos: successUrls }));
+        } else {
+          setFileUrl(prev => ({ ...prev, [action]: successUrls[0] || '' }));
+        }
       }
 
-      toast.success('File uploaded successfully!');
+      // Show appropriate messages
+      const totalFiles = results.length;
+      const successCount = successfulUploads.length;
+      const failCount = failedUploads.length;
+
+      if (failCount === 0) {
+        // All uploads succeeded
+        const message = totalFiles === 1
+          ? 'File uploaded successfully!'
+          : `All ${totalFiles} files uploaded successfully!`;
+        toast.success(message);
+      } else if (successCount === 0) {
+        // All uploads failed
+        const message = totalFiles === 1
+          ? 'Failed to upload file. Please try again.'
+          : `Failed to upload all ${totalFiles} files. Please try again.`;
+        toast.error(message);
+      } else {
+        // Partial success
+        toast.error(`${failCount} of ${totalFiles} files failed to upload. ${successCount} uploaded successfully.`);
+      }
+
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload file');
+      toast.error('An unexpected error occurred during upload');
     } finally {
       setUploading(prev => ({ ...prev, [action]: false }));
     }
