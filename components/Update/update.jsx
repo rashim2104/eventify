@@ -455,11 +455,17 @@ export default function Update() {
     );
   }
 
+  const selectedEventId = watch('selectedEvent');
+  const selectedEventData = eventNames.find(e => e.id === selectedEventId);
+  const isSponsored =
+    selectedEventData?.isSponsored === 'true' ||
+    selectedEventData?.isSponsored === true;
+
   const onSubmit = async data => {
     const missing = [];
     if (!data.selectedEvent) missing.push('Event Selection');
     if (fileUrl.geoPhotos.length === 0) missing.push('Geo Tagged Photos');
-    if (!fileUrl.financialCommitments) missing.push('Financial Commitments');
+    if (isSponsored && !fileUrl.financialCommitments) missing.push('Financial Commitments');
     if (!fileUrl.report) missing.push('Event Report');
     if (!fileUrl.feedback) missing.push('Feedback (Student Responses)');
 
@@ -621,12 +627,14 @@ export default function Update() {
                     label='Event Poster'
                     accept='image/*,application/pdf'
                   />
-                  <FileUploadSection
-                    type='financialCommitments'
-                    label='Financial Commitments'
-                    accept='image/*,application/pdf'
-                    required
-                  />
+                  {isSponsored && (
+                    <FileUploadSection
+                      type='financialCommitments'
+                      label='Financial Commitments'
+                      accept='image/*,application/pdf'
+                      required
+                    />
+                  )}
                   <FileUploadSection
                     type='report'
                     label='Event Report'
@@ -661,39 +669,27 @@ export default function Update() {
                     />
                   </Box>
 
-                  {(() => {
-                    const selectedEventId = watch('selectedEvent');
-                    const selectedEventData = eventNames.find(
-                      e => e.id === selectedEventId
-                    );
-                    const isSponsored =
-                      selectedEventData?.isSponsored === 'true' ||
-                      selectedEventData?.isSponsored === true;
-
-                    return (
-                      isSponsored && (
-                        <Box sx={{ mt: 2 }}>
-                          <Typography
-                            variant='h6'
-                            sx={{ color: colors.light.foreground, mb: 2 }}
-                          >
-                            Amount Spent (Rs.)
-                          </Typography>
-                          <TextField
-                            fullWidth
-                            type='number'
-                            placeholder='Enter the amount spent (optional)'
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position='start'>₹</InputAdornment>
-                              ),
-                            }}
-                            {...register('amountSpent', { min: 0 })}
-                          />
-                        </Box>
-                      )
-                    );
-                  })()}
+                  {isSponsored && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography
+                        variant='h6'
+                        sx={{ color: colors.light.foreground, mb: 2 }}
+                      >
+                        Amount Spent (Rs.)
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        type='number'
+                        placeholder='Enter the amount spent (optional)'
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position='start'>₹</InputAdornment>
+                          ),
+                        }}
+                        {...register('amountSpent', { min: 0 })}
+                      />
+                    </Box>
+                  )}
 
                   <Box
                     sx={{
