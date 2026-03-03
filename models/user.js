@@ -1,4 +1,4 @@
-import mongoose, { Schema, models } from 'mongoose';
+import mongoose, { Schema, Types, models } from 'mongoose';
 
 const userSchema = new Schema(
   {
@@ -47,6 +47,19 @@ const userSchema = new Schema(
       default: null,
     },
     resetTokenExpiry: {
+      type: Date,
+      default: null,
+    },
+    postEventOverrideCount: {
+      type: Number,
+      default: 0,
+    },
+    lastOverrideGrantedBy: {
+      type: Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    lastOverrideGrantedAt: {
       type: Date,
       default: null,
     },
