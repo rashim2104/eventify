@@ -26,13 +26,18 @@ import {
   Select,
   MenuItem,
   Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import * as colorsConfig from '@/lib/colors.config.js';
 import { toast } from 'sonner';
-import { PaperPlaneTilt, DownloadSimple } from '@phosphor-icons/react';
+import { PaperPlaneTilt, DownloadSimple, ShieldCheck } from '@phosphor-icons/react';
 
 export default function Report() {
   const { data: session, status } = useSession();
@@ -63,6 +68,29 @@ export default function Report() {
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // Override dialog state
+  const [overrideDialog, setOverrideDialog] = useState({ open: false, event: null });
+  const [overrideLoading, setOverrideLoading] = useState(false);
+
+  const handleGrantOverride = async (event) => {
+    setOverrideLoading(true);
+    try {
+      const res = await fetch('/api/grantOverride', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: event.user_id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to grant override');
+      toast.success('Override granted successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to grant override');
+    } finally {
+      setOverrideLoading(false);
+      setOverrideDialog({ open: false, event: null });
+    }
+  };
 
   const CATEGORY_TYPES = [
     { value: 'department', label: 'Department' },
@@ -751,15 +779,26 @@ export default function Report() {
                           sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
                         >
                           {canRemind && (
-                            <Tooltip title='Send reminder to creator'>
-                              <IconButton
-                                color='primary'
-                                size='small'
-                                onClick={onSendReminder}
-                              >
-                                <PaperPlaneTilt size={18} weight='regular' />
-                              </IconButton>
-                            </Tooltip>
+                            <>
+                              <Tooltip title='Send reminder to creator'>
+                                <IconButton
+                                  color='primary'
+                                  size='small'
+                                  onClick={onSendReminder}
+                                >
+                                  <PaperPlaneTilt size={18} weight='regular' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Grant event creation override'>
+                                <IconButton
+                                  color='warning'
+                                  size='small'
+                                  onClick={() => setOverrideDialog({ open: true, event })}
+                                >
+                                  <ShieldCheck size={18} weight='regular' />
+                                </IconButton>
+                              </Tooltip>
+                            </>
                           )}
                           <Tooltip title='Download report (PDF)'>
                             <IconButton
@@ -780,6 +819,37 @@ export default function Report() {
           </Table>
         </TableContainer>
       </Paper>
+
+      <Dialog
+        open={overrideDialog.open}
+        onClose={() => setOverrideDialog({ open: false, event: null })}
+      >
+        <DialogTitle>Grant Event Creation Override</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will allow the creator of{' '}
+            <strong>{overrideDialog.event?.eventData?.EventName || 'this event'}</strong>{' '}
+            to create one new event even though they have pending post-event annexure
+            submissions. This is a one-time override.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOverrideDialog({ open: false, event: null })}
+            disabled={overrideLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleGrantOverride(overrideDialog.event)}
+            variant='contained'
+            color='warning'
+            disabled={overrideLoading}
+          >
+            {overrideLoading ? 'Granting...' : 'Grant Override'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
