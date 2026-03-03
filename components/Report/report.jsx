@@ -31,13 +31,19 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import * as colorsConfig from '@/lib/colors.config.js';
 import { toast } from 'sonner';
-import { PaperPlaneTilt, DownloadSimple, ShieldCheck } from '@phosphor-icons/react';
+import { PaperPlaneTilt, DownloadSimple, ShieldCheck, ClipboardText, ChartBar } from '@phosphor-icons/react';
+
+function TabPanel({ children, value, index }) {
+  return value === index ? <Box>{children}</Box> : null;
+}
 
 export default function Report() {
   const { data: session, status } = useSession();
@@ -69,17 +75,20 @@ export default function Report() {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Override dialog state
-  const [overrideDialog, setOverrideDialog] = useState({ open: false, event: null });
+  // Tab state
+  const [reportTab, setReportTab] = useState(0);
+
+  // Override dialog state (used in Pending Report tab)
+  const [overrideDialog, setOverrideDialog] = useState({ open: false, userId: null, userName: null });
   const [overrideLoading, setOverrideLoading] = useState(false);
 
-  const handleGrantOverride = async (event) => {
+  const handleGrantOverride = async (userId) => {
     setOverrideLoading(true);
     try {
       const res = await fetch('/api/grantOverride', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: event.user_id }),
+        body: JSON.stringify({ userId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || 'Failed to grant override');
@@ -88,7 +97,54 @@ export default function Report() {
       toast.error(err.message || 'Failed to grant override');
     } finally {
       setOverrideLoading(false);
-      setOverrideDialog({ open: false, event: null });
+      setOverrideDialog({ open: false, userId: null, userName: null });
+    }
+  };
+
+  // Derive pending reports grouped by user
+  const pendingAnnexures = React.useMemo(() => {
+    const pending = events.filter(e => {
+      const end = e?.eventData?.EndTime ? new Date(e.eventData.EndTime) : null;
+      const completed = end && end < new Date();
+      const postEventFilled = Boolean(e?.postEventData);
+      return completed && !postEventFilled;
+    });
+
+    const grouped = {};
+    for (const e of pending) {
+      const uid = e.user_id;
+      if (!uid) continue;
+      if (!grouped[uid]) {
+        grouped[uid] = {
+          userId: uid,
+          userName: e?.eventData?.eventCoordinators?.[0]?.coordinatorName || uid,
+          dept: e?.dept || '-',
+          events: [],
+        };
+      }
+      grouped[uid].events.push(e);
+    }
+    return Object.values(grouped);
+  }, [events]);
+
+  const handleBulkRemindUser = async (userEvents) => {
+    try {
+      await Promise.all(
+        userEvents.map(async e => {
+          const res = await fetch('/api/remind-coordinator', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId: e._id }),
+          });
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data?.message || 'Failed to send some reminders');
+          }
+        })
+      );
+      toast.success(`Reminder sent for ${userEvents.length} event(s)`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to send reminders');
     }
   };
 
@@ -381,6 +437,31 @@ export default function Report() {
         Events Report
       </Typography>
 
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Tabs
+          value={reportTab}
+          onChange={(e, v) => setReportTab(v)}
+          indicatorColor='primary'
+          sx={{
+            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+          }}
+        >
+          <Tab
+            icon={<ChartBar size={20} />}
+            label='Events Report'
+            iconPosition='start'
+            sx={{ minHeight: 56 }}
+          />
+          <Tab
+            icon={<ClipboardText size={20} />}
+            label='Pending Report'
+            iconPosition='start'
+            sx={{ minHeight: 56 }}
+          />
+        </Tabs>
+      </Box>
+
+      <TabPanel value={reportTab} index={0}>
       <Paper variant='outlined' sx={{ p: 2, mb: 3 }}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Grid container spacing={2} alignItems='center'>
@@ -663,13 +744,13 @@ export default function Report() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align='center' sx={{ py: 4 }}>
+                  <TableCell colSpan={8} align='center' sx={{ py: 4 }}>
                     <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
               ) : events.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align='center' sx={{ py: 4 }}>
+                  <TableCell colSpan={8} align='center' sx={{ py: 4 }}>
                     <Typography variant='body2' color='text.secondary'>
                       No events found for selected range
                     </Typography>
@@ -779,26 +860,15 @@ export default function Report() {
                           sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
                         >
                           {canRemind && (
-                            <>
-                              <Tooltip title='Send reminder to creator'>
-                                <IconButton
-                                  color='primary'
-                                  size='small'
-                                  onClick={onSendReminder}
-                                >
-                                  <PaperPlaneTilt size={18} weight='regular' />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title='Grant event creation override'>
-                                <IconButton
-                                  color='warning'
-                                  size='small'
-                                  onClick={() => setOverrideDialog({ open: true, event })}
-                                >
-                                  <ShieldCheck size={18} weight='regular' />
-                                </IconButton>
-                              </Tooltip>
-                            </>
+                            <Tooltip title='Send reminder to creator'>
+                              <IconButton
+                                color='primary'
+                                size='small'
+                                onClick={onSendReminder}
+                              >
+                                <PaperPlaneTilt size={18} weight='regular' />
+                              </IconButton>
+                            </Tooltip>
                           )}
                           <Tooltip title='Download report (PDF)'>
                             <IconButton
@@ -819,29 +889,140 @@ export default function Report() {
           </Table>
         </TableContainer>
       </Paper>
+      </TabPanel>
+
+      <TabPanel value={reportTab} index={1}>
+        <Paper variant='outlined' sx={{ width: '100%', overflow: 'hidden' }}>
+          <TableContainer
+            sx={{
+              maxHeight: 'calc(100vh - 280px)',
+              overflowY: 'scroll',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#888 #f1f1f1',
+              '&::-webkit-scrollbar': {
+                width: '10px',
+                display: 'block',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f1f1f1',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#888',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: '#555',
+              },
+            }}
+          >
+            <Table size='small' sx={{ minWidth: 650 }} stickyHeader>
+              <TableHead>
+                <TableRow
+                  sx={{
+                    bgcolor:
+                      appColors?.light?.secondaryHex || theme.palette.action.hover,
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Department</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Pending Events</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Event Names</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align='center' sx={{ py: 4 }}>
+                      <CircularProgress size={24} />
+                    </TableCell>
+                  </TableRow>
+                ) : pendingAnnexures.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align='center' sx={{ py: 4 }}>
+                      <Typography variant='body2' color='text.secondary'>
+                        No pending reports found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pendingAnnexures.map(group => (
+                    <TableRow key={group.userId} hover>
+                      <TableCell>{group.userName}</TableCell>
+                      <TableCell>{group.dept}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={group.events.length}
+                          size='small'
+                          color='warning'
+                          variant='filled'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {group.events
+                          .map(e => e?.eventData?.EventName || '-')
+                          .join(', ')}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <Tooltip title='Grant event creation override'>
+                            <IconButton
+                              color='warning'
+                              size='small'
+                              onClick={() =>
+                                setOverrideDialog({
+                                  open: true,
+                                  userId: group.userId,
+                                  userName: group.userName,
+                                })
+                              }
+                            >
+                              <ShieldCheck size={18} weight='regular' />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Send reminders for all pending events'>
+                            <IconButton
+                              color='primary'
+                              size='small'
+                              onClick={() => handleBulkRemindUser(group.events)}
+                            >
+                              <PaperPlaneTilt size={18} weight='regular' />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </TabPanel>
 
       <Dialog
         open={overrideDialog.open}
-        onClose={() => setOverrideDialog({ open: false, event: null })}
+        onClose={() => setOverrideDialog({ open: false, userId: null, userName: null })}
       >
         <DialogTitle>Grant Event Creation Override</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will allow the creator of{' '}
-            <strong>{overrideDialog.event?.eventData?.EventName || 'this event'}</strong>{' '}
+            This will allow{' '}
+            <strong>{overrideDialog.userName || 'this user'}</strong>{' '}
             to create one new event even though they have pending post-event annexure
             submissions. This is a one-time override.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={() => setOverrideDialog({ open: false, event: null })}
+            onClick={() => setOverrideDialog({ open: false, userId: null, userName: null })}
             disabled={overrideLoading}
           >
             Cancel
           </Button>
           <Button
-            onClick={() => handleGrantOverride(overrideDialog.event)}
+            onClick={() => handleGrantOverride(overrideDialog.userId)}
             variant='contained'
             color='warning'
             disabled={overrideLoading}
