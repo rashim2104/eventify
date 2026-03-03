@@ -252,25 +252,40 @@ export async function POST(req) {
   }).select({ 'eventData.EventName': 1, _id: 1 });
 
   if (pendingPostEventUpdates.length > 0) {
-    const pendingEventNames = pendingPostEventUpdates.map(
-      event => event.eventData?.EventName || 'Unknown Event'
+    // Check if user has an admin-granted override
+    const overrideResult = await User.updateOne(
+      { _id: user_id, postEventOverrideCount: { $gt: 0 } },
+      { $inc: { postEventOverrideCount: -1 } }
     );
-    logger(
-      user_id,
-      'Create Event',
-      `Blocked: User has ${pendingPostEventUpdates.length} events pending post-event annexure upload`,
-      403
-    );
-    return NextResponse.json(
-      {
-        message: `You cannot create a new event until you upload annexures for your previous completed event(s): ${pendingEventNames.join(', ')}`,
-        pendingEvents: pendingPostEventUpdates.map(e => ({
-          id: e._id,
-          name: e.eventData?.EventName,
-        })),
-      },
-      { status: 403 }
-    );
+
+    if (overrideResult.modifiedCount > 0) {
+      logger(
+        user_id,
+        'Create Event',
+        `Override consumed: User had pending post-event data but used an admin-granted override`,
+        200
+      );
+    } else {
+      const pendingEventNames = pendingPostEventUpdates.map(
+        event => event.eventData?.EventName || 'Unknown Event'
+      );
+      logger(
+        user_id,
+        'Create Event',
+        `Blocked: User has ${pendingPostEventUpdates.length} events pending post-event annexure upload`,
+        403
+      );
+      return NextResponse.json(
+        {
+          message: `You cannot create a new event until you upload annexures for your previous completed event(s): ${pendingEventNames.join(', ')}`,
+          pendingEvents: pendingPostEventUpdates.map(e => ({
+            id: e._id,
+            name: e.eventData?.EventName,
+          })),
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const crtuser = await User.findOne({ _id: user_id });
